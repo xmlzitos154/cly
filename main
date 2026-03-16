@@ -6,6 +6,10 @@ TIMESTAMP="$(date "+%H:%M - %D")"
 
 touch "$LOG_FILE"
 
+import() {
+    
+}
+
 help_usage() {
     echo "jay usage: [Argument] [Packages]"
     exit 1
