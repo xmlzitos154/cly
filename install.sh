@@ -17,7 +17,7 @@ if ! command -v yay &> /dev/null; then
 fi
 
 installer() {
-    echo "jay Ver: 1.2.0"
+    echo "jay Ver: 1.2.1"
     if [[ ! -f "$SOURCE" ]]; then
         echo "FATAL: File '$SOURCE' not found."
         exit 1
@@ -39,7 +39,7 @@ installer() {
 }
 
 remove() {
-    echo "jay Ver: 1.2.0"
+    echo "jay Ver: 1.2."
     if [[ ! -f "$INSTALL_PATH" ]]; then
         echo "Error: $BIN_NAME not found in $INSTALL_PATH."
         exit 1
