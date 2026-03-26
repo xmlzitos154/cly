@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
-VER="1.2.1"
+VER="1.2.2"
 
+# Verifica se o yay existe
 if ! command -v yay &>/dev/null; then
     echo "erro: yay não está instalado."
     exit 1
@@ -34,6 +35,7 @@ LOGGER=""
 ARGS=()
 NOCONFIRM=()
 
+# Separa as flags de noconfirm dos pacotes
 for arg in "${@:2}"; do
     if [[ "$arg" == "--noconfirm" || "$arg" == "-y" ]]; then
         NOCONFIRM=("--noconfirm")
@@ -45,41 +47,16 @@ done
 [[ -z "$ARG" ]] && help_usage
 
 case "$ARG" in
-    "install")
-        CMD="-S"
-        LOGGER="[INSTALLED]"
-        ;;
-    "remove")
-        CMD="-Rsn"
-        LOGGER="[REMOVED]"
-        ;;
-    "refresh")
-        [[ ${#ARGS[@]} -gt 0 ]] && echo "Aviso: argumentos ignorados para 'refresh'."
-        ARGS=()
-        CMD="-Syy"
-        LOGGER="[REFRESHED]"
-        ;;
-    "update")
-        [[ ${#ARGS[@]} -gt 0 ]] && echo "Aviso: argumentos ignorados para 'update'."
-        ARGS=()
-        CMD="-Syu"
-        LOGGER="[UPDATED]"
-        ;;
-    "search")
-        CMD="-Ss"
-        LOGGER="[SEARCHED]"
-        ;;
-    "query")
-        CMD="-Qs"
-        LOGGER="[QUERIED]"
-        ;;
+    "install") CMD="-S";   LOGGER="[INSTALLED]" ;;
+    "remove")  CMD="-Rsn"; LOGGER="[REMOVED]"   ;;
+    "refresh") CMD="-Syy"; LOGGER="[REFRESHED]"; ARGS=() ;;
+    "update")  CMD="-Syu"; LOGGER="[UPDATED]";   ARGS=() ;;
+    "search")  CMD="-Ss";  LOGGER="[SEARCHED]"  ;;
+    "query")   CMD="-Qs";  LOGGER="[QUERIED]"   ;;
     "cache")
-        [[ ${#ARGS[@]} -gt 0 ]] && echo "Aviso: argumentos ignorados para 'cache'."
-        ARGS=()
         read -rp "Limpar cache? [y/N]: " confirm
         [[ $confirm =~ ^[Yy]$ ]] || exit 0
-        CMD="-Sc"
-        LOGGER="[CACHE CLEAN]"
+        CMD="-Sc"; LOGGER="[CACHE CLEAN]"; ARGS=()
         ;;
     "slog")
         [[ ! -s "$LOG_FILE" ]] && { echo "Nenhum log encontrado."; exit 0; }
@@ -88,54 +65,49 @@ case "$ARG" in
             -e 's/\[ERROR\]/\x1b[41;37m&\x1b[0m/' "$LOG_FILE" | column -t -s '|'
         exit 0
         ;;
-    "clog")
-        > "$LOG_FILE"
-        echo "Logs limpos."
-        exit 0
-        ;;
-    --help|-h|help)
-        help_msg
-        ;;
-    ver|--version|-v)
-        printf "\n JAY version: %s \n\n" "$VER"
-        exit 0
-        ;;
-    *)
-        help_usage
-        ;;
+    "clog") > "$LOG_FILE"; echo "Logs limpos."; exit 0 ;;
+    --help|-h|help) help_msg ;;
+    ver|--version|-v) printf "\n JAY version: %s \n\n" "$VER"; exit 0 ;;
+    *) help_usage ;;
 esac
 
+# Validações de argumentos vazios
 if [[ "$ARG" =~ ^(install|remove)$ ]] && [[ ${#ARGS[@]} -eq 0 ]]; then
     echo "Nenhum programa especificado."
     exit 1
 fi
-
 if [[ "$ARG" =~ ^(search|query)$ ]] && [[ ${#ARGS[@]} -eq 0 ]]; then
     echo "Informe um termo para busca."
     exit 1
 fi
 
+# --- Execução Principal ---
+TMP_LOG=$(mktemp)
 PKGS=$(IFS=','; echo "${ARGS[*]}")
 
-TMP_LOG=$(mktemp)
-
+# Roda o yay mostrando na tela e salvando no arquivo temporário
 yay "$CMD" "${ARGS[@]}" "${NOCONFIRM[@]}" 2>&1 | tee "$TMP_LOG"
 STATUS=$?
 
+# --- Lógica de Log ---
 LOG_DATE="$(date "+%H:%M - %d/%m/%Y")"
 
 if [[ $STATUS -eq 0 ]]; then
+    # Se for update, tenta pescar o que foi atualizado
     if [[ "$ARG" == "update" ]]; then
-
-        UPDATED_PKGS=$(grep "upgraded" "$TMP_LOG" | awk '{print $3}' | paste -sd "," -)
-        
-        FINAL_PKGS="${UPDATED_PKGS:-SYSTEM (no changes)}"
+        # Remove cores ANSI, busca 'upgraded', pega a 3ª coluna e junta com vírgulas
+        UPDATED_LIST=$(sed 's/\x1b\[[0-9;]*m//g' "$TMP_LOG" | grep "upgraded" | awk '{print $3}' | paste -sd "," -)
+        FINAL_PKGS="${UPDATED_LIST:-SYSTEM (no changes)}"
     else
         FINAL_PKGS="${PKGS:-SYSTEM}"
     fi
 
-    echo "($LOG_DATE)|$LOGGER|$FINAL_PKGS" >> "$LOG_FILE"
+    # Só loga se não for busca/query
+    if [[ ! "$ARG" =~ ^(search|query)$ ]]; then
+        echo "($LOG_DATE)|$LOGGER|$FINAL_PKGS" >> "$LOG_FILE"
+    fi
 else
+    # Log de erro
     echo "($LOG_DATE)|[ERROR]|$ARG ${PKGS:-SYSTEM}" >> "$LOG_FILE"
     echo -e "\n\e[31m[!] ERRO ao executar: jay $ARG\e[0m"
 fi
