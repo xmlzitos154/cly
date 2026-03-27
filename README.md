@@ -29,16 +29,17 @@ JAY follows a simple structure: jay [command] [package]
 Helper Flags
 
 Primary Commands
-Command	Alias for	Description
-install	-S	Installs a package
+Command	Alias for Description
+install	-S	    Installs a package
 remove	-Rsn	Removes package and dependencies
 update	-Syu	Updates the system
 refresh	-Syy	Forces refresh of databases
 refdate	-Syyu	Refresh + System update
-search	-Ss	Search in repositories/AUR
-query	-Qs	Search installed packages
+search	-Ss	    Search in repositories/AUR
+query	-Qs	    Search installed packages
+cache   -Scc    Clear all pacman and AUR cache
 Log Management
 
-    show-logs: Displays your JAY history.
+    slog: Displays your JAY history.
 
     clog: Clears the log file.
