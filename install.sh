@@ -5,7 +5,7 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SOURCE="$SCRIPT_DIR/main"
 
-VER="1.3"
+VER="1.3.5"
 BIN_NAME="jay"
 INSTALL_PATH="/usr/bin/$BIN_NAME"
 
