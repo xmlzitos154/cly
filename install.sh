@@ -5,13 +5,13 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SOURCE="$SCRIPT_DIR/main"
 
-VER="1.3.0"
+VER="1.3"
 BIN_NAME="jay"
 INSTALL_PATH="/usr/bin/$BIN_NAME"
 
 if [[ $EUID -ne 0 ]]; then
-    echo "Please run me as sudo."
-    exit 1
+    echo "Getting root acess..."
+    exec sudo "$0" "$@"
 fi
 
 if ! command -v yay &> /dev/null; then
