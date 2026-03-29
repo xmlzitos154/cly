@@ -1,3 +1,10 @@
+Ah, saquei o que rolou! Quando eu coloquei dentro de um bloco de código text, o GitHub renderizou o conteúdo literalmente (com os símbolos de Markdown aparecendo) em vez de transformar aquilo em títulos, tabelas e links bonitões.
+
+Para o GitHub renderizar o visual "pro" que a gente montou, o conteúdo tem que estar fora de um bloco de código global.
+
+Mas relaxa, vou mandar o código exatamente como você tem que copiar. É só clicar no botão de copiar deste bloco abaixo, abrir seu README.md, apagar tudo que tem lá e colar isso:
+Plaintext
+
 # 🍦 JAY — Just Another Yogourt
 > **A lightweight, human-friendly wrapper for `yay` with Flatpak integration.**
 
