@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-VER="1.4.4"
+VER="1.4.5"
 LOG_FILE="$HOME/.cache/jaylog.txt"
 [[ -f "$LOG_FILE" ]] || touch "$LOG_FILE"
 
@@ -18,19 +18,21 @@ msg02() {
     echo -e -n "${CYAN} -> ${NC}" && echo "argumento invalido '-'"
     exit 0
 }
-
-jay_version() {
+msg03() {
     echo -e "\n ${CYAN}-> JAY (Just Another Yogourt) - Version $VER ${NC}\n"
 }
 
 help_message() {
-    jay_version
+    msg03
     echo -e "Uso: jay [comando] [opções] [pacotes]"
-    echo -e "Uso: jay [-i -f | -i --flatpak]\n"
+    echo -e "Uso: jay [ -i | -rm | -s | -u ] [ -f | --flatpak ] [ --noconfirm ]"
+    echo -e "Uso: jay [ -i | install ]"
+    echo -e "Uso: jay [ -rm | remove ] [ -A ]"
+    echo 
     echo -e "Options: \n"
     echo -e "-h,  --help         Mostra essa mensagem"
     echo -e "-i,  install        Sincronizar pacotes"
-    echo -e "-rm, remove         Remover pacotes"
+    echo -e "-rm, remove         Remover pacotes (Use '-A' para modo Agressivo, usa -Rsn)"
     echo -e "-s,  search         Pesquisar pacotes"
     echo -e "-c,  cache          Limpar todo cache"
     echo -e "-q,  query          Procurar pacotes locais"
@@ -52,8 +54,9 @@ usage() {
 [[ -z "$1" ]] && usage
 
 RAW_CMD="$*"
-
 USE_FLATPAK=false
+AGRESSIVE_MODE=false
+
 if [[ "$1" == "-f" || "$1" == "--flatpak" ]]; then
     USE_FLATPAK=true
     shift
@@ -62,7 +65,7 @@ fi
 case "$1" in
     "-") msg02 ;;
     install|-i|-S) CMD="-S";   TAG="[INSTALLED]"; FLAT_CMD="install flathub" ;;
-    remove|-rm)    CMD="-Rsn"; TAG="[REMOVED]";   FLAT_CMD="uninstall" ;;
+    remove|-rm)    CMD="-R";    TAG="[REMOVED]";   FLAT_CMD="uninstall" ;;
     refresh|-r)    CMD="-Syy"; TAG="[REFRESHED]" ;;
     update|-u)     CMD="-Syu"; TAG="[UPDATED]";   FLAT_CMD="update" ;;
     search|-s)     CMD="-Ss";  TAG="[SEARCHED]";  FLAT_CMD="search" ;;
@@ -80,7 +83,7 @@ case "$1" in
         else 
             echo -e "${CYAN}-> Nenhum pacote órfão encontrado.${NC}"; exit 0; 
         fi ;;
-    -v|--version)  jay_version ; exit 0 ;;
+    -v|--version)  msg03 ; exit 0 ;;
     -h|--help)     help_message ;;
     *) VAR="$1" ; msg01 ;;
 esac
@@ -94,6 +97,12 @@ YAY_FLAGS=()
 for arg in "$@"; do
     if [[ "$arg" == "-f" || "$arg" == "--flatpak" ]]; then
         USE_FLATPAK=true
+    elif [[ "$arg" == "-A" ]]; then
+        if [[ "$ACTION" =~ ^(remove|-rm)$ ]]; then
+            AGRESSIVE_MODE=true
+            CMD="-Rsn"
+            TAG="[REMOVED-AGRESSIVE]"
+        fi
     elif [[ "$arg" == -* ]]; then
         YAY_FLAGS+=("$arg")
     else
@@ -112,6 +121,7 @@ command -v yay &>/dev/null || { echo -e "${RED}Erro: yay não encontrado.${NC}";
 TMP_OUT=$(mktemp)
 
 if [[ "$ACTION" != "orphan" && "$ACTION" != "-o" ]]; then
+    [[ "$AGRESSIVE_MODE" == "true" ]] && echo -e "${RED}-> Modo agressivo ativado!${NC}"
     echo -e "${CYAN}-> Iniciando processo via AUR...${NC}\n"
     yay "$CMD" "${FINAL_ARGS[@]}" "${YAY_FLAGS[@]}" 2>&1 | tee "$TMP_OUT"
     EXIT_CODE=${PIPESTATUS[0]}
@@ -138,7 +148,7 @@ if [[ "$TAG" != "SKIP" ]]; then
     DATE_STR=$(date "+%H:%M - %d/%m/%Y")
 
     if [[ $EXIT_CODE -ne 0 ]]; then
-        TAG="[ ! ] Command dont work sucessfully"
+        TAG="[ ! ] Command failed"
         PKGS_TO_LOG="$RAW_CMD"
     elif [[ "$ACTION" =~ ^(update|-u)$ ]]; then
         PKGS_TO_LOG=$(sed 's/\x1b\[[0-9;]*[mGJK]//g' "$TMP_OUT" | grep -E "upgraded|atualizado" | awk '{print $3}' | tr '\n' ',' | sed 's/,$//')
