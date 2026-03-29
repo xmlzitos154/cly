@@ -1,11 +1,26 @@
 #!/usr/bin/env bash
 
-VER="1.4.2"
+VER="1.4.4"
 LOG_FILE="$HOME/.cache/jaylog.txt"
 [[ -f "$LOG_FILE" ]] || touch "$LOG_FILE"
 
+CYAN='\033[0;36m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+NC='\033[0m'
+
+msg01() {
+    echo -e -n "${CYAN} -> ${NC}" && echo "argumento invalido '$VAR'" | tr -d "-"
+    exit 0
+}
+msg02() {
+    echo -e -n "${CYAN} -> ${NC}" && echo "argumento invalido '-'"
+    exit 0
+}
+
 jay_version() {
-    echo -e "\n -> JAY (Just Another Yogourt) - Version $VER \n"
+    echo -e "\n ${CYAN}-> JAY (Just Another Yogourt) - Version $VER ${NC}\n"
 }
 
 help_message() {
@@ -13,56 +28,59 @@ help_message() {
     echo -e "Uso: jay [comando] [opções] [pacotes]"
     echo -e "Uso: jay [-i -f | -i --flatpak]\n"
     echo -e "Options: \n"
-    echo -e "-h, --help          Mostra essa mensagem"
-    echo -e "-i, install         Sincronizar pacotes"
+    echo -e "-h,  --help         Mostra essa mensagem"
+    echo -e "-i,  install        Sincronizar pacotes"
     echo -e "-rm, remove         Remover pacotes"
-    echo -e "-s, search          Pesquisar pacotes"
-    echo -e "-c, cache           Limpar todo cache"
-    echo -e "-q, query           Procurar pacotes locais"
+    echo -e "-s,  search         Pesquisar pacotes"
+    echo -e "-c,  cache          Limpar todo cache"
+    echo -e "-q,  query          Procurar pacotes locais"
     echo -e "-sl, slog           Mostrar histórico de comandos"
     echo -e "-cl, clog           Limpar o arquivo de histórico"
-    echo -e "-u, update          Atualizar o sistema (AUR + Flatpak se -f)"
-    echo -e "-r, refresh         Atualizar repositórios"
-    echo -e "-f, --flatpak       Modo híbrido ou update duplo"
-    echo -e ""
+    echo -e "-u,  update         Atualizar o sistema"
+    echo -e "-r,  refresh        Atualizar repositórios"
+    echo -e "-f,  --flatpak      Modo híbrido ou update duplo, usa AUR e Flatpak"
+    echo
+    echo -e "-o, orphan          Remove todas as dependências desnecessárias"
     exit 0
 }
 
 usage() {
-    echo "Uso: jay <comando> <pacotes>"
+    echo -e "${RED}Uso: jay <comando> <pacotes>${NC}"
     exit 1
-}
-
-show_log() {
-    [[ ! -s "$LOG_FILE" ]] && { echo "Log vazio."; exit 0; }
-    column -t -s '|' "$LOG_FILE"
-    exit 0
-}
-
-clear_log() {
-    > "$LOG_FILE"
-    echo "Logs limpos."
-    exit 0
 }
 
 [[ -z "$1" ]] && usage
 
 USE_FLATPAK=false
+if [[ "$1" == "-f" || "$1" == "--flatpak" ]]; then
+    USE_FLATPAK=true
+    shift
+fi
 
 case "$1" in
-    "-") echo "argumento invalido '-'" && exit 0 ;;
+    "-") msg02 ;;
     install|-i|-S) CMD="-S";   TAG="[INSTALLED]"; FLAT_CMD="install flathub" ;;
     remove|-rm)    CMD="-Rsn"; TAG="[REMOVED]";   FLAT_CMD="uninstall" ;;
     refresh|-r)    CMD="-Syy"; TAG="[REFRESHED]" ;;
     update|-u)     CMD="-Syu"; TAG="[UPDATED]";   FLAT_CMD="update" ;;
-    search|-s)     CMD="-Ss";  TAG="SKIP"        ;;
-    query|-q)      CMD="-Qs";  TAG="SKIP"        ;;
+    search|-s)     CMD="-Ss";  TAG="[SEARCHED]";  FLAT_CMD="search" ;;
+    query|-q)      CMD="-Qs";  TAG="[LOCAL_QUERY]" ;;
     cache|-c)      CMD="-Sc";  TAG="[CACHE CLEAN]" ;;
-    slog|-sl)      show_log ;;
-    clog|-cl)      clear_log ;;
+    slog|-sl)      
+        [[ ! -s "$LOG_FILE" ]] && { echo "Log vazio."; exit 0; }
+        column -t -s '|' "$LOG_FILE" ; exit 0 ;;
+    clog|-cl)      
+        > "$LOG_FILE" ; echo -e "${GREEN}Logs limpos.${NC}" ; exit 0 ;;
+    orphan|-o)     
+        ORPHANS=$(yay -Qdtq)
+        if [[ -n "$ORPHANS" ]]; then 
+            yay -Rsn $ORPHANS; TAG="[ORPHAN REMOVED]"; EXIT_CODE=0 
+        else 
+            echo -e "${CYAN}-> Nenhum pacote órfão encontrado.${NC}"; exit 0; 
+        fi ;;
     -v|--version)  jay_version ; exit 0 ;;
     -h|--help)     help_message ;;
-    *) echo -n "-> " && echo "argumento invalido '$1'" | tr -d "-" ; exit 0 ;;
+    *) VAR="$1" ; msg01 ;;
 esac
 
 ACTION="$1"
@@ -82,58 +100,50 @@ for arg in "$@"; do
 done
 
 if [[ "$ACTION" =~ ^(install|remove)$ && ${#FINAL_ARGS[@]} -eq 0 ]]; then
-    echo "Erro: Informe ao menos um pacote."
+    echo -e "${RED}Erro: Informe ao menos um pacote.${NC}"
     exit 1
 fi
 
-if ! command -v yay &>/dev/null; then
-    echo "Erro: yay não encontrado."
-    exit 1
-fi
+command -v yay &>/dev/null || { echo -e "${RED}Erro: yay não encontrado.${NC}"; exit 1; }
 
 [[ "$USE_FLATPAK" == "true" ]] && FLAT_FLAGS="-y" || FLAT_FLAGS=""
-
 TMP_OUT=$(mktemp)
 
-echo -e "-> Iniciando processo via AUR...\n"
-yay "$CMD" "${FINAL_ARGS[@]}" "${YAY_FLAGS[@]}" 2>&1 | tee "$TMP_OUT"
-EXIT_CODE=$?
+if [[ "$ACTION" != "orphan" && "$ACTION" != "-o" ]]; then
+    echo -e "${CYAN}-> Iniciando processo via AUR...${NC}\n"
+    yay "$CMD" "${FINAL_ARGS[@]}" "${YAY_FLAGS[@]}" 2>&1 | tee "$TMP_OUT"
+    EXIT_CODE=$?
+fi
 
 if [[ "$USE_FLATPAK" == "true" ]]; then
-    if [[ "$ACTION" == "update" || "$ACTION" == "-u" ]]; then
-        echo -e "\n-> Atualizando Flatpaks...\n"
-        if command -v flatpak &>/dev/null; then
-            flatpak update $FLAT_FLAGS
-        fi
+    if [[ "$ACTION" =~ ^(update|-u)$ ]]; then
+        echo -e "\n${GREEN}-> Atualizando Flatpaks...${NC}\n"
+        command -v flatpak &>/dev/null && flatpak update $FLAT_FLAGS
+    elif [[ "$ACTION" =~ ^(search|-s)$ ]]; then
+        echo -e "\n${GREEN}-> Buscando no Flatpak...${NC}\n"
+        command -v flatpak &>/dev/null && flatpak search "${FINAL_ARGS[@]}"
     elif [[ $EXIT_CODE -ne 0 ]] || grep -qiE "Nenhum pacote AUR localizado|não há nada a ser feito|target not found" "$TMP_OUT"; then
-        echo -e "\n[!] AUR não encontrou nada. Pulando para Flatpak...\n"
+        echo -e "\n${YELLOW}[!] AUR não encontrou nada. Pulando para Flatpak...${NC}\n"
         if command -v flatpak &>/dev/null; then
             flatpak $FLAT_CMD $FLAT_FLAGS "${FINAL_ARGS[@]}"
             EXIT_CODE=$?
-            if [[ $EXIT_CODE -eq 0 ]]; then
-                [[ "$FLAT_CMD" == "uninstall" ]] && TAG="[RM FLATPAK]" || TAG="[FLATPAK]"
-                PKGS_TO_LOG="${FINAL_ARGS[*]}"
-            fi
+            [[ $EXIT_CODE -eq 0 ]] && { [[ "$FLAT_CMD" == "uninstall" ]] && TAG="[RM FLATPAK]" || TAG="[FLATPAK]"; }
         fi
     fi
 fi
 
 if [[ "$TAG" != "SKIP" ]]; then
     DATE_STR=$(date "+%H:%M - %d/%m/%Y")
-    
     if [[ "$CMD" == "-Syu" && $EXIT_CODE -eq 0 ]]; then
         PKGS_TO_LOG=$(sed 's/\x1b\[[0-9;]*[mGJK]//g' "$TMP_OUT" | grep -E "upgraded|atualizado" | awk '{print $3}' | tr '\n' ',' | sed 's/,$//')
+    elif [[ "$ACTION" =~ ^(orphan|-o)$ ]]; then
+        PKGS_TO_LOG="ALL_ORPHANS"
     else
         PKGS_TO_LOG=$(IFS=','; echo "${FINAL_ARGS[*]}")
     fi
-
+    
     FINAL_TEXT="${PKGS_TO_LOG:-SYSTEM}"
-
-    if [[ $EXIT_CODE -eq 0 ]]; then
-        echo "($DATE_STR) | $TAG | $FINAL_TEXT" >> "$LOG_FILE"
-    else
-        echo "($DATE_STR) | [ERROR] | $ACTION: $FINAL_TEXT" >> "$LOG_FILE"
-    fi
+    echo "($DATE_STR) | $TAG | $FINAL_TEXT" >> "$LOG_FILE"
 fi
 
 rm "$TMP_OUT"
