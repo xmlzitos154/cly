@@ -99,7 +99,7 @@ for arg in "$@"; do
     fi
 done
 
-if [[ "$ACTION" =~ ^(install|remove)$ && ${#FINAL_ARGS[@]} -eq 0 ]]; then
+if [[ "$ACTION" =~ ^(install|remove|-i|-rm)$ && ${#FINAL_ARGS[@]} -eq 0 ]]; then
     echo -e "${RED}Erro: Informe ao menos um pacote.${NC}"
     exit 1
 fi
@@ -112,7 +112,7 @@ TMP_OUT=$(mktemp)
 if [[ "$ACTION" != "orphan" && "$ACTION" != "-o" ]]; then
     echo -e "${CYAN}-> Iniciando processo via AUR...${NC}\n"
     yay "$CMD" "${FINAL_ARGS[@]}" "${YAY_FLAGS[@]}" 2>&1 | tee "$TMP_OUT"
-    EXIT_CODE=$?
+    EXIT_CODE=${PIPESTATUS[0]}
 fi
 
 if [[ "$USE_FLATPAK" == "true" ]]; then
@@ -134,7 +134,11 @@ fi
 
 if [[ "$TAG" != "SKIP" ]]; then
     DATE_STR=$(date "+%H:%M - %d/%m/%Y")
-    if [[ "$CMD" == "-Syu" && $EXIT_CODE -eq 0 ]]; then
+
+    if [[ $EXIT_CODE -ne 0 ]]; then
+        TAG="[ ! ] Command dont work sucessfully"
+        PKGS_TO_LOG=$(IFS=','; echo "${FINAL_ARGS[*]}")
+    elif [[ "$ACTION" =~ ^(update|-u)$ ]]; then
         PKGS_TO_LOG=$(sed 's/\x1b\[[0-9;]*[mGJK]//g' "$TMP_OUT" | grep -E "upgraded|atualizado" | awk '{print $3}' | tr '\n' ',' | sed 's/,$//')
     elif [[ "$ACTION" =~ ^(orphan|-o)$ ]]; then
         PKGS_TO_LOG="ALL_ORPHANS"

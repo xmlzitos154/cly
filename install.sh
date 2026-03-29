@@ -13,12 +13,11 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SOURCE="$SCRIPT_DIR/main"
 
 if [[ -f "$SOURCE" ]]; then
-    # Pega a linha VER="x.x.x" do arquivo main e avalia apenas ela
     VER_LINE=$(grep -m 1 "^VER=" "$SOURCE")
     if [[ -n "$VER_LINE" ]]; then
         eval "$VER_LINE"
     else
-        VER="unk" # Caso não ache a variável
+        VER="unk"
     fi
 else
     echo -e "${R}Erro: Arquivo 'main' não encontrado.${NC}"
@@ -63,9 +62,17 @@ run_installer() {
     if [ -d "/usr/share/fish/vendor_completions.d" ]; then
         cat <<EOF > "/usr/share/fish/vendor_completions.d/jay.fish"
 complete -c jay -f
-complete -c jay -n "__fish_use_subcommand" -a "install remove refresh update search query cache slog clog help"
+complete -c jay -n "__fish_use_subcommand" -a "install remove refresh update search query cache slog clog orphan help"
+complete -c jay -s i -l install -d "Instalar pacotes"
+complete -c jay -s rm -l remove -d "Remover pacotes"
+complete -c jay -s u -l update -d "Atualizar sistema"
+complete -c jay -s s -l search -d "Pesquisar pacotes"
+complete -c jay -s f -l flatpak -d "Modo híbrido/duplo (AUR + Flatpak)"
+complete -c jay -s o -l orphan -d "Remover órfãos"
+complete -c jay -s sl -l slog -d "Ver histórico"
+complete -c jay -s cl -l clog -d "Limpar histórico"
 EOF
-        success "Fish completions"
+        success "Fish completions (orphan adicionado)"
     fi
 
     echo -e "\n${G}${B}Pronto!${NC} O jay foi atualizado."
