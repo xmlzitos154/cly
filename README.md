@@ -1,45 +1,71 @@
-# 🍦 JAY (Just Another Yogurt)
+# 🍦 JAY — Just Another Yogourt
+> **A lightweight, human-friendly wrapper for `yay` with Flatpak integration.**
 
-JAY is a lightweight Bash wrapper designed to simplify and automate AUR helper tasks. It provides a more human-readable syntax, while keeping a persistent log of your actions.
+[![Bash](https://img.shields.io/badge/Language-Bash-4EAA25?style=flat-square&logo=gnu-bash&logoColor=white)](https://www.gnu.org/software/bash/)
+[![Arch Linux](https://img.shields.io/badge/OS-Arch_Linux-1793D1?style=flat-square&logo=arch-linux&logoColor=white)](https://archlinux.org/)
 
-## 🚀 Features
-* **Intuitive Commands:** Forget cryptic flags like `-Syyu`. Use `update`, `refresh`, or `install`.
-* **Action Logging:** Every success or failure is logged in `~/.cache/jaylog.txt`.
-* **Interactive Installer:** Simple script to install or remove JAY from your system.
+JAY is a **powerful yet simple** wrapper designed to make AUR management intuitive. No more memorizing cryptic flags like `-Syyu` — just use plain English and let JAY handle the rest.
 
-## 🛠️ Dependencies
-Ensure you have the following installed:
-* `base-devel` & `git`
-* `yay`
+---
+
+## 🚀 Key Features
+
+* **✨ Human Syntax:** Use `install`, `update`, or `remove` instead of complex flags.
+* **📦 Hybrid Mode (`-f`):** Seamless fallback to **Flathub** if a package isn't found in the AUR.
+* **🛡️ Aggressive Mode (`-A`):** Purge packages along with all unneeded dependencies (`-Rsn`).
+* **📜 Auto-Logging:** Every action is recorded in `~/.cache/jaylog.txt` for easy tracking.
+* **🧹 Orphan Purge:** One-click removal of unused dependencies.
+
+---
+
+## 🛠️ Prerequisites
+
+Ensure you have the essentials installed before running JAY:
 
 ```bash
-sudo pacman -S --needed git base-devel
+sudo pacman -S --needed git base-devel yay
 
 📥 Installation
+
+Ready to simplify your Arch life? Just run these commands:
 Bash
 
-git clone https://github.com/xmlzitos154/jay-yay.git
+git clone [https://github.com/xmlzitos154/jay-yay.git](https://github.com/xmlzitos154/jay-yay.git)
 cd jay-yay
 chmod +x install.sh
 sudo ./install.sh
 
-📖 Usage
+📖 Usage Guide
 
-JAY follows a simple structure: jay [command] [package]
-Helper Flags
-
+The syntax is straightforward: jay [command] [options] [packages]
 Primary Commands
-Command	Alias for Description
-install	-S	    Installs a package
-remove	-Rsn	Removes package and dependencies
-update	-Syu	Updates the system
-refresh	-Syy	Forces refresh of databases
-refdate	-Syyu	Refresh + System update
-search	-Ss	    Search in repositories/AUR
-query	-Qs	    Search installed packages
-cache   -Scc    Clear all pacman and AUR cache
+Command	Alias	Description
+install	-i	Sync and install packages (AUR/Repo)
+remove	-rm	Remove packages from the system
+update	-u	Full system update (AUR + Flatpaks)
+search	-s	Search for packages in repositories
+query	-q	Search for locally installed packages
+refresh	-r	Force refresh package databases
+orphan	-o	Remove all orphaned dependencies
+cache	-c	Clear Pacman and AUR cache
+Power-User Options
+
+    -f, --flatpak: Enables hybrid search/update for Flatpaks.
+
+    -A: Aggressive Mode (use with remove). Equivalent to -Rsn.
+
+    --noconfirm: Skips AUR confirmation prompts for automation.
+
 Log Management
 
-    slog: Displays your JAY history.
+Keep track of your system changes:
 
-    clog: Clears the log file.
+    jay slog: Displays formatted command history.
+
+    jay clog: Clears the log file.
+
+📄 License
+
+Distributed under the MIT License. Created by xmlzitos154.
+
+Tip: If you like JAY, don't forget to leave a ⭐ to support the project!
