@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-VER="2.1 (Yogourt)"
+VER="2.2 (Yogourt)"
 
 REAL_HOME=$(getent passwd "$SUDO_USER" | cut -d: -f6)
 REAL_HOME=${REAL_HOME:-$HOME}
@@ -36,17 +36,23 @@ msg03() {
 }
 
 msg04() {
-    echo -e "${RED}$ERROR Módulo base não encontrado${NC}\n -> saindo com status 1"
+    echo -e "${RED}$ERROR Módulo $MISSING_MODULE não encontrado${NC}\n -> saindo com status 1"
     exit 1
 }
 
 [[ -f "$LOG_FILE" ]] || touch "$LOG_FILE"
 
 if [[ ! -f "$MODULES_DIR/base" ]]; then
+    MISSING_MODULE="base"
+    msg04
+fi
+if [[ ! -f "$MODULES_DIR/log" ]]; then
+    MISSING_MODULE="log"
     msg04
 fi
 
 source "$MODULES_DIR/base"
+source "$MODULES_DIR/log"
 
 [[ -f "$MODULES_DIR/cache" ]] && source "$MODULES_DIR/cache" || MOD_1="0"
 [[ -f "$MODULES_DIR/search" ]] && source "$MODULES_DIR/search" || MOD_2="0"
@@ -67,6 +73,7 @@ help_message() {
     msg03
     echo -e "Uso: jay [comando] [opções] [pacotes]"
     echo -e "Uso: jay [ -i | -rm | -s | -u ] [ -f | --flatpak ] [ --noconfirm ]"
+    echo -e "Uso: jay [ -q | query ] [ --list-aur ]"
     echo -e "Options: \n"
     echo -e "-h,  --help         Mostra essa mensagem"
     echo -e "-i,  install        Sincronizar pacotes"
@@ -76,11 +83,12 @@ help_message() {
         echo -e "-s,  search         Pesquisa pacotes no AUR"
         echo -e "-q,  query          Pesquisa pacotes locais"
     fi
-    if [[ "$MOD_3" != "0" ]]; then
-        echo -e "-o,  orphan         Remove dependências inúteis"
-    fi
     if [[ "$MOD_1" != "0" ]]; then
+        echo -e "-o,  orphan         Remove dependências inúteis"
         echo -e "-c,  cache          Limpa todo o cache do pacman"
+    fi
+    if [[ "$MOD_3" != "0" ]]; then
+        echo -e "-m, mirrors         Procura repositorios velozes"
     fi
     exit 0
 }
@@ -88,15 +96,6 @@ help_message() {
 usage() {
     echo -e "${RED} $ERROR Uso: jay <comando> <pacotes>${NC}"
     exit 1
-}
-
-tester() {
-    step "Testando rede..."
-    if ping 8.8.8.8 -c 1 &>/dev/null; then
-        success "Conexão ativa. Continuando..."
-    else
-        error "Internet desconectada. Saindo com status 1"
-    fi
 }
 
 [[ -z "$1" ]] && usage
@@ -116,6 +115,8 @@ case "$1" in
     remove|-rm) rmv ;;
     refresh|-r) rfs ;;
     update|-u) upd ;;
+    slog|-sl) show_logs ;;
+    clog|-cl) clear_logs ;;
     search|-s)
         if [[ "$MOD_2" == "0" ]]; then
             echo "$WARNING Não foi possivel carregar o módulo search."
@@ -140,22 +141,20 @@ case "$1" in
             clr_cache
         fi
     ;;
-    slog|-sl)
-        [[ ! -s "$LOG_FILE" ]] && echo "Log vazio." && exit 0
-        column -t -s '|' "$LOG_FILE"
-        exit 0
-    ;;
-    clog|-cl)
-        > "$LOG_FILE"
-        success "Logs limpos."
-        exit 0
-    ;;
     orphan|-o)
         if [[ "$MOD_3" = "0" ]]; then
             echo "$WARNING Não foi possivel carregar o módulo extra."
             exit 1
         else
             remove_orphans
+        fi
+    ;;
+    -m|mirrors)
+        if [[ "$MOD_3" = "0" ]]; then
+            echo "$WARNING Não foi possivel carregar o módulo extra."
+            exit 1
+        else
+            refresh_mirrors
         fi
     ;;
     -v|--version) msg03; exit 0 ;;
@@ -173,6 +172,9 @@ FINAL_ARGS=()
 YAY_FLAGS=()
 
 for arg in "$@"; do
+    if [[ "$arg" == "--aur-only" ]] && [[ "$ACTION" =~ ^(query|-q)$ ]]; then
+        [[ "$MOD_3" != "0" ]] && list_aur || echo "Modulo 'extra' necessario para --aur-only"
+    fi
     if [[ "$arg" == "-f" || "$arg" == "--flatpak" ]]; then
         USE_FLATPAK=true
         elif [[ "$arg" == "-A" ]]; then
