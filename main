@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-VER="1.4.6"
+VER="1.4.7"
 LOG_FILE="$HOME/.cache/jaylog.txt"
 [[ -f "$LOG_FILE" ]] || touch "$LOG_FILE"
 
@@ -125,13 +125,20 @@ YAY_FLAGS=()
 for arg in "$@"; do
     if [[ "$arg" == "-f" || "$arg" == "--flatpak" ]]; then
         USE_FLATPAK=true
-    elif [[ "$arg" == "-A" ]]; then
+        elif [[ "$arg" == "-A" ]]; then
         if [[ "$ACTION" =~ ^(remove|-rm)$ ]]; then
             AGRESSIVE_MODE=true
             CMD="-Rsn"
             TAG="[REMOVED-AGRESSIVE]"
         fi
-    elif [[ "$arg" == -* ]]; then
+        elif [[ "$arg" == "--kill-dblck" ]]; then
+        if [[ -f /var/lib/pacman/db.lck ]]; then
+            step "Removendo trava do banco de dados..."
+            sudo rm /var/lib/pacman/db.lck && success "Trava removida."
+        else
+            echo "$WARNING Nenhuma trava de banco de dados encontrada."
+        fi
+        elif [[ "$arg" == -* ]]; then
         YAY_FLAGS+=("$arg")
     else
         FINAL_ARGS+=("$arg")
@@ -158,10 +165,10 @@ if [[ "$USE_FLATPAK" == "true" ]]; then
     if [[ "$ACTION" =~ ^(update|-u)$ ]]; then
         step "Atualizando Flatpaks..."
         command -v flatpak &>/dev/null && flatpak update $FLAT_FLAGS
-    elif [[ "$ACTION" =~ ^(search|-s)$ ]]; then
+        elif [[ "$ACTION" =~ ^(search|-s)$ ]]; then
         step "Buscando no Flatpak..."
         command -v flatpak &>/dev/null && flatpak search "${FINAL_ARGS[@]}"
-    elif [[ $EXIT_CODE -ne 0 ]] || grep -qiE "Nenhum pacote AUR localizado|não há nada a ser feito|target not found" "$TMP_OUT"; then
+        elif [[ $EXIT_CODE -ne 0 ]] || grep -qiE "Nenhum pacote AUR localizado|não há nada a ser feito|target not found" "$TMP_OUT"; then
         echo -e "\n${YELLOW} $ALERT AUR não encontrou nada. Pulando para Flatpak...${NC}\n"
         if command -v flatpak &>/dev/null; then
             flatpak $FLAT_CMD $FLAT_FLAGS "${FINAL_ARGS[@]}"
@@ -175,7 +182,7 @@ if [[ "$TAG" != "SKIP" ]]; then
     if [[ $EXIT_CODE -ne 0 ]]; then
         TAG="[!] Command failed"
         PKGS_TO_LOG="$RAW_CMD"
-    elif [[ "$ACTION" =~ ^(update|-u)$ ]]; then
+        elif [[ "$ACTION" =~ ^(update|-u)$ ]]; then
         PKGS_TO_LOG=$(sed 's/\x1b\[[0-9;]*[mGJK]//g' "$TMP_OUT" | grep -E "upgraded|atualizado" | awk '{print $3}' | tr '\n' ',' | sed 's/,$//')
     else
         PKGS_TO_LOG=$(IFS=','; echo "${FINAL_ARGS[*]}")
