@@ -1,5 +1,14 @@
 #!/usr/bin/env bash
 
+tester() {
+    step "Testando rede..."
+    if ping 8.8.8.8 -c 1 &>/dev/null; then
+        success "Conexão ativa. Continuando..."
+    else
+        error "Internet desconectada. Saindo com status 1"
+    fi
+}
+
 ins() {
     tester
     CMD="-S"
