@@ -1,0 +1,12 @@
+#!/usr/bin/env basgh
+
+searcher() {
+    tester
+    CMD="-Ss"
+    TAG="[SEARCHED]"
+    FLAT_CMD="search"
+}
+query() {
+    CMD="-Qs"
+    TAG="[LOCAL_QUERY]"
+}

@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+clr_cache() {
+    CMD="-Sc"
+    TAG="[CACHE CLEAN]"
+}

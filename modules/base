@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+ins() {
+    tester
+    CMD="-S"
+    TAG="[INSTALLED]"
+    FLAT_CMD="install flathub"
+}
+rmv() {
+    CMD="-R"
+    TAG="[REMOVED]"
+    FLAT_CMD="uninstall"
+}
+upd() {
+    tester
+    CMD="-Syu"
+    TAG="[UPDATED]"
+    FLAT_CMD="update"
+}
+rfs() {
+    tester
+    CMD="-Syy"
+    TAG="[REFRESHED]"
+}
