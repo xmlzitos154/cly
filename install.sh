@@ -128,7 +128,7 @@ debug() {
             success "Todos os módulos foram pro espaço."
         ;;
         "35ab")
-            echo -e "\nQual módulo? (cache | search | extra | base)"
+            echo -e "\nQual módulo? (cache | search | extra | base | log)"
             read -p " >> " MOD_NAME
             TARGET_SRC="$SCRIPT_DIR/modules/$MOD_NAME"
             
@@ -186,7 +186,7 @@ while true; do
         1) new_installer ;;
         2) run_remove ;;
         3) echo -e "${C}Até logo!${NC}"; exit 0 ;;
-        "ACTIVATE_DEBUG_PROTOCOL") debug ;;
+        "DEBUG_MODE") debug ;;
         *) echo -e "${R}Opção inválida.${NC}"; sleep 0.5 ;;
     esac
 done

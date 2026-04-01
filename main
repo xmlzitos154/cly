@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-VER="2.2 (Yogourt)"
+VER="2.5 (Yogourt)"
 
 REAL_HOME=$(getent passwd "$SUDO_USER" | cut -d: -f6)
 REAL_HOME=${REAL_HOME:-$HOME}
@@ -21,42 +21,37 @@ OK="[✓]"
 WARNING="[*]"
 CONTINUE="[>>]"
 
-msg01() {
+err01() {
     echo -e -n "${CYAN} $ERROR ${NC}" && echo "argumento invalido '$VAR'" | tr -d "-"
     exit 1
 }
 
-msg02() {
+err02() {
     echo -e -n "${CYAN} $ERROR ${NC}" && echo "argumento invalido '-'"
     exit 1
 }
 
-msg03() {
+err03() {
     echo -e "\n ${CYAN}-> JAY (Just Another Yogourt) - Version $VER ${NC}\n"
 }
 
-msg04() {
-    echo -e "${RED}$ERROR Módulo $MISSING_MODULE não encontrado${NC}\n -> saindo com status 1"
+err04() {
+    echo -e "${RED}$ERROR Módulo crítico '$MISSING_MODULE' não encontrado${NC}\n -> saindo com status 1"
     exit 1
 }
 
+
 [[ -f "$LOG_FILE" ]] || touch "$LOG_FILE"
 
-if [[ ! -f "$MODULES_DIR/base" ]]; then
-    MISSING_MODULE="base"
-    msg04
-fi
-if [[ ! -f "$MODULES_DIR/log" ]]; then
-    MISSING_MODULE="log"
-    msg04
-fi
+[[ ! -f "$MODULES_DIR/base" ]] && MISSING_MODULE="base" && err04
+[[ ! -f "$MODULES_DIR/log" ]] && MISSING_MODULE="log" && err04
 
 source "$MODULES_DIR/base"
 source "$MODULES_DIR/log"
 
-[[ -f "$MODULES_DIR/cache" ]] && source "$MODULES_DIR/cache" || MOD_1="0"
-[[ -f "$MODULES_DIR/search" ]] && source "$MODULES_DIR/search" || MOD_2="0"
-[[ -f "$MODULES_DIR/extra" ]] && source "$MODULES_DIR/extra" || MOD_3="0"
+[[ -f "$MODULES_DIR/cache" ]] && source "$MODULES_DIR/cache" || MOD_1="false"
+[[ -f "$MODULES_DIR/search" ]] && source "$MODULES_DIR/search" || MOD_2="false"
+[[ -f "$MODULES_DIR/extra" ]] && source "$MODULES_DIR/extra" || MOD_3="false"
 
 step() { echo -e "${CYAN} $CONTINUE ${NC}${1}"; }
 success() { echo -e "${GREEN} $OK ${NC}${1}"; }
@@ -70,7 +65,7 @@ logger() {
 }
 
 help_message() {
-    msg03
+    err03
     echo -e "Uso: jay [comando] [opções] [pacotes]"
     echo -e "Uso: jay [ -i | -rm | -s | -u ] [ -f | --flatpak ] [ --noconfirm ]"
     echo -e "Uso: jay [ -q | query ] [ --list-aur ]"
@@ -79,16 +74,17 @@ help_message() {
     echo -e "-i,  install        Sincronizar pacotes"
     echo -e "-rm, remove         Remover pacotes (Use '-A' para modo Agressivo)"
     echo -e "-u,  update         Atualizar o sistema"
-    if [[ "$MOD_2" != "0" ]]; then
+    if [[ "$MOD_2" != "false" ]]; then
         echo -e "-s,  search         Pesquisa pacotes no AUR"
         echo -e "-q,  query          Pesquisa pacotes locais"
     fi
-    if [[ "$MOD_1" != "0" ]]; then
+    if [[ "$MOD_1" != "false" ]]; then
         echo -e "-o,  orphan         Remove dependências inúteis"
         echo -e "-c,  cache          Limpa todo o cache do pacman"
     fi
-    if [[ "$MOD_3" != "0" ]]; then
+    if [[ "$MOD_3" != "false" ]]; then
         echo -e "-m, mirrors         Procura repositorios velozes"
+        echo -e "-M, modules         Mostra os modulos disponiveis"
     fi
     exit 0
 }
@@ -119,22 +115,22 @@ for arg in "$@"; do
                 exit 1
             fi
         fi
-    elif [[ "$arg" == "-f" || "$arg" == "--flatpak" ]]; then
+        elif [[ "$arg" == "-f" || "$arg" == "--flatpak" ]]; then
         USE_FLATPAK=true
-    elif [[ "$arg" == "-A" ]]; then
+        elif [[ "$arg" == "-A" ]]; then
         if [[ "$ACTION" =~ ^(remove|-rm)$ ]]; then
             AGRESSIVE_MODE=true
             CMD="-Rsn"
             TAG="[REMOVED-AGRESSIVE]"
         fi
-    elif [[ "$arg" == "--kill-dblck" ]]; then
+        elif [[ "$arg" == "--kill-dblck" ]]; then
         if [[ -f /var/lib/pacman/db.lck ]]; then
             step "Removendo trava do banco de dados..."
             sudo rm /var/lib/pacman/db.lck && success "Trava removida."
         else
             echo "$WARNING Nenhuma trava de banco de dados encontrada."
         fi
-    elif [[ "$arg" == -* ]]; then
+        elif [[ "$arg" == -* ]]; then
         YAY_FLAGS+=("$arg")
     else
         FINAL_ARGS+=("$arg")
@@ -142,33 +138,34 @@ for arg in "$@"; do
 done
 
 case "$ACTION" in
-    "-") msg02 ;;
+    "-") err02 ;;
     install|-i|-S) ins ;;
     remove|-rm) rmv ;;
     refresh|-r) rfs ;;
     update|-u) upd ;;
     slog|-sl) show_logs ;;
     clog|-cl) clear_logs ;;
+    modules|-M) query_modules ;; 
     search|-s)
-        [[ "$MOD_2" == "0" ]] && { echo "$WARNING Módulo search não carregado."; exit 1; } || searcher
+        [[ "$MOD_2" == "false" ]] && { echo "$WARNING Módulo search não carregado."; exit 1; } || searcher
     ;;
     query|-q)
-        [[ "$MOD_2" == "0" ]] && { echo "$WARNING Módulo search não carregado."; exit 1; } || query
+        [[ "$MOD_2" == "false" ]] && { echo "$WARNING Módulo search não carregado."; exit 1; } || query
     ;;
     cache|-c)
-        [[ "$MOD_1" == "0" ]] && { echo "$WARNING Módulo cache não carregado."; exit 1; } || clr_cache
+        [[ "$MOD_1" == "false" ]] && { echo "$WARNING Módulo cache não carregado."; exit 1; } || clr_cache
     ;;
     orphan|-o)
-        [[ "$MOD_3" == "0" ]] && { echo "$WARNING Módulo extra não carregado."; exit 1; } || remove_orphans
+        [[ "$MOD_3" == "false" ]] && { echo "$WARNING Módulo extra não carregado."; exit 1; } || remove_orphans
     ;;
-    -m|mirrors)
-        [[ "$MOD_3" == "0" ]] && { echo "$WARNING Módulo extra não carregado."; exit 1; } || refresh_mirrors
+    mirrors|-M)
+        [[ "$MOD_3" == "false" ]] && { echo "$WARNING Módulo extra não carregado."; exit 1; } || refresh_mirrors
     ;;
-    -v|--version) msg03; exit 0 ;;
+    -v|--version) err03; exit 0 ;;
     -h|--help) help_message ;;
     *)
         VAR="$ACTION"
-        msg01
+        err01
     ;;
 esac
 

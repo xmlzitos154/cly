@@ -31,3 +31,8 @@ rfs() {
     CMD="-Syy"
     TAG="[REFRESHED]"
 }
+query_modules() {
+    step "Módulos instalados:"
+    ls -1 "$MODULES_DIR"
+    exit 0
+}
