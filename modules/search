@@ -11,3 +11,14 @@ query() {
     TAG="[LOCAL_QUERY]"
     local count=$(yay -Qs | wc -l)
 }
+check_updates() {
+    step "Procurando pacotes desatualizados..."
+    UPDS="$(checkupdates 2>/dev/null | wc -l)"
+    if [[ "$UPDS" == "0" ]]; then
+        success "Nenhuma atualização encontrada."
+        exit 0
+    fi
+    echo -e "${YELLOW} $WARNING $UPDS Atualizações encontradas: ${NC}"
+    checkupdates
+    TAG="[CHECK-UPDATES]"
+}

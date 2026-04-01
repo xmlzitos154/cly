@@ -22,12 +22,12 @@ WARNING="[*]"
 CONTINUE="[>>]"
 
 err01() {
-    echo -e -n "${CYAN} $ERROR ${NC}" && echo "argumento invalido '$VAR'" | tr -d "-"
+    echo -e -n "${CYAN} $ALERT ${NC}" && echo "argumento invalido '$VAR'" | tr -d "-"
     exit 1
 }
 
 err02() {
-    echo -e -n "${CYAN} $ERROR ${NC}" && echo "argumento invalido '-'"
+    echo -e -n "${CYAN} $ALERT ${NC}" && echo "argumento invalido '-'"
     exit 1
 }
 
@@ -85,6 +85,7 @@ help_message() {
     if [[ "$MOD_3" != "false" ]]; then
         echo -e "-m, mirrors         Procura repositorios velozes"
         echo -e "-M, modules         Mostra os modulos disponiveis"
+        echo -e "--check-updates     Procura Atualizações Disponiveis"
     fi
     exit 0
 }
@@ -161,6 +162,7 @@ case "$ACTION" in
     mirrors|-M)
         [[ "$MOD_3" == "false" ]] && { echo "$WARNING Módulo extra não carregado."; exit 1; } || refresh_mirrors
     ;;
+    --check-updates) check_updates ;;
     -v|--version) err03; exit 0 ;;
     -h|--help) help_message ;;
     *)
