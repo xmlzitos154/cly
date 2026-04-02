@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-VER="2.8 (Yogourt)"
+VER="2.8.8 (Yogourt)"
 
 REAL_HOME=$(getent passwd "$SUDO_USER" | cut -d: -f6)
 REAL_HOME=${REAL_HOME:-$HOME}
@@ -19,7 +19,11 @@ ALERT="[!]"
 ERROR="[x]"
 OK="[✓]"
 WARNING="[*]"
-CONTINUE=" :: "
+CONTINUE=":: "
+
+step() { echo -e "${CYAN} $CONTINUE ${NC}${1}"; }
+success() { echo -e "${GREEN} $OK ${NC}${1}"; }
+error() { echo -e "${RED} $ERROR ${NC}${1}"; exit 1; }
 
 err01() {
     echo -e -n "${CYAN} $ALERT ${NC}" && echo "argumento invalido '$VAR'" | tr -d "-"
@@ -31,7 +35,7 @@ err02() {
     exit 1
 }
 
-err03() {
+ver_msg() {
     echo -e "\n ${CYAN}-> JAY (Just Another Yogourt) - Version $VER ${NC}\n"
 }
 
@@ -52,10 +56,6 @@ source "$MODULES_DIR/log"
 [[ -f "$MODULES_DIR/search" ]] && source "$MODULES_DIR/search" || MOD_2="false"
 [[ -f "$MODULES_DIR/extra" ]] && source "$MODULES_DIR/extra" || MOD_3="false"
 
-step() { echo -e "${CYAN} $CONTINUE ${NC}${1}"; }
-success() { echo -e "${GREEN} $OK ${NC}${1}"; }
-error() { echo -e "${RED} $ERROR ${NC}${1}"; exit 1; }
-
 logger() {
     local tag="$1"
     local info="$2"
@@ -68,7 +68,7 @@ help_message() {
     echo -e "Uso: jay [comando] [opções] [pacotes]"
     echo -e "Uso: jay [ -i | -rm | -s | -u ] [ -f | --flatpak ] [ --noconfirm ]"
     echo -e "Uso: jay [ -q | query ] [ --list-aur ]"
-    echo -e "Options: \n"\
+    echo -e "Options:\n"
     echo -e "-h,  --help         Mostra essa mensagem"
     echo -e "-i,  install        Sincronizar pacotes"
     echo -e "-rm, remove         Remover pacotes (Use '-A' para modo Agressivo)"
@@ -129,17 +129,17 @@ case "$ACTION" in
     remove|-rm) rmv ;;
     refresh|-r) rfs ;;
     update|-u) upd ;;
-    slog|-sl) show_logs ; exit 0 ;;
-    clog|-cl) clear_logs ; exit 0 ;;
+    slog|-sl) show_logs ;;
+    clog|-cl) clear_logs ;;
     modules|-M) query_modules ;;
-    --diff|-d) [[ "$MOD_1" == "false" ]] && error "Módulo cache necessário." || { check_conf ; exit 0; } ;;
+    --diff|-d) [[ "$MOD_1" == "false" ]] && error "Módulo cache necessário." || check_conf ;;
     search|-s) [[ "$MOD_2" == "false" ]] && error "Módulo search necessário." || searcher ;;
-    query|-q) [[ "$MOD_2" == "false" ]] && error "Módulo search necessário." || query && exit 0 ;;
-    cache|-c) [[ "$MOD_1" == "false" ]] && error "Módulo cache necessário." || { clr_cache ; exit 0; } ;;
-    orphan|-o) [[ "$MOD_1" == "false" ]] && error "Módulo cache necessário." || { remove_orphans ; exit 0; } ;;
-    mirrors|-m) [[ "$MOD_3" == "false" ]] && error "Módulo extra necessário." || { refresh_mirrors ; exit 0; } ;;
-    --check-updates) [[ "$MOD_3" == "false" ]] && error "Módulo extra necessário." || { check_updates ; exit 0; } ;;
-    -v|--version) err03; exit 0 ;;
+    query|-q) [[ "$MOD_2" == "false" ]] && error "Módulo search necessário." || query ;;
+    cache|-c) [[ "$MOD_1" == "false" ]] && error "Módulo cache necessário." || clr_cache ;;
+    orphan|-o) [[ "$MOD_1" == "false" ]] && error "Módulo cache necessário." || remove_orphans ;;
+    mirrors|-m) [[ "$MOD_3" == "false" ]] && error "Módulo extra necessário." || refresh_mirrors ;;
+    --check-updates) [[ "$MOD_3" == "false" ]] && error "Módulo extra necessário." || check_updates ;;
+    -v|--version) ver_msg ;;
     -h|--help) help_message ;;
     *) VAR="$ACTION" ; err01 ;;
 esac
@@ -156,29 +156,42 @@ if [[ -n "$CMD" ]]; then
 fi
 
 if [[ "$USE_FLATPAK" == "true" ]]; then
+    case "$ACTION" in
+        install|-i|-S) FLAT_CMD="install" ;;
+        remove|-rm)    FLAT_CMD="uninstall" ;;
+        search|-s)     FLAT_CMD="search" ;;
+        update|-u)     FLAT_CMD="update" ;;
+        *)             FLAT_CMD="" ;;
+    esac
+
     if [[ "$ACTION" =~ ^(update|-u)$ ]]; then
         step "Atualizando Flatpaks..."
         flatpak update -y
+    elif [[ -n "$FLAT_CMD" ]]; then
+        if [[ "$ACTION" =~ ^(search|-s)$ ]]; then
+            step "Procurando pacotes no Flatpak..."
+            flatpak $FLAT_CMD "${FINAL_ARGS[@]}"
         elif [[ $EXIT_CODE -ne 0 ]] || grep -qiE "Nenhum pacote|não há nada|target not found" "$TMP_OUT"; then
-        echo -e "\n${YELLOW} $WARNING AUR não resolveu. Tentando Flatpak...${NC}\n"
-        if command -v flatpak &>/dev/null; then
-            flatpak $FLAT_CMD -y "${FINAL_ARGS[@]}"
-            EXIT_CODE=$?
-            [[ $EXIT_CODE -eq 0 ]] && TAG=$([[ "$FLAT_CMD" == "uninstall" ]] && echo "[RM FLATPAK]" || echo "[FLATPAK]")
+            if command -v flatpak &>/dev/null; then
+                echo -e "\n${YELLOW} $WARNING AUR não resolveu. Tentando Flatpak...${NC}\n"
+                flatpak $FLAT_CMD -y "${FINAL_ARGS[@]}"
+                EXIT_CODE=$?
+                [[ $EXIT_CODE -eq 0 ]] && TAG=$([[ "$FLAT_CMD" == "uninstall" ]] && echo "[RM FLATPAK]" || echo "[FLATPAK]")
+            fi
         fi
     fi
 fi
 
 if [[ "$TAG" != "SKIP" ]]; then
-    if [[ $EXIT_CODE -ne 0 ]]; then
+    if [[ $EXIT_CODE -ne 0 && -n "$ACTION" ]]; then
         TAG="$ALERT Erro"
         PKGS_TO_LOG="$RAW_CMD"
-        elif [[ "$ACTION" =~ ^(update|-u)$ ]]; then
+    elif [[ "$ACTION" =~ ^(update|-u)$ ]]; then
         PKGS_TO_LOG=$(sed 's/\x1b\[[0-9;]*[mGJK]//g' "$TMP_OUT" | grep -E "upgraded|atualizado" | awk '{print $3}' | tr '\n' ',' | sed 's/,$//')
     else
         PKGS_TO_LOG=$(IFS=','; echo "${FINAL_ARGS[*]}")
     fi
-    logger "$TAG" "${PKGS_TO_LOG:-SYSTEM}"
+    logger "${TAG:-SYSTEM}" "${PKGS_TO_LOG:-$ACTION}"
 fi
 
 rm -f "$TMP_OUT"

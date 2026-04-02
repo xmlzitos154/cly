@@ -6,6 +6,7 @@ searcher() {
     TAG="[SEARCHED]"
     FLAT_CMD="search"
 }
+
 query() {
     CMD="-Qs"
     TAG="[LOCAL QUERY]"

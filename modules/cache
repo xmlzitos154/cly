@@ -18,22 +18,15 @@ clr_cache() {
 }
 
 remove_orphans() {
-    step "Buscando pacotes órfãos..."
-    ORPHANS=$(yay -Qdtq)
-    if [[ -n "$ORPHANS" ]]; then
-        step "Removendo: $ORPHANS"
-        yay -Rsn $ORPHANS
-        EXIT_CODE=$?
-        if [[ $EXIT_CODE -eq 0 ]]; then
-            success "Órfãos removidos com sucesso."
-            logger "[ORPHAN REMOVED]" "ALL_ORPHANS"
-        else
-            error "Falha ao remover órfãos"
-        fi
-    else
-        success "Nenhum pacote órfão encontrado"
-    fi
-    exit 0
+    step "Buscando pacotes orfãos..."
+    ORPHANS="$(yay -Qtqd)"
+    ORPHANS_N="$(yay -Qtqd | wc -l)"
+    [[ "$ORPHANS_N" == "0" ]] && success "Nenhum pacote orfão encontrado" && logger "[SEARCHED ORPHANS]" "clean" && return 0
+    echo "$WARNING $ORPHANS_N Orfãos encontrados"
+    echo "$ORPHANS"
+    step "Removendo Orfãos..."
+    CMD="-Rsn $ORPHANS"
+    TAG="[REMOVED ORPHANS]"
 }
 
 check_conf() {
