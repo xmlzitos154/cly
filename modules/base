@@ -1,5 +1,38 @@
 #!/usr/bin/env bash
 
+err01() { echo -e "$ALERT opção invalida '$ACTION'" && exit 1; }
+err02() { echo -e -n "${CYAN} $ALERT ${NC}" && echo "argumento invalido '-'" && exit 1; }
+err03() { echo -e "${RED}$ERROR Módulo crítico '$MISSING_MODULE' não encontrado${NC}\n -> saindo com status 1" && exit 1; }
+err04() { error "Falha ao criar arquivo temporário"; }
+usage() { echo -e "Uso: jay [comando] [opções] [pacotes]" && exit 1; }
+ver_msg() { echo -e "\n ${CYAN}-> JAY (Just Another Yogourt) - Version $VER ${NC}\n"; }
+
+help_message() {
+    ver_msg
+    echo -e "Uso: jay [comando] [opções] [pacotes]"
+    echo -e "Uso: jay [ -i | -rm | -s | -u ] [ -f | --flatpak ] [ --noconfirm ]"
+    echo -e "Uso: jay [ -q | query ] [ --list-aur ]"
+    echo -e "Options:\n"
+    echo -e "-h,  --help         Mostra essa mensagem"
+    echo -e "-i,  install        Sincronizar pacotes"
+    echo -e "-rm, remove         Remover pacotes (Use '-A' para modo Agressivo)"
+    echo -e "-u,  update         Atualizar o sistema"
+    if [[ "$MOD_2" != "false" ]]; then
+        echo -e "-s,  search         Pesquisa pacotes no AUR"
+        echo -e "-q,  query          Pesquisa pacotes locais"
+    fi
+    if [[ "$MOD_1" != "false" ]]; then
+        echo -e "-o,  orphan         Remove dependências inúteis"
+        echo -e "-c,  cache          Limpa todo o cache do pacman"
+    fi
+    if [[ "$MOD_3" != "false" ]]; then
+        echo -e "-m, mirrors         Procura repositorios velozes"
+        echo -e "--check-updates     Procura Atualizações Disponiveis"
+        echo -e "--fix-keys          Restaura chaves GPG invalidas ou não importadas"
+    fi
+    exit 0
+}
+
 tester() {
     step "Testando rede..."
     ping -c 1 8.8.8.8 &>/dev/null || error "Internet desconectada. Verifique seu Wi-Fi/Cabo."
@@ -32,3 +65,4 @@ rfs() {
     TAG="REFRESHED MIRRORS"
     FLAT_CMD="SKIP"
 }
+

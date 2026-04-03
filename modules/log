@@ -1,5 +1,13 @@
 #!/usr/bin/env bash
 
+logger() {
+    local status="${EXIT_CODE:-0}"
+    local tag="$1"
+    local info="$2"
+    printf -v date_str '%(%Y-%m-%d - %H:%M:%S)T' -1
+    echo "[$date_str] [EXIT STATUS $status] [$tag] -> $info" >> "$LOG_FILE"
+}
+
 show_logs() {
     [[ ! -s "$LOG_FILE" ]] && echo "$NOTE O Arquivo de log está vazio" && exit 0
     column -t -s '|' "$LOG_FILE"
