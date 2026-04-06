@@ -10,18 +10,19 @@ searcher() {
 query() {
     CMD="-Qs"
     TAG="LOCAL QUERY"
+    [[ "$LIST_AUR" == true ]] && list_aur && TAG="SKIP" && return
 }
 
 check_updates() {
     tester
     step "Procurando pacotes desatualizados..."
-    UPDS="$(checkupdates)"
-    UPDS_N="$(checkupdates 2>/dev/null | wc -l)"
+    UPDS="$(checkupdates 2>/dev/null)"
+    UPDS_N=$(echo "$UPDS" | wc -l)
     if [[ "$UPDS_N" == "0" ]]; then
         success "Nenhuma atualização encontrada."
         exit 0
     fi
-    echo -e "${YELLOW} $NOTE $UPDS Atualizações encontradas: ${NC}"
+    echo -e "${YELLOW} $NOTE $UPDS_N Atualizações encontradas:${NC}"
     echo "$UPDS"
     logger "FOUND UPDATES" "$UPDS"
 }

@@ -1,7 +1,12 @@
 #!/usr/bin/env bash
 G='\e[32m'; C='\e[36m'; Y='\e[33m'; R='\e[31m'; B='\e[1m'; NC='\e[0m'
 
-REAL_USER="${SUDO_USER:-$USER}"; CONFIG_DIRECTORY="/home/$REAL_USER/.config/jay"; SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; SOURCE="$SCRIPT_DIR/main"
+REAL_USER="${SUDO_USER:-$USER}"
+REAL_HOME=$(getent passwd "$REAL_USER" 2>/dev/null | cut -d: -f6)
+REAL_HOME=${REAL_HOME:-/home/$REAL_USER}
+CONFIG_DIRECTORY="$REAL_HOME/.config/jay"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SOURCE="$SCRIPT_DIR/main"
 
 if [[ -f "$SOURCE" ]]; then
     VER=$(sed -n 's/^VER="\(.*\)"/\1/p' "$SOURCE" | head -1)
@@ -44,18 +49,21 @@ new_installer() {
     echo "4. todos"
     echo "5. nenhum"
     echo ""
-    read -p " > " MODS
+    echo -n " > "
+    read -r MODS
     case "$MODS" in
         "1") cp -r "$SCRIPT_DIR/modules/cache" "$CONFIG_DIRECTORY/modules" ;;
         "2") cp -r "$SCRIPT_DIR/modules/search" "$CONFIG_DIRECTORY/modules" ;;
         "3") cp -r "$SCRIPT_DIR/modules/extra" "$CONFIG_DIRECTORY/modules" ;;
-        "4") cp -r "$SCRIPT_DIR/modules/." "$CONFIG_DIRECTORY/modules" ;;
+        "4") for mod in cache search extra; do
+                cp -r "$SCRIPT_DIR/modules/$mod" "$CONFIG_DIRECTORY/modules/" 2>/dev/null
+        done ;;
         "5") echo "  [>>]" ;;
-        *) echo "modulo não existe." && exit 1 ;;
+        *) echo "modulo não existe."; exit 1 ;;
     esac
     step "Configurando completions"
     if [ -d "/usr/share/fish/vendor_completions.d" ]; then
-        cat <<EOF > "/usr/share/fish/vendor_completions.d/jay.fish"
+		cat <<EOF > "/usr/share/fish/vendor_completions.d/jay.fish"
 complete -c jay -f
 complete -c jay -n "__fish_use_subcommand" -a "install remove refresh update search query cache slog clog orphan help"
 complete -c jay -s i -l install -d "Instalar pacotes"
@@ -67,7 +75,7 @@ complete -c jay -s o -l orphan -d "Remover órfãos"
 complete -c jay -s sl -l slog -d "Ver histórico"
 complete -c jay -s cl -l clog -d "Limpar histórico"
 EOF
-        success "Fish completions (orphan adicionado)"
+        success "Fish completions configuradas."
     fi
     chown -R "$REAL_USER:$REAL_USER" "$CONFIG_DIRECTORY"
     success "Permissões ajustadas."
@@ -75,13 +83,26 @@ EOF
     read -n1 -s -p "Pressione qualquer tecla para voltar..."
 }
 
-debug() { 
-    -title; echo -e "${Y}${B}[ DEBUG MODE ]${NC}"; echo "Ações disponíveis:"; echo "  35ab - Instalar UM módulo específico"; echo "  44aa - Reinstalar TODOS os módulos"; echo "  35a6 - Remover UM módulo específico"; echo "  s4a7 - Limpar pasta de módulos"; echo ""; read -p " >> " DBG
+debug() {
+    title
+    echo -e "${Y}${B}[ DEBUG MODE ]${NC}"
+    echo "Ações disponíveis:"
+    echo "  35ab - Instalar UM módulo específico"
+    echo "  44aa - Reinstalar TODOS os módulos"
+    echo "  35a6 - Remover UM módulo específico"
+    echo "  s4a7 - Limpar pasta de módulos"
+    echo ""
+    echo -n " >> "
+    read -r DBG
     case "$DBG" in
-        "s4a7") rm -rf "$CONFIG_DIRECTORY/modules/"*; success "Todos os módulos foram pro espaço." ;;
+        "s4a7")
+            rm -rf "$CONFIG_DIRECTORY/modules/"*
+            success "Todos os módulos foram pro espaço."
+        ;;
         "35ab")
             echo -e "\nQual módulo? (cache | search | extra | base | log)"
-            read -p " >> " MOD_NAME
+            echo -n " >> "
+            read -r MOD_NAME
             TARGET_SRC="$SCRIPT_DIR/modules/$MOD_NAME"
             if [[ -e "$TARGET_SRC" ]]; then
                 cp -r "$TARGET_SRC" "$CONFIG_DIRECTORY/modules/"
@@ -91,14 +112,40 @@ debug() {
                 echo -e "${Y}Tentativa de leitura: ${NC}$TARGET_SRC"
             fi
         ;;
-        "44aa") step "Limpando e reinstalando tudo..."; rm -rf "$CONFIG_DIRECTORY/modules/"; mkdir -p "$CONFIG_DIRECTORY/modules/"; cp -r "$SCRIPT_DIR/modules/." "$CONFIG_DIRECTORY/modules/"; success "Full reset concluído." ;;
-        "35a6") echo -e "\nRemover qual?"; read -p " >> " RM_NAME; rm -rf "$CONFIG_DIRECTORY/modules/$RM_NAME"; success "Módulo '$RM_NAME' removido. Adeus!" ;;
-        *) echo -e "${R}Código de debug inválido.${NC}" ;;
+        "44aa")
+            step "Limpando e reinstalando tudo..."
+            rm -rf "$CONFIG_DIRECTORY/modules/"
+            mkdir -p "$CONFIG_DIRECTORY/modules/"
+            cp -r "$SCRIPT_DIR/modules/." "$CONFIG_DIRECTORY/modules/"
+            success "Full reset concluído."
+        ;;
+        "35a6")
+            echo -e "\nRemover qual?"
+            echo -n " >> "
+            read -r RM_NAME
+            rm -rf "$CONFIG_DIRECTORY/modules/$RM_NAME"
+            success "Módulo '$RM_NAME' removido. Adeus!"
+        ;;
+        *)
+            echo -e "${R}Código de debug inválido.${NC}"
+        ;;
     esac
-    chown -R "$REAL_USER:$REAL_USER" "$CONFIG_DIRECTORY"; read -n1 -s -p "Pressione qualquer tecla para voltar..."; exit 0
+    chown -R "$REAL_USER:$REAL_USER" "$CONFIG_DIRECTORY"
+    read -n1 -s -p "Pressione qualquer tecla para voltar..."
+    exit 0
 }
 
-run_remove() { title; echo -e "${R}${B}Removendo JAY...${NC}\n"; rm -f "$INSTALL_PATH"; rm -f "/usr/share/fish/vendor_completions.d/jay.fish"; rm -rf "$CONFIG_DIRECTORY"; success "Arquivos removidos"; echo -e "\n${Y}Sistema limpo.${NC}"; read -n1 -s -p "Pressione qualquer tecla para voltar..."; exit 0; }
+run_remove() {
+    title
+    echo -e "${R}${B}Removendo JAY...${NC}\n"
+    rm -f "$INSTALL_PATH"
+    rm -f "/usr/share/fish/vendor_completions.d/jay.fish"
+    rm -rf "$CONFIG_DIRECTORY"
+    success "Arquivos removidos"
+    echo -e "\n${Y}Sistema limpo.${NC}"
+    read -n1 -s -p "Pressione qualquer tecla para voltar..."
+    exit 0
+}
 
 while true; do
     title
@@ -106,7 +153,8 @@ while true; do
     echo -e "  ${C}2.${NC} Remover"
     echo -e "  ${C}3.${NC} Sair"
     echo ""
-    read -p " > " DO
+    echo -n " > "
+    read -r DO
     
     case "$DO" in
         1) new_installer ;;

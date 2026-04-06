@@ -3,15 +3,15 @@
 clr_cache() {
     if [[ -d "$REAL_HOME/.cache/yay" ]]; then
         step "Limpando builds do AUR..."
-        find "$REAL_HOME/.cache/yay" -maxdepth 1 -type d -not -path "$REAL_HOME/.cache/yay" -exec rm -rf {} +
-        echo -e "${GREEN} $COMPLETE ${NC}"
+        find "$REAL_HOME/.cache/yay" -maxdepth 1 -type d \
+        -not -path "$REAL_HOME/.cache/yay" -exec rm -rf {} +
+        success "Builds limpos."
     fi
     if command -v flatpak &>/dev/null; then
-        step "Limpando sobra de Flatpaks..."
+        step "Limpando sobras de Flatpaks..."
         flatpak uninstall --unused -y &>/dev/null
-        echo -e "${GREEN} $COMPLETE ${NC}"
+        success "Flatpaks limpos."
     fi
-
     step "Limpando cache do pacman..."
     CMD="-Scc"
     TAG="CLEANED CACHE"
@@ -19,20 +19,24 @@ clr_cache() {
 
 remove_orphans() {
     step "Buscando pacotes orfãos..."
-    ORPHANS="$(yay -Qtqd)"
-    ORPHANS_N="$(yay -Qtqd | wc -l)"
-    [[ "$ORPHANS_N" == "0" ]] && success "Nenhum pacote orfão encontrado" && logger "[SEARCHED ORPHANS]" "clean" && exit 0
+    mapfile -t FINAL_ARGS < <(yay -Qqtd 2>/dev/null)
+    ORPHANS_N=${#FINAL_ARGS[@]}
+    if [[ "$ORPHANS_N" -eq 0 ]]; then
+        success "Nenhum pacote orfão encontrado"
+        logger "SEARCHED ORPHANS" "clean"
+        exit 0
+    fi
     echo "$NOTE $ORPHANS_N Orfãos encontrados"
-    echo "$ORPHANS"
+    printf '%s\n' "${FINAL_ARGS[@]}"
     step "Removendo Orfãos..."
-    CMD="-Rsn $ORPHANS"
+    CMD="-Rsn"
     TAG="REMOVED ORPHANS"
 }
 
 check_conf() {
     step "Buscando arquivos .pacnew/.pacsave..."
-    PACNEWS=$(find /etc -regextype posix-extended -regex ".+\.pac(new|save)" 2>/dev/null)
-
+    PACNEWS=$(find /etc -regextype posix-extended \
+    -regex ".+\.pac(new|save)" 2>/dev/null)
     if [[ -z "$PACNEWS" ]]; then
         success "Tudo limpo! Nenhum conflito em /etc."
     else
@@ -41,9 +45,7 @@ check_conf() {
         echo -e "\n${CYAN} $CC ${NC}Mesclar agora com pacdiff? [y/N]"
         read -r -n 1 opt
         echo
-        if [[ "$opt" =~ ^(y|Y)$ ]]; then
-            sudo pacdiff
-        fi
+        [[ "$opt" =~ ^(y|Y)$ ]] && sudo pacdiff
     fi
     TAG="CLEAR DIFFS"
 }

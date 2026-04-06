@@ -1,19 +1,19 @@
 #!/usr/bin/env bash
-VER="3.2.2"
+VER="3.3"
 set -o pipefail
 REAL_HOME=$(getent passwd "${SUDO_USER:-$USER}" 2>/dev/null | cut -d: -f6); REAL_HOME=${REAL_HOME:-$HOME}
-MODULES_DIR="$REAL_HOME/.config/jay/modules"; LOG_FILE="$REAL_HOME/.cache/jaylog.txt"; CONFIG_DIR="$REAL_HOME/.config/jay"
+MODULES_DIR="$REAL_HOME/.config/jay/modules"; LOG_FILE="$REAL_HOME/.cache/jaylog.txt"
 CYAN='\033[0;36m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; NC='\033[0m'; ALERT="[!]"; ERROR="[x]"; COMPLETE="[✓]"; NOTE="[*]"; CC=":: "
 
 step() { echo -e "${CYAN} $CC ${NC}${1}"; }
 success() { echo -e "${GREEN} $COMPLETE ${NC}${1}"; }
 error() { echo -e "${RED} $ERROR ${NC}${1}"; exit 1; }
 
-err01() { echo -e "$ALERT opção invalida '$ACTION'" && exit 1; }
-err02() { echo -e -n "${CYAN} $ALERT ${NC}" && echo "argumento invalido '-'" && exit 1; }
+err01() { echo -e "$ALERT opção invalida '$ACTION'"; exit 1; }
+err02() { echo -e -n "${CYAN} $ALERT ${NC}" && echo "argumento invalido '-'"; exit 1; }
 err03() { echo -e "${RED}$ERROR Módulo crítico '$MISSING_MODULE' não encontrado${NC}\n -> saindo com status 1" && exit 1; }
 err04() { error "Falha ao criar arquivo temporário"; }
-usage() { echo -e "Uso: jay [comando] [opções] [pacotes]" && exit 1; }
+usage() { echo -e "Uso: jay [comando] [opções] [pacotes]"; exit 1; }
 ver_msg() { echo -e "\n ${CYAN}-> JAY (Just Another Yogourt) - Version $VER ${NC}\n"; }
 
 
@@ -30,13 +30,13 @@ RAW_CMD="$*"; USE_FLATPAK=false; AGRESSIVE_MODE=false; FINAL_ARGS=(); YAY_FLAGS=
 
 for arg in "$@"; do
     case "$arg" in
-        install|-i|remove|-rm|update|-u|search|-s|query|-q|cache|-c|orphan|-o|mirrors|-m|refresh|-r|slog|-sl|--fix-keys|clog|-cl|--check-updates|--diff) [[ -z "$ACTION" ]] && ACTION="$arg" || FINAL_ARGS+=("$arg") ;;
+        install|-i|remove|-rm|update|-u|search|-s|query|-q|cache|-c|orphan|-o|mirrors|-m|refresh|-r|slog|-sl|--fix-keys|clog|-cl|--check-updates) [[ -z "$ACTION" ]] && ACTION="$arg" || FINAL_ARGS+=("$arg") ;;
+        --kill-dblock) KILL_DBLOCK=true ;;
         -v|--version) ver_msg; exit 0 ;;
         -h|--help) help_message ;;
         -f|--flatpak) USE_FLATPAK=true ;;
         -A) AGRESSIVE_MODE=true ;;
         --list-aur) LIST_AUR=true ;;
-        --kill-dblck) KILL_DBLOCK=true ;;
         -) err02 ;;
         -*) YAY_FLAGS+=("$arg") ;;
         *) FINAL_ARGS+=("$arg") ;;
@@ -45,6 +45,21 @@ done
 
 [[ -z "$ACTION" && ${#FINAL_ARGS[@]} -gt 0 ]] && ACTION="${FINAL_ARGS[0]}" && FINAL_ARGS=("${FINAL_ARGS[@]:1}")
 [[ -z "$ACTION" ]] && ACTION="${YAY_FLAGS[0]:-$1}"
+
+[[ "$ACTION" =~ ^(install|remove|-i|-rm)$ && ${#FINAL_ARGS[@]} -eq 0 ]] && error "Informe ao menos um pacote"
+command -v yay &>/dev/null || error "yay não encontrado"
+
+TMP_OUT=$(mktemp) || err04
+trap 'rm -f "$TMP_OUT" 2>/dev/null' EXIT
+
+if [[ -n "$ACTION" ]]; then
+    [[ "$AGRESSIVE_MODE" == "true" ]] && echo -e "${RED} $ALERT Modo agressivo ativado!${NC}"
+    [[ ! "$ACTION" =~ ^(-m|mirrors)$ ]] && step "Executando: $ACTION"
+fi
+if [[ "$KILL_DBLOCK" == "true" ]]; then
+    pgrep -x "pacman|yay" &>/dev/null && error "Pacman/yay em execução."
+    [[ -f /var/lib/pacman/db.lck ]] && sudo rm /var/lib/pacman/db.lck && success "Trava removida."
+fi
 
 case "$ACTION" in
     install|-i) ins ;;
@@ -64,24 +79,14 @@ case "$ACTION" in
 esac
 
 [[ "$TAG" == "SKIP" ]] && exit 0
-[[ "$ACTION" =~ ^(install|remove|-i|-rm)$ && ${#FINAL_ARGS[@]} -eq 0 ]] && error "Informe ao menos um pacote"
-command -v yay &>/dev/null || error "yay não encontrado"
-
-TMP_OUT=$(mktemp) || err04
-trap 'rm -f "$TMP_OUT" 2>/dev/null' EXIT
-
-if [[ -n "$ACTION" ]]; then
-    [[ "$AGRESSIVE_MODE" == "true" ]] && echo -e "${RED} $ALERT Modo agressivo ativado!${NC}"
-    [[ ! "$ACTION" =~ ^(-m|mirrors)$ ]] && step "Executando: $ACTION"
-fi
-
-if [[ "$KILL_DBLOCK" == "true" ]]; then
-    pgrep -x "pacman|yay" &>/dev/null && error "Pacman/yay em execução."
-    [[ -f /var/lib/pacman/db.lck ]] && sudo rm /var/lib/pacman/db.lck && success "Trava removida."
-fi
 
 case "$ACTION" in
-    search|-s) yay "$CMD" "${FINAL_ARGS[@]}" "${YAY_FLAGS[@]}" --noconfirm --nodiffmenu --noeditmenu 2>&1 | tee "$TMP_OUT"; EXIT_CODE=${PIPESTATUS[0]}; run_flatpak_logic ;;
-    *) [[ -n "$CMD" ]] && yay "$CMD" "${FINAL_ARGS[@]}" "${YAY_FLAGS[@]}" 2>&1 | tee "$TMP_OUT"; EXIT_CODE=${PIPESTATUS[0]}; run_flatpak_logic ;;
+    search|-s) yay ${CMD:?} "${FINAL_ARGS[@]}" "${YAY_FLAGS[@]}" --noconfirm --nodiffmenu --noeditmenu 2>&1 | tee "$TMP_OUT"; EXIT_CODE=${PIPESTATUS[0]}; run_flatpak_logic ;;
+    *) if [[ -n "$CMD" ]]; then
+            yay "$CMD" "${FINAL_ARGS[@]}" "${YAY_FLAGS[@]}" 2>&1 | tee "$TMP_OUT"
+            EXIT_CODE=${PIPESTATUS[0]}
+            run_flatpak_logic
+        fi
+    ;;
 esac
-[[ -n "$TAG" || "$EXIT_CODE" -eq 0 ]] && logger "${TAG:-SYSTEM}" "${RAW_CMD}"
+[[ "$EXIT_CODE" -eq 0 && -n "$TAG" ]] && logger "${TAG:-SYSTEM}" "${RAW_CMD}"
