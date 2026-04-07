@@ -24,16 +24,17 @@ Ensure you have the essentials installed before running JAY:
 
 ```bash
 sudo pacman -S --needed git base-devel yay
-
+```
 📥 Installation
 
 Ready to simplify your Arch life? Just run these commands:
 Bash
-
-git clone [https://github.com/xmlzitos154/jay-yay.git](https://github.com/xmlzitos154/jay-yay.git)
-cd jay-yay
+```
+git clone https://github.com/xmlzitos154/jay.git
+cd jay
 chmod +x install.sh
 sudo ./install.sh
+```
 
 📖 Usage Guide
 
@@ -56,6 +57,10 @@ Power-User Options
 
     --noconfirm: Skips AUR confirmation prompts for automation.
 
+    --fix-keys: Fix GPG Keys issues
+
+    --check-updates: Search for updates in AUR
+
 Log Management
 
 Keep track of your system changes:
@@ -67,5 +72,6 @@ Keep track of your system changes:
 📄 License
 
 Distributed under the MIT License. Created by xmlzitos154.
+Version 3.3 stable
 
-Tip: If you like JAY, don't forget to leave a ⭐ to support the project!
+Tip: If you like JAY, don't forget to leave a star to support the project!
