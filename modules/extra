@@ -34,7 +34,7 @@ refresh_mirrors() {
 
 fix_keys() {
     step "Iniciando recuperação de chaves GPG..."
-    yay -Sy archlinux-keyring --noconfirm
+    yay -S archlinux-keyring --noconfirm --needed &>/dev/null
     if [[ -f "$TMP_OUT" ]]; then
         local keys=$(grep -oP '(?<=key\s)([A-F0-9]{16,})|(?<=ID\s)([A-F0-9]{16,})' "$TMP_OUT" | sort -u)
         

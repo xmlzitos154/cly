@@ -26,7 +26,7 @@ help_message() {
     exit 0
 }
 
-run_flatpak_logic() {
+run_flatpak() {
     [[ "$USE_FLATPAK" != "true" ]] && return
     command -v flatpak &>/dev/null || return
     case "$ACTION" in
