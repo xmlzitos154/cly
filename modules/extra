@@ -1,55 +1,55 @@
 #!/usr/bin/env bash
 
 list_aur() {
-    step "Filtrando pacotes instalados via AUR..."
+    step "Filtering packages installed via AUR..."
     pacman -Qm | column -t
     TAG="LOCAL_QUERY (AUR)"
     local count=$(yay -Qm | wc -l)
-    echo -e "\n${GREEN}$COMPLETE${NC} Total de $count pacotes AUR encontrados."
+    echo -e "\n${GREEN}$COMPLETE${NC} Total of $count AUR packages found."
 }
 
 refresh_mirrors() {
-    step "Iniciando otimização de mirrors (Reflector)..."
+    step "Starting mirror optimization (Reflector)..."
     if ! command -v reflector &>/dev/null; then
-        echo -e "${YELLOW}$NOTE Reflector não encontrado.${NC}"
-        read -p "Deseja instalar o reflector para otimizar mirrors? [S/n] " -n 1 -r
+        echo -e "${YELLOW}$NOTE Reflector not found.${NC}"
+        read -p "Do you want to install reflector to optimize mirrors? [Y/n] " -n 1 -r
         echo
-        if [[ $REPLY =~ ^[Ss]$ ]]; then
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
             sudo pacman -S reflector --noconfirm
         else
-            error "Reflector é necessário para esta função."
+            error "Reflector is required for this function."
         fi
     fi
 
-    step "Criando backup em /etc/pacman.d/mirrorlist.bak"
+    step "Creating backup at /etc/pacman.d/mirrorlist.bak"
     sudo cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.bak
-    step "Buscando os 10 mirrors mais rápidos no Brasil... (Aguarde)"
-    if sudo reflector --country Brazil --latest 10 --sort rate --save /etc/pacman.d/mirrorlist; then
-        success "Mirrors atualizados e salvos com sucesso."
+    step "Fetching the 10 fastest mirrors... (Please wait)"
+    if sudo reflector --latest 20 --protocol https --sort rate --save /etc/pacman.d/mirrorlist; then
+        success "Mirrors updated and saved successfully."
         TAG="UPDATE MIRRORS"
     else
-        error "Falha ao atualizar mirrors. Verifique sua conexão."
+        error "Failed to update mirrors. Check your internet connection."
     fi
 }
 
 fix_keys() {
-    step "Iniciando recuperação de chaves GPG..."
+    step "Starting GPG key recovery..."
     yay -S archlinux-keyring --noconfirm --needed &>/dev/null
     if [[ -f "$TMP_OUT" ]]; then
         local keys=$(grep -oP '(?<=key\s)([A-F0-9]{16,})|(?<=ID\s)([A-F0-9]{16,})' "$TMP_OUT" | sort -u)
         
         if [[ -n "$keys" ]]; then
             for key in $keys; do
-                step "Importando chave: $key"
+                step "Importing key: $key"
                 gpg --recv-keys "$key" || gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys "$key"
             done
         fi
     fi
-    step "Limpando caches de chaves corrompidas..."
+    step "Cleaning corrupted key caches..."
     sudo find /etc/pacman.d/gnupg -type f -name "*.lck" -delete
     sudo pacman-key --init
     sudo pacman-key --populate archlinux
     
-    success "Procedimento de chaves finalizado."
+    success "Key recovery procedure finished."
     TAG="SKIP"
 }

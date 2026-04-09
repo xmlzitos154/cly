@@ -9,11 +9,11 @@ step() { echo -e "${CYAN} $CC ${NC}${1}"; }
 success() { echo -e "${GREEN} $COMPLETE ${NC}${1}"; }
 error() { echo -e "${RED} $ERROR ${NC}${1}"; exit 1; }
 
-err01() { echo -e "$ALERT opção invalida '$ACTION'"; exit 1; }
-err02() { echo -e -n "${CYAN} $ALERT ${NC}" && echo "argumento invalido '-'"; exit 1; }
-err03() { echo -e "${RED}$ERROR Módulo crítico '$MISSING_MODULE' não encontrado${NC}\n -> saindo com status 1" && exit 1; }
-err04() { error "Falha ao criar arquivo temporário"; }
-usage() { echo -e "Uso: jay [comando] [opções] [pacotes]"; exit 1; }
+err01() { echo -e "$ALERT invalid option '$ACTION'"; exit 1; }
+err02() { echo -e -n "${CYAN} $ALERT ${NC}" && echo "invalid argument '-'"; exit 1; }
+err03() { echo -e "${RED}$ERROR critic module '$MISSING_MODULE' not found${NC}\n -> exit with status 1" && exit 1; }
+err04() { error "Cannot create temporary file"; }
+usage() { echo -e "Usage: jay [command] [options] [packages]"; exit 1; }
 ver_msg() { echo -e "\n ${CYAN}-> JAY (Just Another Yogourt) - Version $VER ${NC}\n"; }
 
 
@@ -46,19 +46,19 @@ done
 [[ -z "$ACTION" && ${#FINAL_ARGS[@]} -gt 0 ]] && ACTION="${FINAL_ARGS[0]}" && FINAL_ARGS=("${FINAL_ARGS[@]:1}")
 [[ -z "$ACTION" ]] && ACTION="${YAY_FLAGS[0]:-$1}"
 
-[[ "$ACTION" =~ ^(install|remove|-i|-rm)$ && ${#FINAL_ARGS[@]} -eq 0 ]] && error "Informe ao menos um pacote"
-command -v yay &>/dev/null || error "yay não encontrado"
+[[ "$ACTION" =~ ^(install|remove|-i|-rm)$ && ${#FINAL_ARGS[@]} -eq 0 ]] && error "specify at least one package"
+command -v yay &>/dev/null || error "yay not found"
 
 TMP_OUT=$(mktemp) || err04
 trap 'rm -f "$TMP_OUT" 2>/dev/null' EXIT
 
 if [[ -n "$ACTION" ]]; then
-    [[ "$AGRESSIVE_MODE" == "true" ]] && echo -e "${RED} $ALERT Modo agressivo ativado!${NC}"
-    [[ ! "$ACTION" =~ ^(-m|mirrors)$ ]] && step "Executando: $ACTION"
+    [[ "$AGRESSIVE_MODE" == "true" ]] && echo -e "${RED} $ALERT Agressive mode enabled!${NC}"
+    [[ ! "$ACTION" =~ ^(-m|mirrors)$ ]] && step "Executing: $ACTION"
 fi
 if [[ "$KILL_DBLOCK" == "true" ]]; then
-    pgrep -x "pacman|yay" &>/dev/null && error "Pacman/yay em execução."
-    [[ -f /var/lib/pacman/db.lck ]] && sudo rm /var/lib/pacman/db.lck && success "Trava removida."
+    pgrep -x "pacman|yay" &>/dev/null && error "Pacman/yay is already running."
+    [[ -f /var/lib/pacman/db.lck ]] && sudo rm /var/lib/pacman/db.lck && success "Database lock removed."
 fi
 
 case "$ACTION" in

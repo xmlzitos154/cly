@@ -6,22 +6,23 @@ help_message() {
     echo -e "Uso: jay [ -i | -rm | -s | -u ] [ -f | --flatpak ] [ --noconfirm ]"
     echo -e "Uso: jay [ -q | query ] [ --list-aur ]"
     echo -e "Options:\n"
-    echo -e "-h,  --help         Mostra essa mensagem"
-    echo -e "-i,  install        Sincronizar pacotes"
-    echo -e "-rm, remove         Remover pacotes (Use '-A' para modo Agressivo)"
-    echo -e "-u,  update         Atualizar o sistema"
+    echo -e "-h,  --help         Show this message again"
+    echo -e "-i,  install        Sync/install packages"
+    echo -e "-rm, remove         Remove packages (Use '-A' to activate the Agressive mode)"
+    echo -e "-u,  update         Update the system"
+    echo -e "-r,  refresh        Refresh and upgrade the system"
     if [[ "$MOD_2" != "false" ]]; then
-        echo -e "-s,  search         Pesquisa pacotes no AUR"
-        echo -e "-q,  query          Pesquisa pacotes locais"
+        echo -e "-s,  search         search packages in AUR"
+        echo -e "-q,  query          Query local packages"
     fi
     if [[ "$MOD_1" != "false" ]]; then
-        echo -e "-o,  orphan         Remove dependências inúteis"
-        echo -e "-c,  cache          Limpa todo o cache do pacman"
+        echo -e "-o,  orphan         Remove non-necessary packages"
+        echo -e "-c,  cache          Clear all pacman cache"
     fi
     if [[ "$MOD_3" != "false" ]]; then
-        echo -e "-m, mirrors         Procura repositorios velozes"
-        echo -e "--check-updates     Procura Atualizações Disponiveis"
-        echo -e "--fix-keys          Restaura chaves GPG invalidas ou não importadas"
+        echo -e "-m, mirrors         Search for faster repos"
+        echo -e "--check-updates     Search for avaliable updates"
+        echo -e "--fix-keys          Restore invalid GPG keys"
     fi
     exit 0
 }
@@ -31,16 +32,16 @@ run_flatpak() {
     command -v flatpak &>/dev/null || return
     case "$ACTION" in
         update|-u)
-            step "Atualizando Flatpaks..."
+            step "Updating Flatpaks..."
             flatpak update -y
             EXIT_CODE=$?
         ;;
         search|-s)
-            [[ -n "$FLAT_CMD" ]] && step "Procurando no Flatpak..." && flatpak "$FLAT_CMD" "${FINAL_ARGS[@]}"
+            [[ -n "$FLAT_CMD" ]] && step "Searching in Flatpak..." && flatpak "$FLAT_CMD" "${FINAL_ARGS[@]}"
         ;;
         *)
             if [[ $EXIT_CODE -ne 0 && -n "$FLAT_CMD" ]] && grep -qiE "target not found|Nenhum pacote" "$TMP_OUT"; then
-                echo -e "\n${YELLOW} $NOTE AUR falhou. Tentando Flatpak...${NC}\n"
+                echo -e "\n${YELLOW} $NOTE AUR failed. Trying Flatpak...${NC}\n"
                 flatpak "$FLAT_CMD" -y "${FINAL_ARGS[@]}"
                 EXIT_CODE=$?
                 [[ $EXIT_CODE -eq 0 ]] && TAG="FLATPAK"
@@ -50,9 +51,9 @@ run_flatpak() {
 }
 
 tester() {
-    step "Testando rede..."
-    ping -c 1 8.8.8.8 &>/dev/null || error "Internet desconectada. Verifique seu Wi-Fi/Cabo."
-    success "Conexão ativa."
+    step "Testing network..."
+    ping -c 1 8.8.8.8 &>/dev/null || error "Network disconected. Verify your Wi-Fi/Cable."
+    success "Connection is active."
 }
 
 ins() {

@@ -12,14 +12,14 @@ if [[ -f "$SOURCE" ]]; then
     VER=$(sed -n 's/^VER="\(.*\)"/\1/p' "$SOURCE" | head -1)
     [[ -z "$VER" ]] && VER="unk"
 else
-    echo -e "${R}Erro: Arquivo 'main' não encontrado.${NC}"
+    echo -e "${R}Error: File 'main' not found.${NC}"
     exit 1
 fi
 
 BIN_NAME="jay"
 INSTALL_PATH="/usr/bin/$BIN_NAME"
 
-[[ $EUID -ne 0 ]] && { echo -e "${Y}>>${NC} Solicitando root..."; exec sudo "$0" "$@"; }
+[[ $EUID -ne 0 ]] && { echo -e "${Y}>>${NC} Soliciting root..."; exec sudo "$0" "$@"; }
 
 title() { clear; echo -e "${C}${B}JAY SETUP${NC} — v$VER"; echo -e "${C}──────────────────────────────${NC}"; }
 step() { echo -e "${C}  [..]${NC} $1"; sleep 0.3; }
@@ -27,25 +27,25 @@ success() { echo -e "${G}  [OK]${NC} $1"; }
 
 new_installer() {
     title
-    step "Copiando arquivos necessários..."
+    step "Copying necessary files..."
     install -Dm755 "$SOURCE" "$INSTALL_PATH"
-    success "Pronto."
-    step "Criando pasta de configs..."
+    success "Done."
+    step "Creating config folders..."
     mkdir -p "$CONFIG_DIRECTORY" || exit 1
     cd "$CONFIG_DIRECTORY" || exit 1
-    step "Carregando módulos basicos..."
+    step "Loading basic modules..."
     [[ -d "modules" ]] && rm -rf "modules"
     mkdir "modules"
-    [[ ! -f "$SCRIPT_DIR/modules/base" ]] && echo -e "${R}erro: modulo base não encontrado.${NC}" && exit 1
-    [[ ! -f "$SCRIPT_DIR/modules/log" ]] && echo -e "${R}erro: modulo log não encontrado.${NC}" && exit 1
+    [[ ! -f "$SCRIPT_DIR/modules/base" ]] && echo -e "${R}error: base module not found.${NC}" && exit 1
+    [[ ! -f "$SCRIPT_DIR/modules/log" ]] && echo -e "${R}error: log module not found.${NC}" && exit 1
     cp -r "$SCRIPT_DIR/modules/base" "$CONFIG_DIRECTORY/modules/"
     cp -r "$SCRIPT_DIR/modules/log" "$CONFIG_DIRECTORY/modules/"
-    success "Pronto."
-    echo "Que modulos deseja instalar?"
+    success "Done."
+    echo "Select modules to install"
     echo ""
-    echo "1. cache (Limpa o cache)"
-    echo "2. search (search e query do yay)"
-    echo "3. extra (Varias outras funções)"
+    echo "1. cache (clear all cache)"
+    echo "2. search (search and query of yay)"
+    echo "3. extra (Another useful options)"
     echo "4. todos"
     echo "5. nenhum"
     echo ""
@@ -59,9 +59,9 @@ new_installer() {
                 cp -r "$SCRIPT_DIR/modules/$mod" "$CONFIG_DIRECTORY/modules/" 2>/dev/null
         done ;;
         "5") echo "  [>>]" ;;
-        *) echo "modulo não existe."; exit 1 ;;
+        *) echo "module not found."; exit 1 ;;
     esac
-    step "Configurando completions"
+    step "Configuring completions"
     if [ -d "/usr/share/fish/vendor_completions.d" ]; then
 		cat <<EOF > "/usr/share/fish/vendor_completions.d/jay.fish"
 complete -c jay -f
@@ -78,80 +78,28 @@ EOF
         success "Fish completions configuradas."
     fi
     chown -R "$REAL_USER:$REAL_USER" "$CONFIG_DIRECTORY"
-    success "Permissões ajustadas."
-    echo -e "\n${G}${B}Pronto!${NC} O jay foi instalado."
-    read -n1 -s -p "Pressione qualquer tecla para voltar..."
-}
-
-debug() {
-    title
-    echo -e "${Y}${B}[ DEBUG MODE ]${NC}"
-    echo "Ações disponíveis:"
-    echo "  35ab - Instalar UM módulo específico"
-    echo "  44aa - Reinstalar TODOS os módulos"
-    echo "  35a6 - Remover UM módulo específico"
-    echo "  s4a7 - Limpar pasta de módulos"
-    echo ""
-    echo -n " >> "
-    read -r DBG
-    case "$DBG" in
-        "s4a7")
-            rm -rf "$CONFIG_DIRECTORY/modules/"*
-            success "Todos os módulos foram pro espaço."
-        ;;
-        "35ab")
-            echo -e "\nQual módulo? (cache | search | extra | base | log)"
-            echo -n " >> "
-            read -r MOD_NAME
-            TARGET_SRC="$SCRIPT_DIR/modules/$MOD_NAME"
-            if [[ -e "$TARGET_SRC" ]]; then
-                cp -r "$TARGET_SRC" "$CONFIG_DIRECTORY/modules/"
-                success "Módulo '$MOD_NAME' injetado com sucesso."
-            else
-                echo -e "${R}Erro: '$MOD_NAME' não encontrado em $SCRIPT_DIR/modules/${NC}"
-                echo -e "${Y}Tentativa de leitura: ${NC}$TARGET_SRC"
-            fi
-        ;;
-        "44aa")
-            step "Limpando e reinstalando tudo..."
-            rm -rf "$CONFIG_DIRECTORY/modules/"
-            mkdir -p "$CONFIG_DIRECTORY/modules/"
-            cp -r "$SCRIPT_DIR/modules/." "$CONFIG_DIRECTORY/modules/"
-            success "Full reset concluído."
-        ;;
-        "35a6")
-            echo -e "\nRemover qual?"
-            echo -n " >> "
-            read -r RM_NAME
-            rm -rf "$CONFIG_DIRECTORY/modules/$RM_NAME"
-            success "Módulo '$RM_NAME' removido. Adeus!"
-        ;;
-        *)
-            echo -e "${R}Código de debug inválido.${NC}"
-        ;;
-    esac
-    chown -R "$REAL_USER:$REAL_USER" "$CONFIG_DIRECTORY"
-    read -n1 -s -p "Pressione qualquer tecla para voltar..."
-    exit 0
+    success "Ajusted permissions."
+    echo -e "\n${G}${B}Done!${NC} Jay installed successfully."
+    read -n1 -s -p "Press any key to back..."
 }
 
 run_remove() {
     title
-    echo -e "${R}${B}Removendo JAY...${NC}\n"
+    echo -e "${R}${B}Removing JAY...${NC}\n"
     rm -f "$INSTALL_PATH"
     rm -f "/usr/share/fish/vendor_completions.d/jay.fish"
     rm -rf "$CONFIG_DIRECTORY"
-    success "Arquivos removidos"
-    echo -e "\n${Y}Sistema limpo.${NC}"
-    read -n1 -s -p "Pressione qualquer tecla para voltar..."
+    success "Removed files"
+    echo -e "\n${Y}System clear.${NC}"
+    read -n1 -s -p "Press any key to back..."
     exit 0
 }
 
 while true; do
     title
-    echo -e "  ${C}1.${NC} Instalar / Atualizar"
-    echo -e "  ${C}2.${NC} Remover"
-    echo -e "  ${C}3.${NC} Sair"
+    echo -e "  ${C}1.${NC} Install / Update"
+    echo -e "  ${C}2.${NC} Remove"
+    echo -e "  ${C}3.${NC} Exit"
     echo ""
     echo -n " > "
     read -r DO
@@ -160,7 +108,6 @@ while true; do
         1) new_installer ;;
         2) run_remove ;;
         3) echo -e "${C}Até logo!${NC}"; exit 0 ;;
-        "DEBUG_MODULES") debug ;;
         *) echo -e "${R}Opção inválida.${NC}"; sleep 0.5 ;;
     esac
 done

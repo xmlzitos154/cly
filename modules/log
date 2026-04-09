@@ -9,13 +9,13 @@ logger() {
 }
 
 show_logs() {
-    [[ ! -s "$LOG_FILE" ]] && echo "$NOTE O Arquivo de log está vazio" && exit 0
+    [[ ! -s "$LOG_FILE" ]] && echo "$NOTE The log file is empty." && exit 0
     column -t -s '|' "$LOG_FILE"
     exit 0
 }
 
 clear_logs() {
     > "$LOG_FILE"
-    echo "$COMPLETE Arquivo de log limpo"
+    echo "$COMPLETE Cleared log file"
     exit 0
 }
