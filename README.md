@@ -35,6 +35,15 @@ cd jay
 chmod +x install.sh
 sudo ./install.sh
 ```
+if you want to install with AUR:
+With yay:
+```
+yay -S jay-bin
+```
+Or paru:
+```
+paru -S jay-bin
+```
 
 📖 Usage Guide
 
