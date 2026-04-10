@@ -12,11 +12,11 @@ JAY is a **powerful yet simple** wrapper designed to make AUR management intuiti
 
 ## Key Features
 
-* ** Human Syntax:** Use `install`, `update`, or `remove` instead of complex flags.
-* ** Hybrid Mode (`-f`):** Seamless fallback to **Flathub** if a package isn't found in the AUR.
-* ** Aggressive Mode (`-A`):** Purge packages along with all unneeded dependencies (`-Rsn`).
-* ** Auto-Logging:** Every action is recorded in `~/.cache/jaylog.txt` for easy tracking.
-* ** Orphan Purge:** One-click removal of unused dependencies.
+* **Human Syntax:** Use `install`, `update`, or `remove` instead of complex flags.
+* **Hybrid Mode (`-f`):** Seamless fallback to **Flathub** if a package isn't found in the AUR.
+* **Aggressive Mode (`-A`):** Purge packages along with all unneeded dependencies (`-Rsn`).
+* **Auto-Logging:** Every action is recorded in `~/.cache/jaylog.txt` for easy tracking.
+* **Orphan Purge:** One-click removal of unused dependencies.
 
 ---
 
