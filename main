@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-VER="3.3.6"
+VER="3.3.7"
 set -o pipefail
 REAL_HOME=$(getent passwd "${SUDO_USER:-$USER}" 2>/dev/null | cut -d: -f6); REAL_HOME=${REAL_HOME:-$HOME}
 MODULES_DIR="$REAL_HOME/.config/jay/modules"; LOG_FILE="$REAL_HOME/.cache/jaylog.txt"
@@ -58,7 +58,7 @@ if [[ -n "$ACTION" ]]; then
 fi
 if [[ "$KILL_DBLOCK" == "true" ]]; then
     pgrep -x "pacman|yay" &>/dev/null && error "Pacman/yay is already running."
-    [[ -f /var/lib/pacman/db.lck ]] && sudo rm /var/lib/pacman/db.lck && success "Database lock removed."
+    [[ -f /var/lib/pacman/db.lck ]] && sudo rm /var/lib/pacman/db.lck && success "Database lock removedg."
 fi
 
 case "$ACTION" in
@@ -81,7 +81,7 @@ esac
 [[ "$TAG" == "SKIP" ]] && exit 0
 
 case "$ACTION" in
-    search|-s) yay "$CMD" "${FINAL_ARGS[@]}" "${YAY_FLAGS[@]}" --noconfirm 2>&1 | tee "$TMP_OUT"; EXIT_CODE=${PIPESTATUS[0]}; run_flatpak ;;
+    search|-s) yay "$CMD" "${FINAL_ARGS[@]}" "${YAY_FLAGS[@]}" 2>&1 | tee "$TMP_OUT"; EXIT_CODE=${PIPESTATUS[0]}; run_flatpak ;;
     *) if [[ -n "$CMD" ]]; then
             yay "$CMD" "${FINAL_ARGS[@]}" "${YAY_FLAGS[@]}" 2>&1 | tee "$TMP_OUT"
             EXIT_CODE=${PIPESTATUS[0]}
@@ -90,4 +90,10 @@ case "$ACTION" in
     ;;
 esac
 
-[[ "$EXIT_CODE" -eq 0 && -n "$TAG" ]] && logger "${TAG:-SYSTEM}" "${RAW_CMD}"
+if [[ "$EXIT_CODE" -eq 0 && -n "$TAG" ]]; then
+    if grep -qiE "could not find|nenhum pacote|target not found" "$TMP_OUT"; then
+        logger "NOT FOUND" "${RAW_CMD}" 
+    else
+        logger "${TAG:-SYSTEM}" "${RAW_CMD}"
+    fi
+fi
