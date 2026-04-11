@@ -2,7 +2,16 @@
 VER="3.3.8"
 set -o pipefail
 REAL_HOME=$(getent passwd "${SUDO_USER:-$USER}" 2>/dev/null | cut -d: -f6); REAL_HOME=${REAL_HOME:-$HOME}
-MODULES_DIR="$REAL_HOME/.config/jay/modules"; LOG_FILE="$REAL_HOME/.cache/jaylog.txt"
+
+if [[ -d "./modules" ]]; then
+    MODULES_DIR="./modules"
+elif [[ -d "/usr/share/jay/modules" ]]; then
+    MODULES_DIR="/usr/share/jay/modules"
+else
+    MODULES_DIR="$REAL_HOME/.config/jay/modules"
+fi
+
+LOG_FILE="$REAL_HOME/.cache/jaylog.txt"
 CYAN='\033[0;36m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; NC='\033[0m'; ALERT="[!]"; ERROR="[x]"; COMPLETE="[✓]"; NOTE="[*]"; CC=":: "
 
 step() { echo -e "${CYAN} $CC ${NC}${1}"; }
@@ -16,11 +25,20 @@ err04() { error "Cannot create temporary file"; }
 usage() { echo -e "Usage: jay [command] [options] [packages]"; exit 1; }
 ver_msg() { echo -e "\n ${CYAN}-> JAY (Just Another Yogourt) - Version $VER ${NC}\n"; }
 
+load_mod() {
+    local mod="$1"
+    if [[ -f "$MODULES_DIR/$mod" ]]; then
+        source "$MODULES_DIR/$mod"
+    else
+        MISSING_MODULE="$mod" && err03
+    fi
+}
 
 [[ -f "$LOG_FILE" ]] || touch "$LOG_FILE"
 [[ ! -w "$LOG_FILE" ]] && sudo chown "${SUDO_USER:-$USER}":"${SUDO_USER:-$USER}" "$LOG_FILE" 2>/dev/null
-[[ ! -f "$MODULES_DIR/base" ]] && MISSING_MODULE="base" && err03 || source "$MODULES_DIR/base"
-[[ ! -f "$MODULES_DIR/log" ]] && MISSING_MODULE="log" && err03 || source "$MODULES_DIR/log"
+
+load_mod "base"
+load_mod "log"
 [[ -f "$MODULES_DIR/cache" ]] && source "$MODULES_DIR/cache" || MOD_1="false"
 [[ -f "$MODULES_DIR/search" ]] && source "$MODULES_DIR/search" || MOD_2="false"
 [[ -f "$MODULES_DIR/extra" ]] && source "$MODULES_DIR/extra" || MOD_3="false"
@@ -58,7 +76,7 @@ if [[ -n "$ACTION" ]]; then
 fi
 if [[ "$KILL_DBLOCK" == "true" ]]; then
     pgrep -x "pacman|yay" &>/dev/null && error "Pacman/yay is already running."
-    [[ -f /var/lib/pacman/db.lck ]] && sudo rm /var/lib/pacman/db.lck && success "Database lock removedg."
+    [[ -f /var/lib/pacman/db.lck ]] && sudo rm /var/lib/pacman/db.lck && success "Database lock removed."
 fi
 
 case "$ACTION" in
