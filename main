@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-VER="3.3.7"
+VER="3.3.8"
 set -o pipefail
 REAL_HOME=$(getent passwd "${SUDO_USER:-$USER}" 2>/dev/null | cut -d: -f6); REAL_HOME=${REAL_HOME:-$HOME}
 MODULES_DIR="$REAL_HOME/.config/jay/modules"; LOG_FILE="$REAL_HOME/.cache/jaylog.txt"
