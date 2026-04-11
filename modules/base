@@ -14,6 +14,7 @@ help_message() {
     if [[ "$MOD_2" != "false" ]]; then
         echo -e "-s,  search         search packages in AUR"
         echo -e "-q,  query          Query local packages"
+        echo -e "-p,  --path         Search for binary path"
     fi
     if [[ "$MOD_1" != "false" ]]; then
         echo -e "-o,  orphan         Remove non-necessary packages"
