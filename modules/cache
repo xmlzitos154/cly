@@ -13,7 +13,7 @@ clr_cache() {
         success "Flatpaks cleaned."
     fi
     step "Cleaning pacman cache..."
-    CMD="-Scc"
+    CMD="-Sc"
     TAG="CLEANED CACHE"
 }
 

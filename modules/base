@@ -33,8 +33,16 @@ run_flatpak() {
     case "$ACTION" in
         update|-u)
             step "Updating Flatpaks..."
-            flatpak update -y
-            EXIT_CODE=$?
+            flatpak update -y 2>&1 | tee -a "$TMP_OUT"
+            FLAT_EXIT=${PIPESTATUS[0]}
+            if [[ $FLAT_EXIT -eq 0 ]]; then
+                if grep -qiE "nothing to do|nada a fazer" "$TMP_OUT"; then
+                    logger "SKIPPED (flatpak)" "${RAW_CMD}"
+                else
+                    logger "UPDATED (flatpak)" "${RAW_CMD}"
+                fi
+            fi
+            EXIT_CODE=$FLAT_EXIT
         ;;
         search|-s)
             [[ -n "$FLAT_CMD" ]] && step "Searching in Flatpak..." && flatpak "$FLAT_CMD" "${FINAL_ARGS[@]}"

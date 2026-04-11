@@ -30,3 +30,23 @@ check_updates() {
     [[ "$UPDS_AUR_N" -gt 0 ]] && echo "$raw_aur"
     logger "FOUND UPDATES" "$((UPDS_N + UPDS_AUR_N)) updates ($UPDS_AUR_N in AUR)"
 }
+
+get_package_path() {
+    local pkg="$1"
+    [[ -z "$pkg" ]] && error "Provide a package name."
+    if pacman -Qi "$pkg" &>/dev/null; then
+        step "Files for package: ${pkg}"
+        local bins=$(pacman -Ql "$pkg" | grep '/bin/' | cut -d' ' -f2-)
+        if [[ -n "$bins" ]]; then
+            echo -e "${GREEN}Binaries found:${NC}"
+            echo "$bins"
+        else
+            echo -e "${YELLOW}No binaries found. Displaying all files instead:${NC}"
+            pacman -Ql "$pkg" | cut -d' ' -f2- | less
+        fi
+        logger "PATH SEARCH" "$pkg"
+    else
+        logger "PATH SEARCH FAILED" "$pkg"
+        error "Package '$pkg' is not installed."
+    fi
+}
