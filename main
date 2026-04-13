@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-VER="3.4.1" ## Jay version 3.4.1-1
+VER="3.4.2" ## Jay version 3.4.2-1
 
 set -o pipefail
 REAL_HOME=$(getent passwd "${SUDO_USER:-$USER}" 2>/dev/null | cut -d: -f6); REAL_HOME=${REAL_HOME:-$HOME}
@@ -24,7 +24,7 @@ err01() { echo -e "$ALERT invalid argument '$ACTION'"; exit 1; }
 err02() { echo -e "${RED}$ERROR critic module '$MISSING_MODULE' not found${NC}\n -> exit with status 1" && exit 1; }
 err03() { error "Cannot create temporary file"; }
 usage() { echo -e "Usage: jay [command] [options] [packages]"; exit 1; }
-ver_msg() { echo -e "\n ${CYAN}-> JAY (Just Another Yogourt) - Version $VER ${NC}\n"; }
+ver_msg() { echo -e "\njay v$VER - release-candidate 1\n"; }
 
 load_mod() {
     local mod="$1"
@@ -40,12 +40,12 @@ load_mod() {
 
 load_mod "base"
 load_mod "log"
-[[ -f "$MODULES_DIR/cache" ]] && source "$MODULES_DIR/cache" || MOD_1="false"
+[[ -f "$MODULES_DIR/cache" ]] && source "$MODULES_DIR/cache" || MOD_1\="false"
 [[ -f "$MODULES_DIR/search" ]] && source "$MODULES_DIR/search" || MOD_2="false"
 [[ -f "$MODULES_DIR/extra" ]] && source "$MODULES_DIR/extra" || MOD_3="false"
 [[ -z "$1" ]] && usage
 
-RAW_CMD="$*"; USE_FLATPAK=false; PTB=false; AGRESSIVE_MODE=false; FINAL_ARGS=(); YAY_FLAGS=(); EXIT_CODE=0; KILL_DBLOCK=false; LIST_AUR=false
+RAW_CMD="$*"; USE_FLATPAK=false; PTBIN=false; AGRESSIVE_MODE=false; FINAL_ARGS=(); YAY_FLAGS=(); EXIT_CODE=0; KILL_DBLOCK=false; LIST_AUR=false
 
 for arg in "$@"; do
     case "$arg" in
@@ -56,7 +56,7 @@ for arg in "$@"; do
         -f|--flatpak) USE_FLATPAK=true ;;
         -A) AGRESSIVE_MODE=true ;;
         --list-aur) LIST_AUR=true ;;
-        -p|--path-to-binary) PTB=true ;;
+        -p|--path-to-binary) PTBIN=true ;;
         -) ACTION="-" && err01 ;;
         -*) YAY_FLAGS+=("$arg") ;;
         *) FINAL_ARGS+=("$arg") ;;
