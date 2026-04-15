@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-VER="3.4.3" ## Jay version 3.4.3-1
+VER="3.4.3" ## Jay version 3.4.3-3
 
-ver_msg() { echo -e "\njay v$VER - release-candidate 1\n"; }
+ver_msg() { echo -e "\njay v$VER - release-candidate 3\n"; }
 
 set -o pipefail
 REAL_HOME=$(getent passwd "${SUDO_USER:-$USER}" 2>/dev/null | cut -d: -f6); REAL_HOME=${REAL_HOME:-$HOME}
