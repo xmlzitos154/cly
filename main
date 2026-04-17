@@ -2,12 +2,10 @@
 
 VER="3.4.3" ## Jay version 3.4.3-3
 
-ver_msg() { echo -e "\njay v$VER - release-candidate 3\n"; }
+ver_msg() { echo -e "\njay v$VER - release-candidate 3.1\n"; }
 
 set -o pipefail
 REAL_HOME=$(getent passwd "${SUDO_USER:-$USER}" 2>/dev/null | cut -d: -f6); REAL_HOME=${REAL_HOME:-$HOME}
-
-## NOTE: Changing log file name: jaylog.txt -> jay.log
 LOG_FILE="$REAL_HOME/.cache/jay.log"
 
 if [[ -d "./modules" ]]; then
@@ -42,8 +40,9 @@ load_mod() {
 [[ -f "$LOG_FILE" ]] || touch "$LOG_FILE"
 [[ ! -w "$LOG_FILE" ]] && sudo chown "${SUDO_USER:-$USER}":"${SUDO_USER:-$USER}" "$LOG_FILE" 2>/dev/null
 
-load_mod "base"
 load_mod "log"
+load_mod "base"
+
 [[ -f "$MODULES_DIR/cache" ]] && source "$MODULES_DIR/cache" || MOD_1\="false"
 [[ -f "$MODULES_DIR/search" ]] && source "$MODULES_DIR/search" || MOD_2="false"
 [[ -f "$MODULES_DIR/extra" ]] && source "$MODULES_DIR/extra" || MOD_3="false"
@@ -86,6 +85,8 @@ if [[ "$KILL_DBLOCK" == "true" ]]; then
 fi
 
 case "$ACTION" in
+    slog|-sl) LOG_FUNC="sl"; log_acts ;;
+    clog|-cl) LOG_FUNC="cl"; log_acts ;;
     install|-i) ins ;;
     remove|-rm) rmv ;;
     refresh|-r) rfs ;;
@@ -97,8 +98,6 @@ case "$ACTION" in
     mirrors|-m) refresh_mirrors ;;
     --check-updates) check_updates ;;
     --fix-keys) fix_keys ;;
-    slog|-sl) LOG_FUNC="sl"; log_acts ;;
-    clog|-cl) LOG_FUNC="cl"; log_acts ;;
     *) err01 ;;
 esac
 

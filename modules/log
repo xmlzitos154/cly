@@ -1,13 +1,5 @@
 #!/usr/bin/env bash
 
-logger() {
-    local status="${EXIT_CODE:-0}"
-    local tag="$1"
-    local info="$2"
-    printf -v date_str '%(%Y-%m-%d - %H:%M:%S)T' -1
-    echo "[$date_str] [EXIT STATUS $status] [$tag] -> $info" >> "$LOG_FILE"
-}
-
 log_acts() {
     case "$LOG_FUNC" in
         "sl")
@@ -21,4 +13,12 @@ log_acts() {
             exit 0
         ;;
     esac
+}
+
+logger() {
+    local status="${EXIT_CODE:-0}"
+    local tag="$1"
+    local info="$2"
+    printf -v date_str '%(%Y-%m-%d - %H:%M:%S)T' -1
+    echo "[$date_str] [EXIT STATUS $status] [$tag] -> $info" >> "$LOG_FILE"
 }
