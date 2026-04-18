@@ -261,7 +261,7 @@ query() {
 
 check_updates() {
     tester
-    if ! command -v checkupdates 2>/dev/null; then
+    if ! command -v checkupdates &>/dev/null; then
         step "pacman-contrib not found. Installing..."
         yay -S pacman-contrib --noconfirm
     fi
