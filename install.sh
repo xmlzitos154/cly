@@ -7,7 +7,6 @@ REAL_HOME=${REAL_HOME:-/home/$REAL_USER}
 CONFIG_DIRECTORY="$REAL_HOME/.config/jay"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SOURCE="$SCRIPT_DIR/main"
-
 if [[ -f "$SOURCE" ]]; then
     VER=$(sed -n 's/^VER="\(.*\)"/\1/p' "$SOURCE" | head -1)
     [[ -z "$VER" ]] && VER="unk"
@@ -18,7 +17,6 @@ fi
 
 BIN_NAME="jay"
 INSTALL_PATH="/usr/bin/$BIN_NAME"
-
 [[ $EUID -ne 0 ]] && { echo -e "${Y}>>${NC} Soliciting root..."; exec sudo "$0" "$@"; }
 
 title() { clear; echo -e "${C}${B}JAY SETUP${NC} — v$VER"; echo -e "${C}──────────────────────────────${NC}"; }
@@ -26,44 +24,14 @@ step() { echo -e "${C}  [..]${NC} $1"; sleep 0.3; }
 success() { echo -e "${G}  [OK]${NC} $1"; }
 
 new_installer() {
-    title
-    step "Copying necessary files..."
+    titles
+    step "Installing binary to $INSTALL_PATH..."
     install -Dm755 "$SOURCE" "$INSTALL_PATH"
-    success "Done."
-    step "Creating config folders..."
-    mkdir -p "$CONFIG_DIRECTORY" || exit 1
-    cd "$CONFIG_DIRECTORY" || exit 1
-    step "Loading basic modules..."
-    [[ -d "modules" ]] && rm -rf "modules"
-    mkdir "modules"
-    [[ ! -f "$SCRIPT_DIR/modules/base" ]] && echo -e "${R}error: base module not found.${NC}" && exit 1
-    [[ ! -f "$SCRIPT_DIR/modules/log" ]] && echo -e "${R}error: log module not found.${NC}" && exit 1
-    cp -r "$SCRIPT_DIR/modules/base" "$CONFIG_DIRECTORY/modules/"
-    cp -r "$SCRIPT_DIR/modules/log" "$CONFIG_DIRECTORY/modules/"
-    success "Done."
-    echo "Select modules to install"
-    echo ""
-    echo "1. cache (clear all cache)"
-    echo "2. search (search and query of yay)"
-    echo "3. extra (Another useful options)"
-    echo "4. todos"
-    echo "5. nenhum"
-    echo ""
-    echo -n " > "
-    read -r MODS
-    case "$MODS" in
-        "1") cp -r "$SCRIPT_DIR/modules/cache" "$CONFIG_DIRECTORY/modules" ;;
-        "2") cp -r "$SCRIPT_DIR/modules/search" "$CONFIG_DIRECTORY/modules" ;;
-        "3") cp -r "$SCRIPT_DIR/modules/extra" "$CONFIG_DIRECTORY/modules" ;;
-        "4") for mod in cache search extra; do
-                cp -r "$SCRIPT_DIR/modules/$mod" "$CONFIG_DIRECTORY/modules/" 2>/dev/null
-        done ;;
-        "5") echo "  [>>]" ;;
-        *) echo "module not found."; exit 1 ;;
-    esac
-    step "Configuring completions"
+    success "Binary installed."
+
+    step "Configuring completions..."
     if [ -d "/usr/share/fish/vendor_completions.d" ]; then
-		cat <<EOF > "/usr/share/fish/vendor_completions.d/jay.fish"
+        cat <<EOF > "/usr/share/fish/vendor_completions.d/jay.fish"
 complete -c jay -f
 complete -c jay -n "__fish_use_subcommand" -a "install remove refresh update search query cache slog clog orphan help"
 complete -c jay -s i -l install -d "Instalar pacotes"
@@ -75,10 +43,12 @@ complete -c jay -s o -l orphan -d "Remover órfãos"
 complete -c jay -s sl -l slog -d "Ver histórico"
 complete -c jay -s cl -l clog -d "Limpar histórico"
 EOF
-        success "Fish completions configuradas."
+        success "Fish completions configured."
     fi
+    mkdir -p "$CONFIG_DIRECTORY"
     chown -R "$REAL_USER:$REAL_USER" "$CONFIG_DIRECTORY"
-    success "Ajusted permissions."
+    success "Adjusted permissions for $REAL_USER."
+
     echo -e "\n${G}${B}Done!${NC} Jay installed successfully."
     read -n1 -s -p "Press any key to back..."
 }
@@ -86,13 +56,13 @@ EOF
 run_remove() {
     title
     echo -e "${R}${B}Removing JAY...${NC}\n"
+    step "Removing files..."
     rm -f "$INSTALL_PATH"
     rm -f "/usr/share/fish/vendor_completions.d/jay.fish"
     rm -rf "$CONFIG_DIRECTORY"
-    success "Removed files"
-    echo -e "\n${Y}System clear.${NC}"
+    success "System clear."
+    echo -e "\n${Y}Uninstallation complete.${NC}"
     read -n1 -s -p "Press any key to back..."
-    exit 0
 }
 
 while true; do
