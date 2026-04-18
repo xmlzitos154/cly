@@ -20,7 +20,7 @@ err02() { echo -e "${RED}$ERROR Cannot create temporary file"; exit 1; }
 err03() { echo -e "${RED}$ERROR yay not found"; exit 1; }
 usage() { echo -e "Usage: jay [command] [options] [packages]"; exit 1; }
 
-## START OF COMANDS SESSION
+### START OF COMANDS SESSION ###
 
 ## BASE
 
@@ -301,7 +301,7 @@ get_package_path() {
     fi
 }
 
-## END OF COMMANDS SESSION
+### END OF COMMANDS SESSION ###
 
 [[ -f "$LOG_FILE" ]] || touch "$LOG_FILE"
 [[ ! -w "$LOG_FILE" ]] && sudo chown "${SUDO_USER:-$USER}":"${SUDO_USER:-$USER}" "$LOG_FILE" 2>/dev/null
