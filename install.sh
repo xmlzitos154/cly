@@ -24,7 +24,7 @@ step() { echo -e "${C}  [..]${NC} $1"; sleep 0.3; }
 success() { echo -e "${G}  [OK]${NC} $1"; }
 
 new_installer() {
-    titles
+    title
     step "Installing binary to $INSTALL_PATH..."
     install -Dm755 "$SOURCE" "$INSTALL_PATH"
     success "Binary installed."
