@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 
-VER="3.4.5"
+VER="3.5"
 
-ver_msg() { echo -e "\njay v$VER\n"; }
+ver_msg() { echo -e "\njay v$VER - rc-1 stable\n"; }
 
 set -o pipefail
 REAL_HOME=$(getent passwd "${SUDO_USER:-$USER}" 2>/dev/null | cut -d: -f6); REAL_HOME=${REAL_HOME:-$HOME}
-
+BACKUP_DIR="$REAL_HOME/.local/share/jay/backup"; BACKUP_FILE="$BACKUP_DIR/backup.txt"
 LOG_FILE="$REAL_HOME/.cache/jay.log"
 
 CYAN='\033[0;36m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; NC='\033[0m'; ALERT="[!]"; ERROR="[x]"; COMPLETE="[✓]"; NOTE="[*]"; CC=":: "
@@ -29,6 +29,7 @@ help_message() {
     echo -e "Uso: jay [comando] [opções] [pacotes]"
     echo -e "Uso: jay [ -i | -rm | -s | -u ] [ -f | --flatpak ] [ --noconfirm ]"
     echo -e "Uso: jay [ -q | query ] [ --list-aur ]"
+    echo -e "Uso: jay [--create-backup | --restore-backup ] [--path /path/to/backup/file.txt ]"
     echo -e "Options:\n"
     echo -e "-h, --help            Show this message again"
     echo -e "-i, install           Sync/install packages"
@@ -43,6 +44,10 @@ help_message() {
     echo -e "-m, mirrors           Search for faster repos"
     echo -e "--check-updates       Search for avaliable updates"
     echo -e "--fix-keys            Restore invalid GPG keys"
+    echo -e "--create-backup       Create an backup file"
+    echo -e "--restore-backup      Install packages listed on backup file"
+    echo -e "                      Use --path to specify path to the backup file"
+    echo ""
     exit 0
 }
 
@@ -213,9 +218,49 @@ fix_keys() {
     sudo find /etc/pacman.d/gnupg -type f -name "*.lck" -delete
     sudo pacman-key --init
     sudo pacman-key --populate archlinux
-    
-    success "Key recovery procedure finished."
-    TAG="SKIP"
+    success "Done."
+}
+
+backup_func() {
+    case "$BACKUP_ACTION" in
+        "create")
+            step "Creating backup of packages..."
+            mkdir -p "$BACKUP_DIR"
+            yay -Qqa > "$BACKUP_FILE"
+            CHECKSUM=$(sha256sum "$BACKUP_FILE" | cut -d' ' -f1)
+            echo "$CHECKSUM" > "$BACKUP_DIR/backup.sha256"
+            
+            success "Backup created successfully in $BACKUP_FILE"
+            logger "CREATED BACKUP" "$BACKUP_FILE"
+            exit 0
+        ;;
+        "restore")
+            [[ -n "$CUSTOM_PATH" ]] && BACKUP_FILE="$CUSTOM_PATH"
+            if [[ ! -f "$BACKUP_FILE" ]]; then
+                error "Backup file not found."
+            fi
+            CHECKSUM_FILE="${BACKUP_FILE%.txt}.sha256"
+            if [[ ! -f "$CHECKSUM_FILE" ]]; then
+                error "Validation key not found. Backup may be invalid or corrupted."
+            fi
+            step "Validating backup integrity..."
+            if ! echo "$(cat $CHECKSUM_FILE)  $BACKUP_FILE" | sha256sum --check --quiet 2>/dev/null; then
+                error "Backup validation failed. File may be corrupted or tampered."
+            fi
+            success "Backup integrity verified."
+            step "Searching for available backups..."
+            success "Backup file found: $BACKUP_FILE"
+            step "Restoring backup..."
+            mapfile -t PKG_LIST < "$BACKUP_FILE"
+            if yay -S "${PKG_LIST[@]}" --needed; then
+                success "Backup restored."
+                logger "BACKUP RESTORATION" "Reinstalled ${#PKG_LIST[@]} packages"
+                exit 0
+            else
+                error "Restore failed."
+            fi
+        ;;
+    esac
 }
 
 ## LOGGER
@@ -309,9 +354,16 @@ get_package_path() {
 
 RAW_CMD="$*"; USE_FLATPAK=false; PTBIN=false; AGRESSIVE_MODE=false; FINAL_ARGS=(); YAY_FLAGS=(); EXIT_CODE=0; KILL_DBLOCK=false; LIST_AUR=false
 
-for arg in "$@"; do
-    case "$arg" in
-        install|-i|remove|-rm|update|-u|search|-s|query|-q|cache|-c|orphan|-o|mirrors|-m|refresh|-r|slog|-sl|--fix-keys|clog|-cl|--check-updates) [[ -z "$ACTION" ]] && ACTION="$arg" || FINAL_ARGS+=("$arg") ;;
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --create-backup|--restore-backup|install|-i|remove|-rm|update|-u|search|-s|query|-q|cache|-c|orphan|-o|mirrors|-m|refresh|-r|slog|-sl|--fix-keys|clog|-cl|--check-updates)
+            [[ -z "$ACTION" ]] && ACTION="$1" || FINAL_ARGS+=("$1")
+        ;;
+        --path)
+            shift
+            [[ -z "$1" ]] && error "--path requires a file path argument"
+            CUSTOM_PATH="$1"
+        ;;
         --kill-dblock) KILL_DBLOCK=true ;;
         -h|--help) help_message ;;
         -f|--flatpak) USE_FLATPAK=true ;;
@@ -320,9 +372,10 @@ for arg in "$@"; do
         --list-aur) LIST_AUR=true ;;
         -p|--path-to-binary) PTBIN=true ;;
         -) ACTION="-" && err01 ;;
-        -*) YAY_FLAGS+=("$arg") ;;
-        *) FINAL_ARGS+=("$arg") ;;
+        -*) YAY_FLAGS+=("$1") ;;
+        *) FINAL_ARGS+=("$1") ;;
     esac
+    shift
 done
 
 [[ -z "$ACTION" && ${#FINAL_ARGS[@]} -gt 0 ]] && ACTION="${FINAL_ARGS[0]}" && FINAL_ARGS=("${FINAL_ARGS[@]:1}")
@@ -357,6 +410,8 @@ case "$ACTION" in
     mirrors|-m) refresh_mirrors ;;
     --check-updates) check_updates ;;
     --fix-keys) fix_keys ;;
+    --create-backup) BACKUP_ACTION="create"; backup_func ;;
+    --restore-backup) BACKUP_ACTION="restore"; backup_func ;;
     *) err01 ;;
 esac
 
