@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-VER="3.5.1"
+VER="3.5.2"
 
 ver_msg() { echo -e "\njay v$VER - rc-1 stable\n"; }
 
@@ -27,10 +27,10 @@ usage() { echo -e "Usage: jay [command] [options] [packages]"; exit 1; }
 ## BASE
 help_message() {
     ver_msg
-    echo -e "Use: jay [command] [options] [packages]"
-    echo -e "Use: jay [ -i | -rm | -s | -u ] [ -f | --flatpak ] [ --noconfirm ]"
-    echo -e "Use: jay [ -q | query ] [ --list-aur ]"
-    echo -e "Use: jay [ --create-backup | --restore-backup ] [ --path /path/to/backup/file.txt ]"
+    echo -e "Usage: jay [command] [options] [packages]"
+    echo -e "Usage: jay [ -i | -rm | -s | -u ] [ -f | --flatpak ] [ --noconfirm ]"
+    echo -e "Usage: jay [ -q | query ] [ --list-aur ] [ -p | --path-to-binary ]"
+    echo -e "Usage: jay [ --create-backup | --restore-backup ] [ --path /path/to/backup/file.txt ]"
     echo -e "Options:\n"
     echo -e "-h, --help            Show this message again"
     echo -e "-i, install           Sync/install packages"
@@ -39,7 +39,7 @@ help_message() {
     echo -e "-r, refresh           Refresh and upgrade the system"
     echo -e "-s, search            search packages in AUR"
     echo -e "-q, query             Query local packages"
-    echo -e "-p, --path-to-binary  Search for binary path"
+    echo -e "-p, --path-to-binary  Search for binary path (use with query)"
     echo -e "-o, orphan            Remove non-necessary packages"
     echo -e "-c, cache             Clear all pacman cache"
     echo -e "-m, mirrors           Search for faster repos"
@@ -47,6 +47,7 @@ help_message() {
     echo -e "--fix-keys            Restore invalid GPG keys"
     echo -e "--create-backup       Create an backup file"
     echo -e "--restore-backup      Install packages listed on backup file"
+    echo -e "--ping                Test if network is available"
     echo -e "                      Use --path to specify path to the backup file"
     echo ""
     exit 0
@@ -85,8 +86,13 @@ run_flatpak() {
 
 tester() {
     step "Testing network..."
-    ping -c 1 8.8.8.8 &>/dev/null || error "Network disconected. Verify your Wi-Fi/Cable."
-    success "Connection is active."
+    if ping -c 1 8.8.8.8 &>/dev/null; then
+        success "Connection is active."
+    else
+        echo -e "${RED}$ERROR ${NC}Network disconected. Verify your Wi-Fi/Cable."
+        logger "TEST FOR NETWORK" "unavailable"
+        exit 1
+    fi
 }
 
 ins() {
@@ -356,7 +362,7 @@ RAW_CMD="$*"; USE_FLATPAK=false; PTBIN=false; AGRESSIVE_MODE=false; FINAL_ARGS=(
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --create-backup|--restore-backup|install|-i|remove|-rm|update|-u|search|-s|query|-q|cache|-c|orphan|-o|mirrors|-m|refresh|-r|slog|-sl|--fix-keys|clog|-cl|--check-updates)
+        --ping|--create-backup|--restore-backup|install|-i|remove|-rm|update|-u|search|-s|query|-q|cache|-c|orphan|-o|mirrors|-m|refresh|-r|slog|-sl|--fix-keys|clog|-cl|--check-updates)
             [[ -z "$ACTION" ]] && ACTION="$1" || FINAL_ARGS+=("$1")
         ;;
         --path)
@@ -399,6 +405,7 @@ fi
 case "$ACTION" in
     slog|-sl) LOG_FUNC="sl"; log_acts ;;
     clog|-cl) LOG_FUNC="cl"; log_acts ;;
+    --ping) tester && logger "TEST FOR NETWORK" "available" && exit 0 ;;
     install|-i) ins ;;
     remove|-rm) rmv ;;
     refresh|-r) rfs ;;
