@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-VER="3.5.3"
+VER="3.5.5"
 
 ver_msg() { echo -e "\njay v$VER - rc-1\n"; }
 
@@ -86,7 +86,7 @@ run_flatpak() {
 
 tester() {
     step "Testing network..."
-    if ping -c 1 8.8.8.8 &>/dev/null; then
+    if ping -c 1 -i 0.01 8.8.8.8 &>/dev/null; then
         success "Connection is active."
     else
         echo -e "${RED}$ERROR ${NC}Network disconected. Verify your Wi-Fi/Cable."
@@ -311,45 +311,42 @@ query() {
 
 check_updates() {
     tester
-    if ! command -v checkupdates &>/dev/null; then
-        step "pacman-contrib not found. Installing..."
-        yay -S pacman-contrib --noconfirm
+    command -v checkupdates &>/dev/null || { step "Instalando dependências..."; yay -S pacman-contrib --noconfirm; }
+    step "Searching for updates (Sync/AUR)..."
+    local tmp_repo=$(mktemp)
+    local tmp_aur=$(mktemp)
+    checkupdates > "$tmp_repo" 2>/dev/null &
+    local pid_repo=$!
+    yay -Qua > "$tmp_aur" 2>/dev/null &
+    local pid_aur=$!
+    wait $pid_repo $pid_aur
+    local upds_n=$(wc -l < "$tmp_repo")
+    local upds_aur_n=$(wc -l < "$tmp_aur")
+    local total=$((upds_n + upds_aur_n))
+    
+    if [[ "$total" -eq 0 ]]; then
+        success "Nada para fazer."
+        rm -f "$tmp_repo" "$tmp_aur"
+        return
     fi
-    step "Searching for updates..."
-    raw_upds=$(checkupdates 2>/dev/null)
-    raw_aur=$(yay -Qua 2>/dev/null)
-    [[ -n "$raw_upds" ]] && UPDS_N=$(echo "$raw_upds" | grep -c .) || UPDS_N=0
-    [[ -n "$raw_aur" ]] && UPDS_AUR_N=$(echo "$raw_aur" | grep -c .) || UPDS_AUR_N=0
-    if [[ "$UPDS_N" -eq 0 && "$UPDS_AUR_N" -eq 0 ]]; then
-        success "nothing to do."
-        logger "NO UPDATES FOUND" "$((UPDS_N + UPDS_AUR_N)) updates ($UPDS_AUR_N in AUR)"
-        exit 0
-    fi
-    echo -e "${YELLOW} $NOTE $((UPDS_N + UPDS_AUR_N)) Updates found ($UPDS_AUR_N in AUR):${NC}"
-    [[ "$UPDS_N" -gt 0 ]] && echo -e "${CYAN}$raw_upds ${NC}"
-    [[ "$UPDS_AUR_N" -gt 0 ]] && echo -e "${GREEN}$raw_aur ${NC}"
-    logger "FOUND UPDATES" "$((UPDS_N + UPDS_AUR_N)) updates ($UPDS_AUR_N in AUR)"
+    echo -e "${YELLOW} $NOTE $total Atualizações encontradas ($upds_aur_n no AUR):${NC}"
+    [[ "$upds_n" -gt 0 ]] && echo -e "${CYAN}$(cat "$tmp_repo")${NC}"
+    [[ "$upds_aur_n" -gt 0 ]] && echo -e "${GREEN}$(cat "$tmp_aur")${NC}"
+    
+    rm -f "$tmp_repo" "$tmp_aur"
+    logger "FOUND UPDATES" "$total updates"
 }
 
 get_package_path() {
     local pkg="$1"
-    [[ -z "$pkg" ]] && echo "$ALERT Provide a package name." && exit 1
-    if pacman -Qi "$pkg" &>/dev/null; then
-        step "Files for package: ${pkg}"
-        local bins=$(pacman -Ql "$pkg" | grep '/bin/' | cut -d' ' -f2-)
-        if [[ -n "$bins" ]]; then
-            echo -e "${GREEN}Binaries found:${NC}"
-            echo "$bins"
-        else
-            echo -e "${YELLOW}No binaries found. Displaying all files instead:${NC}"
-            pacman -Ql "$pkg" | cut -d' ' -f2- | less
-        fi
-        logger "PATH SEARCH" "$pkg"
+    local bins=$(pacman -Ql "$pkg" 2>/dev/null | awk '/\/bin\// {print $2}')
+    if [[ -n "$bins" ]]; then
+        echo -e "${GREEN}Binários encontrados:${NC}\n$bins"
     else
-        logger "PATH SEARCH FAILED" "$pkg"
-        echo "$ALERT Package '$pkg' is not installed."; exit 1
+        step "Nenhum binário encontrado para $pkg"
     fi
 }
+
 ###############################
 ### END OF COMMANDS SESSION ###
 ###############################
