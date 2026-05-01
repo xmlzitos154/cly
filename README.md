@@ -70,6 +70,8 @@ cache	-c	Clear Pacman and AUR cache
 
 --ping: test if network is available
 
+--pacdiff: Manage pacnew files on your device
+
 Power-User Options
 
     -f, --flatpak: Enables hybrid search/update for Flatpaks.
@@ -101,11 +103,17 @@ Restore or create a backup of your packages:
    jay --restore-backup: restore packages to original instalation (use --path to specify the path to backup file)
 
 ```
+Paru fallback
 
+Use paru instead yay
+```
+  jay --backend paru <command>
+  
+```
 License
 
 Distributed under the MIT License. Created by xmlzitos154.
 
-Version 3.5.5
+Version 3.5.6
 
 Tip: If you like JAY, don't forget to leave a star to support the project!
