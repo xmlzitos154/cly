@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-VER="3.5.5"
+VER="3.5.5" 
 
 ver_msg() { echo -e "\njay v$VER - rc-1\n"; }
 
@@ -311,8 +311,8 @@ query() {
 
 check_updates() {
     tester
-    command -v checkupdates &>/dev/null || { step "Instalando dependências..."; yay -S pacman-contrib --noconfirm; }
-    step "Searching for updates (Sync/AUR)..."
+    command -v checkupdates &>/dev/null || { step "Installing dependencies..."; yay -S pacman-contrib --noconfirm; }
+    step "Searching for updates..."
     local tmp_repo=$(mktemp)
     local tmp_aur=$(mktemp)
     checkupdates > "$tmp_repo" 2>/dev/null &
@@ -325,11 +325,11 @@ check_updates() {
     local total=$((upds_n + upds_aur_n))
     
     if [[ "$total" -eq 0 ]]; then
-        success "Nada para fazer."
+        success "You system is updated."
         rm -f "$tmp_repo" "$tmp_aur"
         return
     fi
-    echo -e "${YELLOW} $NOTE $total Atualizações encontradas ($upds_aur_n no AUR):${NC}"
+    echo -e "${YELLOW} $NOTE $total Updates found ($upds_aur_n no AUR):${NC}"
     [[ "$upds_n" -gt 0 ]] && echo -e "${CYAN}$(cat "$tmp_repo")${NC}"
     [[ "$upds_aur_n" -gt 0 ]] && echo -e "${GREEN}$(cat "$tmp_aur")${NC}"
     
@@ -341,9 +341,9 @@ get_package_path() {
     local pkg="$1"
     local bins=$(pacman -Ql "$pkg" 2>/dev/null | awk '/\/bin\// {print $2}')
     if [[ -n "$bins" ]]; then
-        echo -e "${GREEN}Binários encontrados:${NC}\n$bins"
+        echo -e "${GREEN}Binaries found:${NC}\n$bins"
     else
-        step "Nenhum binário encontrado para $pkg"
+        step "No binaries found in $pkg"
     fi
 }
 
