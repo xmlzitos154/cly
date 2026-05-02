@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 ver="3.5.7"
-ver_msg() { echo -e "\njay v$ver - rc-1\n"; }
+ver_msg() { echo -e "\njay v$ver - rc-2\n"; }
 
 set -o pipefail
 REAL_HOME=$(getent passwd "${SUDO_USER:-$USER}" 2>/dev/null | cut -d: -f6); REAL_HOME=${REAL_HOME:-$HOME}
@@ -325,7 +325,6 @@ check_updates() {
     echo -e "${YELLOW} $NOTE $total Updates found ($upds_aur_n no AUR):${NC}"
     [[ "$upds_n" -gt 0 ]] && echo -e "${CYAN}$(cat "$tmp_repo")${NC}"
     [[ "$upds_aur_n" -gt 0 ]] && echo -e "${GREEN}$(cat "$tmp_aur")${NC}"
-    
     rm -f "$tmp_repo" "$tmp_aur"
     logger "FOUND UPDATES" "$total updates"
 }
@@ -375,6 +374,7 @@ while [[ $# -gt 0 ]]; do
         -A) AGRESSIVE_MODE=true ;;
         --list-aur) LIST_AUR=true ;;
         --path-to-binary) PTBIN=true ;;
+        --noconfirm) YAY_FLAGS+=("--noconfirm") ;;
         --backend)
             shift
             if [[ "$1" == "paru" || "$1" == "yay" ]]; then
