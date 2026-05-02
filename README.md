@@ -62,8 +62,6 @@ search	-s	Search for packages in repositories
 
 query	-q	Search for locally installed packages
 
-refresh	-r	Refresh and Upgrade package databases
-
 orphan	-o	Remove all orphaned dependencies
 
 cache	-c	Clear Pacman and AUR cache
@@ -84,7 +82,7 @@ Power-User Options
 
     --check-updates: Search for updates in AUR
 
-    -p, --path-to-binary: use with query to search for the package path 
+    --path-to-binary: use with query to search for the package path 
 
 Log Management
 
@@ -114,6 +112,6 @@ License
 
 Distributed under the MIT License. Created by xmlzitos154.
 
-Version 3.5.6
+Version 3.5.7
 
 Tip: If you like JAY, don't forget to leave a star to support the project!
