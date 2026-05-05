@@ -112,6 +112,6 @@ License
 
 Distributed under the MIT License. Created by xmlzitos154.
 
-Version 3.6 stable
+Version 4
 
 Tip: If you like JAY, don't forget to leave a star to support the project!

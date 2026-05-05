@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 
-ver="3.6"
-ver_msg() { echo -e "\njay v$ver - rc-1\n"; }
+ver="4"; rc="1"
+
+## A Semantic AUR helper wrapper written in bashc
+
+ver_msg() { echo -e "\njay v$ver - rc-$rc\n"; }
+inform() { echo -e " -> jay v$ver - release-candidate $rc - version codename 'Ice Cream'"; }
 
 set -o pipefail
 REAL_HOME=$(getent passwd "${SUDO_USER:-$USER}" 2>/dev/null | cut -d: -f6); REAL_HOME=${REAL_HOME:-$HOME}
@@ -9,7 +13,7 @@ BACKUP_DIR="$REAL_HOME/.local/share/jay/backup"; BACKUP_FILE="$BACKUP_DIR/backup
 LOG_FILE="$REAL_HOME/.cache/jay.log"
 
 CYAN='\033[0;36m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; NC='\033[0m';
-ALERT="[!]"; ERROR="[x]"; COMPLETE="[✓]"; NOTE="[*]"; CC=":: "
+ALERT="[!]"; ERROR="[x]"; COMPLETE="[✓]"; NOTE="[*]"; CC="::"
 
 step() { echo -e "${CYAN} $CC ${NC}${1}"; }
 success() { echo -e "${GREEN} $COMPLETE ${NC}${1}"; }
@@ -18,33 +22,40 @@ err01() { echo -e "$ALERT invalid argument '$ACTION'"; exit 1; }
 err02() { echo -e "${RED}$ERROR Cannot create temporary file"; exit 1; }
 err03() { echo -e "${RED}$ERROR the specified AUR Helper ($backend) not found"; exit 1; }
 err04() { echo -e "${RED}$ERROR Specified aur helper is not found or is not suported."; exit 1; }
+err05() { echo -e "${RED}$ERROR Don't use '$backend' with sudo."; exit 1; }
 usage() { echo -e "Usage: jay [command] [options] [packages]"; exit 1; }
 
-if command -v paru &>/dev/null; then
-    backend="paru"
-    elif command -v yay &>/dev/null; then
-    backend="yay"
-else
-    echo -e "${YELLOW}$ALERT No AUR Helpers found. Using pacman instead (limited)${NC}"
-    backend="pacman"
-fi
+[[ "$backend" != "pacman" && "$EUID" -eq 0 ]] && err05
 
 #################################
 ### START OF COMMANDS SESSION ###
 #################################
 
+## NETWORK TESTER
+tester() {
+    step "Testing network..."
+    if ping -c 1 -i 0.01 8.8.8.8 &>/dev/null; then
+        success "Connection is active."
+    else
+        echo -e "${RED}$ERROR ${NC}Network disconnected. Verify your Wi-Fi/Cable."
+        logger "TEST FOR NETWORK" "unavailable"
+        exit 1
+    fi
+}
+
 ## BASE
 help_message() {
     ver_msg
     echo -e "Usage: jay [command] [options] [packages]"
-    echo -e "Usage: jay [ -i | -rm | -s | -u ] [ -f | --flatpak ] [ --noconfirm ]"
+    echo -e "Usage: jay [ -i | -r | -s | -u ] [ -f | --flatpak ] [ --noconfirm ]"
     echo -e "Usage: jay [ -q | query ] [ --list-aur ] [ --path-to-binary ]"
     echo -e "Usage: jay [ --create-backup | --restore-backup ] [ --path /path/to/backup/file.txt ]"
     echo -e "Usage: jay [ --backend ] [ yay | paru ]"
     echo -e "\nOptions:\n"
     echo -e "-h, --help              Show this message again"
+    echo -e "-v, --version           Show the actual program version"
     echo -e "-i, install             Sync/install packages"
-    echo -e "-rm, remove             Remove packages (Use '-A' to activate the Agressive mode)"
+    echo -e "-r, remove              Remove packages (Use '-A' to activate the Agressive mode)"
     echo -e "-u, update              Update the system"
     echo -e "-s, search              search packages in AUR"
     echo -e "-q, query               Query local packages"
@@ -52,6 +63,7 @@ help_message() {
     echo -e "-c, cache               Clear all pacman cache"
     echo -e "-m, mirrors             Search for faster repos"
     echo -e "--check-updates         Search for available updates"
+    echo -e "--info                  Show more detailed informations of this program"
     echo -e "--fix-keys              Restore invalid GPG keys"
     echo -e "--pacdiff               Manage pacdiffs"
     echo -e "--create-backup         Create an backup file"
@@ -90,18 +102,6 @@ run_flatpak() {
     esac
 }
 
-tester() {
-    step "Testing network..."
-    if ping -c 1 -i 0.01 8.8.8.8 &>/dev/null; then
-        success "Connection is active."
-    else
-        # FIX: typo "disconected" -> "disconnected"
-        echo -e "${RED}$ERROR ${NC}Network disconnected. Verify your Wi-Fi/Cable."
-        logger "TEST FOR NETWORK" "unavailable"
-        exit 1
-    fi
-}
-
 ins() {
     tester
     CMD="-S"
@@ -123,7 +123,7 @@ upd() {
 }
 
 ## CACHE
-clr_cache() {
+cache_mgr() {
     local cache_dir="$REAL_HOME/.cache/$backend"
     if [[ -d "$cache_dir" ]]; then
         step "Cleaning $backend builds..."
@@ -191,9 +191,9 @@ view_pkgbuild() {
 
 list_aur() {
     step "Filtering packages installed via AUR..."
-    pacman -Qm | column -t
+    "$backend" -Qqm | column -t
     TAG="LOCAL_QUERY (AUR)"
-    local count=$("$backend" -Qm | wc -l)
+    local count=$("$backend" -Qqm | wc -l)
     echo -e "\n${GREEN}$COMPLETE${NC} Total of $count AUR packages found."
 }
 
@@ -209,11 +209,24 @@ refresh_mirrors() {
             error "Reflector is required for this function."
         fi
     fi
+    detect_country() {
+        curl -s --max-time 2 https://ipinfo.io/country 2>/dev/null
+    }
     
+    if [[ -z "$MIRROR_COUNTRY" ]]; then
+        MIRROR_COUNTRY=$(detect_country)
+    fi
+    REFLECTOR_ARGS=(--latest 20 --protocol https --sort rate)
+    if [[ -n "$MIRROR_COUNTRY" ]]; then
+        step "Using mirrors from: $MIRROR_COUNTRY"
+        REFLECTOR_ARGS+=(--country "$MIRROR_COUNTRY")
+    else
+        step "Could not detect country, using worldwide mirrors"
+    fi
     step "Creating backup at /etc/pacman.d/mirrorlist.bak"
     sudo cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.bak
-    step "Fetching the 10 fastest mirrors... (Please wait)"
-    if sudo reflector --latest 20 --protocol https --sort rate --save /etc/pacman.d/mirrorlist; then
+    step "Fetching the fastest mirrors... (Please wait)"
+    if sudo reflector "${REFLECTOR_ARGS[@]}" --save /etc/pacman.d/mirrorlist; then
         success "Mirrors updated and saved successfully."
         TAG="UPDATE MIRRORS"
     else
@@ -321,7 +334,6 @@ searcher() {
 query() {
     CMD="-Qs"
     TAG="LOCAL QUERY"
-    [[ "$LIST_AUR" == true ]] && list_aur && TAG="SKIP" && return
     [[ "$PTBIN" == true ]] && get_package_path "${FINAL_ARGS[@]}" && TAG="SKIP" && return
 }
 
@@ -339,15 +351,14 @@ check_updates() {
     local upds_n=$(wc -l < "$tmp_repo")
     local upds_aur_n=$(wc -l < "$tmp_aur")
     local total=$((upds_n + upds_aur_n))
-    
     if [[ "$total" -eq 0 ]]; then
         success "You system is updated."
         rm -f "$tmp_repo" "$tmp_aur"
         return
     fi
-    echo -e "${YELLOW} $NOTE $total Updates found ($upds_aur_n no AUR):${NC}"
-    [[ "$upds_n" -gt 0 ]] && echo -e "${CYAN}$(cat "$tmp_repo")${NC}"
-    [[ "$upds_aur_n" -gt 0 ]] && echo -e "${GREEN}$(cat "$tmp_aur")${NC}"
+    echo -e "${YELLOW} $NOTE $total Updates found ($upds_aur_n in AUR):${NC}"
+    [[ "$upds_n" -gt 0 ]] && echo -e "\nOficial upds:\n${CYAN}$(cat "$tmp_repo")${NC}"
+    [[ "$upds_aur_n" -gt 0 ]] && echo -e "\nUpds in aur:\n${GREEN}$(cat "$tmp_aur")${NC}"
     rm -f "$tmp_repo" "$tmp_aur"
     logger "FOUND UPDATES" "$total updates"
 }
@@ -370,11 +381,11 @@ get_package_path() {
 [[ ! -w "$LOG_FILE" ]] && sudo chown "${SUDO_USER:-$USER}":"${SUDO_USER:-$USER}" "$LOG_FILE" 2>/dev/null
 [[ -z "$1" ]] && usage
 
-RAW_CMD="$*"; USE_FLATPAK=false; PTBIN=false; AGRESSIVE_MODE=false; FINAL_ARGS=(); YAY_FLAGS=(); EXIT_CODE=0; KILL_DBLOCK=false; LIST_AUR=false
+RAW_CMD="$*"; USE_FLATPAK=false; PTBIN=false; AGRESSIVE_MODE=false; FINAL_ARGS=(); YAY_FLAGS=(); EXIT_CODE=0; LIST_AUR=false
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --pacdiff|--ping|--create-backup|--restore-backup|install|-i|remove|-rm|update|-u|search|-s|query|-q|cache|-c|orphan|-o|mirrors|-m|slog|-sl|--fix-keys|clog|-cl|--check-updates)
+        --list-aur|--pacdiff|--ping|--create-backup|--restore-backup|install|-i|remove|-r|update|-u|search|-s|query|-q|cache|-c|orphan|-o|mirrors|-m|slog|-sl|--fix-keys|clog|-cl|--check-updates)
             [[ -z "$ACTION" ]] && ACTION="$1" || FINAL_ARGS+=("$1")
         ;;
         --view)
@@ -382,7 +393,7 @@ while [[ $# -gt 0 ]]; do
         ;;
         --backend)
             shift
-            if [[ "$1" == "paru" || "$1" == "yay" ]]; then
+            if [[ "$1" == "paru" || "$1" == "yay" || "$1" == "pikaur" ]]; then
                 backend="$1"
             else
                 err04
@@ -393,25 +404,38 @@ while [[ $# -gt 0 ]]; do
             [[ -z "$1" ]] && error "--path requires a file path argument"
             CUSTOM_PATH="$1"
         ;;
-        --kill-dblock) KILL_DBLOCK=true ;;
         -h|--help) help_message ;;
+        --info) inform; exit 0 ;;
         -f|--flatpak) USE_FLATPAK=true ;;
         -v|--version) ver_msg; exit 0 ;;
         -A) AGRESSIVE_MODE=true ;;
-        --list-aur) LIST_AUR=true ;;
         --path-to-binary) PTBIN=true ;;
         --noconfirm) YAY_FLAGS+=("--noconfirm") ;;
         -) ACTION="-" && err01 ;;
-        -*) echo -e "-> Opção desconhecida: '$1'. Use --help para ver as opções válidas."; exit 1 ;;
+        -*) echo -e "jay: Invalid option: '$1'"; usage ;;
         *) FINAL_ARGS+=("$1") ;;
     esac
     shift
 done
 
+if command -v yay &>/dev/null; then
+    echo -e "${GREEN} $CC ${NC}Using yay..."
+    backend="yay"
+    elif command -v paru &>/dev/null; then
+    echo -e " $NOTE paru detected, using paru..."
+    backend="paru"
+    elif command -v pikaur &>/dev/null; then
+    echo -e " $NOTE pikaur detected, using pikaur..."
+    backend="pikaur"
+else
+    echo -e "${YELLOW} $ALERT No AUR Helpers found. Using pacman instead (limited)${NC}"; backend="pacman"
+    [[ ! "$EUID" == "0" ]] && error "Pacman needs sudo to continue."
+fi
+
 [[ -z "$ACTION" && ${#FINAL_ARGS[@]} -gt 0 ]] && ACTION="${FINAL_ARGS[0]}" && FINAL_ARGS=("${FINAL_ARGS[@]:1}")
 [[ -z "$ACTION" ]] && ACTION="${YAY_FLAGS[0]:-$1}" && err01
 
-[[ "$ACTION" =~ ^(install|remove|-i|-rm)$ && ${#FINAL_ARGS[@]} -eq 0 ]] && error "specify at least one package"
+[[ "$ACTION" =~ ^(install|remove|-i|-r)$ && ${#FINAL_ARGS[@]} -eq 0 ]] && error "specify at least one package"
 
 command -v "$backend" &>/dev/null || {
     err03
@@ -423,31 +447,29 @@ trap 'rm -f "$TMP_OUT" 2>/dev/null' EXIT
 if [[ -n "$ACTION" ]]; then
     [[ "$AGRESSIVE_MODE" == "true" ]] && echo -e "${RED} $NOTE Agressive mode enabled!${NC}"
     [[ ! "$ACTION" =~ ^(-m|mirrors|-sl|-cl|slog|clog)$ ]] && step "Executing: $ACTION"
-fi
-
-if [[ "$KILL_DBLOCK" == "true" ]]; then
-    pgrep -x "pacman|$backend" &>/dev/null && error "Pacman/$backend is already running."
+    pgrep -x pacman >/dev/null || pgrep -x "$backend" >/dev/null && error "Pacman/$backend is already running."
     [[ -f /var/lib/pacman/db.lck ]] && sudo rm /var/lib/pacman/db.lck && success "Database lock removed."
 fi
 
 case "$ACTION" in
-    slog|-sl) LOG_FUNC="sl"; log_acts ;;
-    clog|-cl) LOG_FUNC="cl"; log_acts ;;
+    show-logs|slog|-sl) LOG_FUNC="sl"; log_acts ;;
+    clear-logs|clog|-cl) LOG_FUNC="cl"; log_acts ;;
     --ping) tester && logger "TEST FOR NETWORK" "available" && exit 0 ;;
-    install|-i) ins ;;
-    remove|-rm) rmv ;;
-    update|-u) upd ;;
-    search|-s) searcher ;;
-    query|-q) query ;;
-    cache|-c) clr_cache ;;
-    orphan|-o) remove_orphans ;;
-    mirrors|-m) refresh_mirrors ;;
-    --check-updates) check_updates ;;
-    --fix-keys) fix_keys ;;
-    --pacdiff) check_conf ;;
-    --create-backup) BACKUP_ACTION="create"; backup_func ;;
-    --restore-backup) BACKUP_ACTION="restore"; backup_func ;;
-    --view) view_pkgbuild "${FINAL_ARGS[0]}"; exit 0 ;;
+    i|in|ins|install|-i) ins ;;
+    r|rm|rem|remove|-r|-rm) rmv ;;
+    u|up|upd|update|-u) upd ;;
+    s|sr|src|search|-s) searcher ;;
+    q|qr|qur|query|-q) query ;;
+    c|cc|cac|cache|-c) cache_mgr ;;
+    o|op|orp|orphan|-o) remove_orphans ;;
+    m|mr|mir|mirrors|-m) refresh_mirrors ;;
+    cu|check|--check-updates) check_updates ;;
+    fk|--fix-keys) fix_keys ;;
+    pd|--pacdiff) check_conf ;;
+    cb|--create-backup) BACKUP_ACTION="create"; backup_func ;;
+    rb|--restore-backup) BACKUP_ACTION="restore"; backup_func ;;
+    la|--list-aur) list_aur ;;
+    vi|--view) view_pkgbuild "${FINAL_ARGS[0]}"; exit 0 ;;
     *) err01 ;;
 esac
 
