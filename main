@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-ver="4"; rc="1"
+ver="5"; rc="1"
 
 ## A Semantic AUR helper wrapper written in bashc
 
@@ -47,10 +47,10 @@ tester() {
 help_message() {
     ver_msg
     echo -e "Usage: jay [command] [options] [packages]"
-    echo -e "Usage: jay [ -i | -r | -s | -u ] [ -f | --flatpak ] [ --noconfirm ]"
-    echo -e "Usage: jay [ -q | query ] [ --list-aur ] [ --path-to-binary ]"
-    echo -e "Usage: jay [ --create-backup | --restore-backup ] [ --path /path/to/backup/file.txt ]"
-    echo -e "Usage: jay [ --backend ] [ yay | paru ]"
+    echo -e "Usage: jay [-i | -r | -s | -u | check] [-f | --flatpak] [--noconfirm]"
+    echo -e "Usage: jay [-q | query] [--list-aur] [--path-to-binary]"
+    echo -e "Usage: jay [--restore-backup] [--path /path/to/backup/file.txt]"
+    echo -e "Usage: jay [--backend] [yay | paru]"
     echo -e "\nOptions:\n"
     echo -e "-h, --help              Show this message again"
     echo -e "-v, --version           Show the actual program version"
@@ -71,6 +71,7 @@ help_message() {
     echo -e "--path-to-binary        Search for binary path (use with query)"
     echo -e "--ping                  Test if network is available"
     echo -e "--view                  View PKGBUILD file of AUR Packages"
+    echo -e "--statistics, stats     Show packages and system statistics"
     echo -e "--backend               Switches the aur helper between yay and paru to be used (Default: yay)\n"
     exit 0
 }
@@ -173,7 +174,39 @@ check_conf() {
     TAG="CLEAR DIFFS"
 }
 
-## BASE2
+## ETC
+show_stats() {
+    step "Gathering system statistics..."
+    local native_pkgs=$(pacman -Qn | wc -l)
+    local aur_pkgs=$(pacman -Qm | wc -l)
+    local flat_pkgs=0
+    if command -v flatpak &>/dev/null; then
+        flat_pkgs=$(flatpak list --app | wc -l)
+    fi
+    local cache_size=$(du -sh /var/lib/pacman | cut -f1)
+    local install_date=$(head -n1 /var/log/pacman.log | cut -d' ' -f1 | tr -d '[]' | cut -d'T' -f1)
+    local aur_cache_size="0"
+    [[ -d "$REAL_HOME/.cache/$backend" ]] && aur_cache_size=$(du -sh "$REAL_HOME/.cache/$backend" | cut -f1)
+    local heavy_pkgs=$(expac -S "%m\t%n"  2>/dev/null | sort -hr | head -5 | awk '{print $2 " (" $1/1024/1024 "MB)"}')
+    echo -e "\n${CYAN}${B}--- JAY SYSTEM STATS ---${NC}"
+    echo -e "${G}Packages:${NC}"
+    echo -e "  $CC Native: $native_pkgs"
+    echo -e "  $CC AUR:    $aur_pkgs"
+    [[ $flat_pkgs -gt 0 ]] && echo -e "  $CC Flatpak: $flat_pkgs"
+    echo -e "\n${Y}Disk Usage (Cache):${NC}"
+    echo -e "  $CC Pacman DB: $cache_size"
+    echo -e "  $CC System Born on: $install_date"
+    echo -e "  $CC $backend Cache: $aur_cache_size"
+    if command -v expac &>/dev/null; then
+        echo -e "\n${R}Heaviest Packages:${NC}"
+        echo "$heavy_pkgs" | sed "s/^/  $CC /"
+    else
+        echo -e "\n${Y}$NOTE Install 'expac' to see heaviest packages.${NC}"
+    fi
+    echo -e "${CYAN}------------------------${NC}"
+    TAG="STATS"
+}
+
 view_pkgbuild() {
     local pkg="$1"
     [[ -z $pkg ]] && echo "$NOTE Specify one package." && exit 1
@@ -320,7 +353,7 @@ logger() {
     local tag="$1"
     local info="$2"
     printf -v date_str '%(%Y-%m-%d - %H:%M:%S)T' -1
-    echo "[$date_str] [EXIT STATUS $status] [$tag] -> $info" >> "$LOG_FILE"
+    echo "$date_str [Exit Status $status] [$tag] -> $info" >> "$LOG_FILE"
 }
 
 ## SEARCH
@@ -343,24 +376,37 @@ check_updates() {
     step "Searching for updates..."
     local tmp_repo=$(mktemp)
     local tmp_aur=$(mktemp)
+    local tmp_flat=$(mktemp)
     checkupdates > "$tmp_repo" 2>/dev/null &
     local pid_repo=$!
     "$backend" -Qua > "$tmp_aur" 2>/dev/null &
     local pid_aur=$!
-    wait $pid_repo $pid_aur
+    local pid_flat=""
+    if [[ "$USE_FLATPAK" == "true" ]] && command -v flatpak &>/dev/null; then
+        flatpak remote-ls --updates > "$tmp_flat" 2>/dev/null &
+        pid_flat=$!
+    fi
+    wait $pid_repo $pid_aur ${pid_flat:+$pid_flat}
     local upds_n=$(wc -l < "$tmp_repo")
     local upds_aur_n=$(wc -l < "$tmp_aur")
-    local total=$((upds_n + upds_aur_n))
+    local upds_flat_n=0
+    [[ -f "$tmp_flat" ]] && upds_flat_n=$(wc -l < "$tmp_flat")
+    local total=$((upds_n + upds_aur_n + upds_flat_n))
     if [[ "$total" -eq 0 ]]; then
-        success "You system is updated."
-        rm -f "$tmp_repo" "$tmp_aur"
+        success "Your system is updated."
+        rm -f "$tmp_repo" "$tmp_aur" "$tmp_flat"
         return
     fi
-    echo -e "${YELLOW} $NOTE $total Updates found ($upds_aur_n in AUR):${NC}"
-    [[ "$upds_n" -gt 0 ]] && echo -e "\nOficial upds:\n${CYAN}$(cat "$tmp_repo")${NC}"
-    [[ "$upds_aur_n" -gt 0 ]] && echo -e "\nUpds in aur:\n${GREEN}$(cat "$tmp_aur")${NC}"
-    rm -f "$tmp_repo" "$tmp_aur"
-    logger "FOUND UPDATES" "$total updates"
+    local flat_info=""
+    [[ "$USE_FLATPAK" == "true" ]] && flat_info=" and $upds_flat_n in Flatpak"
+    echo -e "${YELLOW} $NOTE $total Updates found ($upds_aur_n in AUR$flat_info):${NC}"
+    [[ "$upds_n" -gt 0 ]] && echo -e "\nOfficial upds:\n${CYAN}$(cat "$tmp_repo")${NC}"
+    [[ "$upds_aur_n" -gt 0 ]] && echo -e "\nUpdates in AUR:\n${GREEN}$(cat "$tmp_aur")${NC}"
+    if [[ "$USE_FLATPAK" == "true" && "$upds_flat_n" -gt 0 ]]; then
+        echo -e "\nUpdates in Flatpak:\n${YELLOW}$(cat "$tmp_flat")${NC}"
+    fi
+    rm -f "$tmp_repo" "$tmp_aur" "$tmp_flat"
+    logger "FOUND UPDATES" "$total updates (Flatpak: $USE_FLATPAK)"
 }
 
 get_package_path() {
@@ -385,7 +431,7 @@ RAW_CMD="$*"; USE_FLATPAK=false; PTBIN=false; AGRESSIVE_MODE=false; FINAL_ARGS=(
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --list-aur|--pacdiff|--ping|--create-backup|--restore-backup|install|-i|remove|-r|update|-u|search|-s|query|-q|cache|-c|orphan|-o|mirrors|-m|slog|-sl|--fix-keys|clog|-cl|--check-updates)
+        stats|--list-aur|--pacdiff|--ping|--create-backup|--restore-backup|install|-i|remove|-r|update|-u|search|-s|query|-q|cache|-c|orphan|-o|mirrors|-m|slog|-sl|--fix-keys|clog|-cl|--check-updates)
             [[ -z "$ACTION" ]] && ACTION="$1" || FINAL_ARGS+=("$1")
         ;;
         --view)
@@ -410,9 +456,9 @@ while [[ $# -gt 0 ]]; do
         -v|--version) ver_msg; exit 0 ;;
         -A) AGRESSIVE_MODE=true ;;
         --path-to-binary) PTBIN=true ;;
-        --noconfirm) YAY_FLAGS+=("--noconfirm") ;;
+        nc|--noconfirm) YAY_FLAGS+=("--noconfirm") ;;
         -) ACTION="-" && err01 ;;
-        -*) echo -e "jay: Invalid option: '$1'"; usage ;;
+        -*) ACTION="$1" && err01 ;;
         *) FINAL_ARGS+=("$1") ;;
     esac
     shift
@@ -437,16 +483,13 @@ fi
 
 [[ "$ACTION" =~ ^(install|remove|-i|-r)$ && ${#FINAL_ARGS[@]} -eq 0 ]] && error "specify at least one package"
 
-command -v "$backend" &>/dev/null || {
-    err03
-}
+! command -v "$backend" &>/dev/null && err03
 
 TMP_OUT=$(mktemp) || err02
 trap 'rm -f "$TMP_OUT" 2>/dev/null' EXIT
 
 if [[ -n "$ACTION" ]]; then
     [[ "$AGRESSIVE_MODE" == "true" ]] && echo -e "${RED} $NOTE Agressive mode enabled!${NC}"
-    [[ ! "$ACTION" =~ ^(-m|mirrors|-sl|-cl|slog|clog)$ ]] && step "Executing: $ACTION"
     pgrep -x pacman >/dev/null || pgrep -x "$backend" >/dev/null && error "Pacman/$backend is already running."
     [[ -f /var/lib/pacman/db.lck ]] && sudo rm /var/lib/pacman/db.lck && success "Database lock removed."
 fi
@@ -466,6 +509,7 @@ case "$ACTION" in
     cu|check|--check-updates) check_updates ;;
     fk|--fix-keys) fix_keys ;;
     pd|--pacdiff) check_conf ;;
+    stats|--statistics) show_stats ;;
     cb|--create-backup) BACKUP_ACTION="create"; backup_func ;;
     rb|--restore-backup) BACKUP_ACTION="restore"; backup_func ;;
     la|--list-aur) list_aur ;;
