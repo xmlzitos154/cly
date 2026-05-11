@@ -80,6 +80,8 @@ Power-User Options
 
     --noconfirm: Skips AUR confirmation prompts for automation.
 
+    --lines: Specify number of lines to display on logger displayer
+
     --fix-keys: Fix GPG Keys issues.
 
     --check-updates: Search for updates in AUR.
@@ -118,6 +120,6 @@ License
 
 Distributed under the MIT License. Created by xmlzitos154.
 
-Version 5.2
+Version 5.3
 
 Tip: If you like JAY, don't forget to leave a star to support the project!
