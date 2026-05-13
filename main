@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
-ver="5.3.1"; rc="1"
+ver="5.4"; rc="1"
 
 ## JAY - A Semantic AUR helper wrapper written in bash
 
-ver_msg() { echo -e "\njay v$ver - rc-$rc\n"; }
+display_ver() { echo -e "\njay v$ver - rc-$rc\n"; }
 inform() { echo -e " -> jay v$ver - release-candidate $rc - version codename 'Ice Cream'"; }
 
 set -o pipefail
@@ -18,7 +18,7 @@ ALERT="[!]"; ERROR="[x]"; COMPLETE="[✓]"; NOTE="[*]"; CC="::"
 step() { echo -e "${CYAN} $CC ${NC}${1}"; }
 success() { echo -e "${GREEN} $COMPLETE ${NC}${1}"; }
 error() { echo -e "${RED} $ERROR ${NC}${1}"; exit 1; }
-err01() { echo -e "$ALERT invalid argument '$ACTION'"; exit 1; }
+err01() { echo -e "$ALERT invalid argument '$action'"; exit 1; }
 err02() { echo -e "${RED}$ERROR Cannot create temporary file"; exit 1; }
 err03() { echo -e "${RED}$ERROR the specified AUR Helper ($backend) not found"; exit 1; }
 err04() { echo -e "${RED}$ERROR Specified aur helper is not found or is not suported."; exit 1; }
@@ -60,7 +60,7 @@ tester() {
 
 ## BASE
 help_message() {
-    ver_msg
+    display_ver
     echo -e "Usage: jay [command] [options] [packages]"
     echo -e "Usage: jay [-i | -r | -s | -u | check] [-f | --flatpak] [--noconfirm]"
     echo -e "Usage: jay [-q | query] [--list-aur] [--path-to-binary]"
@@ -102,46 +102,46 @@ flatpak_only() {
     ! command -v flatpak &>/dev/null && err06
     echo -e "${GREEN} $CC ${NC}Using flatpak..."
     
-    case "$ACTION" in
-        i|in|ins|install|-i)  FLAT_CMD="install" ;;
-        r|rm|rem|remove|-r)   FLAT_CMD="uninstall" ;;
-        u|up|upd|update|-u)   FLAT_CMD="update" ;;
-        s|sr|src|search|-s)   FLAT_CMD="search" ;;
-        q|qr|qur|query|-q)    FLAT_CMD="list" ;;
-        c|cc|cac|cache|-c)    FLAT_CMD="uninstall --unused" ;;
-        cu|check|--check-updates) FLAT_CMD="remote-ls --updates" ;;
+    case "$action" in
+        i|in|ins|install|-i)  flat_cmd="install" ;;
+        r|rm|rem|remove|-r)   flat_cmd="uninstall" ;;
+        u|up|upd|update|-u)   flat_cmd="update" ;;
+        s|sr|src|search|-s)   flat_cmd="search" ;;
+        q|qr|qur|query|-q)    flat_cmd="list" ;;
+        c|cc|cac|cache|-c)    flat_cmd="uninstall --unused" ;;
+        cu|check|--check-updates) flat_cmd="remote-ls --updates" ;;
         
-        *) error "Action '$ACTION' not supported in Flatpak-only mode." ;;
+        *) error "Action '$action' not supported in Flatpak-only mode." ;;
     esac
-    flatpak $FLAT_CMD "${FINAL_ARGS[@]}"
-    EXIT_CODE=$?
-    TAG="FLATPAK_ONLY"
-    logger "$TAG" "$FLAT_CMD ${FINAL_ARGS[*]}"
-    exit $EXIT_CODE
+    flatpak $flat_cmd "${final_args[@]}"
+    exit_code=$?
+    tag="FLATPAK_ONLY"
+    logger "$tag" "$flat_cmd ${final_args[*]}"
+    exit $exit_code
 }
 
 run_flatpak() {
-    [[ "$USE_FLATPAK" != "true" ]] && return
+    [[ "$use_flatpak" != "true" ]] && return
     command -v flatpak &>/dev/null || err06
-    case "$ACTION" in
+    case "$action" in
         update|-u)
             step "Updating Flatpaks..."
-            flatpak update -y 2>&1 | tee -a "$TMP_OUT"
-            FLAT_EXIT=${PIPESTATUS[0]}
-            if [[ $FLAT_EXIT -eq 0 ]]; then
-                logger "UPDATED (flatpak)" "${RAW_CMD}"
+            flatpak update -y 2>&1 | tee -a "$tmp_out"
+            flat_exit=${PIPESTATUS[0]}
+            if [[ $flat_exit -eq 0 ]]; then
+                logger "UPDATED (flatpak)" "${raw_cmd}"
             fi
-            EXIT_CODE=$FLAT_EXIT
+            exit_code=$flat_exit
         ;;
         search|-s)
-            [[ -n "$FLAT_CMD" ]] && step "Searching in Flatpak..." && flatpak "$FLAT_CMD" "${FINAL_ARGS[@]}"
+            [[ -n "$flat_cmd" ]] && step "Searching in Flatpak..." && flatpak "$flat_cmd" "${final_args[@]}"
         ;;
         *)
-            if [[ $EXIT_CODE -ne 0 ]] || grep -qiE "target not found|Nenhum pacote|não encontrado" "$TMP_OUT"; then
+            if [[ $exit_code -ne 0 ]] || grep -qiE "target not found|Nenhum pacote|não encontrado" "$tmp_out"; then
                 echo -e "\n${YELLOW} $NOTE Package not found in AUR. Trying on Flatpak...${NC}\n"
-                flatpak "$FLAT_CMD" -y "${FINAL_ARGS[@]}"
-                EXIT_CODE=$?
-                [[ $EXIT_CODE -eq 0 ]] && TAG="FLATPAK"
+                flatpak "$flat_cmd" -y "${final_args[@]}"
+                exit_code=$?
+                [[ $exit_code -eq 0 ]] && tag="FLATPAK"
             fi
         ;;
     esac
@@ -156,22 +156,22 @@ run_flatpak() {
 ## !BASE
 ins() {
     tester
-    CMD="-S"
-    TAG="INSTALLED"
-    FLAT_CMD="install"
+    cmd="-S"
+    tag="INSTALLED"
+    flat_cmd="install"
 }
 
 rmv() {
-    CMD=$([[ "$AGRESSIVE_MODE" == "true" ]] && echo "-Rsn" || echo "-Rs")
-    TAG=$([[ "$AGRESSIVE_MODE" == "true" ]] && echo "REMOVED WITH -Rsn MODE" || echo "REMOVED")
-    FLAT_CMD="uninstall"
+    cmd=$([[ "$agressive_mode" == "true" ]] && echo "-Rsn" || echo "-Rs")
+    tag=$([[ "$agressive_mode" == "true" ]] && echo "REMOVED WITH -Rsn MODE" || echo "REMOVED")
+    flat_cmd="uninstall"
 }
 
 upd() {
     tester
-    CMD="-Syu"
-    TAG="UPDATED"
-    FLAT_CMD="update"
+    cmd="-Syu"
+    tag="UPDATED"
+    flat_cmd="update"
 }
 
 ## !CACHE
@@ -188,40 +188,40 @@ cache_mgr() {
         success "Flatpaks cleaned."
     fi
     step "Cleaning pacman cache..."
-    CMD="-Sc"
-    TAG="CLEANED CACHE"
+    cmd="-Sc"
+    tag="CLEANED CACHE"
 }
 
 remove_orphans() {
     step "Searching for orphan packages..."
-    mapfile -t FINAL_ARGS < <("$backend" -Qqtd 2>/dev/null)
-    ORPHANS_N=${#FINAL_ARGS[@]}
-    if [[ "$ORPHANS_N" -eq 0 ]]; then
+    mapfile -t final_args < <("$backend" -Qqtd 2>/dev/null)
+    orphans_n=${#final_args[@]}
+    if [[ "$orphans_n" -eq 0 ]]; then
         success "No orphan packages found"
         logger "SEARCHED ORPHANS" "clean"
         exit 0
     fi
-    echo "$NOTE $ORPHANS_N Orphans found"
-    printf '%s\n' "${FINAL_ARGS[@]}"
+    echo "$NOTE $orphans_n Orphans found"
+    printf '%s\n' "${final_args[@]}"
     step "Removing orphans..."
-    CMD="-Rsn"
-    TAG="REMOVED ORPHANS"
+    cmd="-Rsn"
+    tag="REMOVED ORPHANS"
 }
 
 check_conf() {
     step "Searching for .pacnew/.pacsave files..."
-    PACNEWS=$(find /etc -regextype posix-extended -regex ".+\.pac(new|save)" 2>/dev/null)
-    if [[ -z "$PACNEWS" ]]; then
+    pacnews=$(find /etc -regextype posix-extended -regex ".+\.pac(new|save)" 2>/dev/null)
+    if [[ -z "$pacnews" ]]; then
         success "All clear! No conflicts found in /etc."
     else
         echo -e "${YELLOW} $NOTE Pending files found:${NC}"
-        echo "$PACNEWS"
+        echo "$pacnews"
         echo -e "\n${CYAN} $CC ${NC}Merge now with pacdiff? [y/N]"
         read -r -n 1 opt
         echo
         [[ "$opt" =~ ^(y|Y)$ ]] && sudo pacdiff
     fi
-    TAG="CLEAR DIFFS"
+    tag="CLEAR DIFFS"
 }
 
 ## !ETC
@@ -237,7 +237,7 @@ show_stats() {
     local install_date=$(head -n1 /var/log/pacman.log | cut -d' ' -f1 | tr -d '[]' | cut -d'T' -f1)
     local aur_cache_size="0"
     [[ -d "$REAL_HOME/.cache/$backend" ]] && aur_cache_size=$(du -sh "$REAL_HOME/.cache/$backend" | cut -f1)
-    local heavy_pkgs=$(expac -S "%m\t%n"  2>/dev/null | sort -hr | head -5 | awk '{print $2 " (" $1/1024/1024 "MB)"}')
+    local heavy_pkgs=$(expac -S "%m\t%n" 2>/dev/null | sort -hr | head -5 | awk '{print $2 " (" $1/1024/1024 "MB)"}')
     echo -e "\n${CYAN}--- JAY SYSTEM STATS ---${NC}"
     echo -e "${GREEN}Packages:${NC}"
     echo -e "  $CC Native: $native_pkgs"
@@ -254,7 +254,7 @@ show_stats() {
         echo -e "\n${YELLOW}$NOTE Install 'expac' to see heaviest packages.${NC}"
     fi
     echo -e "${CYAN}------------------------${NC}"
-    TAG="STATS"
+    tag="STATS"
 }
 
 view_pkgbuild() {
@@ -266,7 +266,7 @@ view_pkgbuild() {
     if [[ -n "$content" ]]; then
         echo -e "${CYAN}--- PKGBUILD: $pkg ---${NC}\n"
         echo "$content" | less -R
-        TAG="VIEW PKGBUILD"
+        tag="VIEW PKGBUILD"
     else
         error "Can't find PKGBUILD for '$pkg'. Is it in the AUR?"
     fi
@@ -275,7 +275,7 @@ view_pkgbuild() {
 list_aur() {
     step "Filtering packages installed via AUR..."
     "$backend" -Qqm | column -t
-    TAG="LOCAL_QUERY (AUR)"
+    tag="LOCAL_QUERY (AUR)"
     local count=$("$backend" -Qqm | wc -l)
     echo -e "\n${GREEN}$COMPLETE${NC} Total of $count AUR packages found."
 }
@@ -296,22 +296,22 @@ refresh_mirrors() {
         curl -s --max-time 2 https://ipinfo.io/country 2>/dev/null
     }
     
-    if [[ -z "$MIRROR_COUNTRY" ]]; then
-        MIRROR_COUNTRY=$(detect_country)
+    if [[ -z "$mirror_country" ]]; then
+        mirror_country=$(detect_country)
     fi
-    REFLECTOR_ARGS=(--latest 20 --protocol https --sort rate)
-    if [[ -n "$MIRROR_COUNTRY" ]]; then
-        step "Using mirrors from: $MIRROR_COUNTRY"
-        REFLECTOR_ARGS+=(--country "$MIRROR_COUNTRY")
+    reflector_args=(--latest 20 --protocol https --sort rate)
+    if [[ -n "$mirror_country" ]]; then
+        step "Using mirrors from: $mirror_country"
+        reflector_args+=(--country "$mirror_country")
     else
         step "Could not detect country, using worldwide mirrors"
     fi
     step "Creating backup at /etc/pacman.d/mirrorlist.bak"
     sudo cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.bak
     step "Fetching the fastest mirrors... (Please wait)"
-    if sudo reflector "${REFLECTOR_ARGS[@]}" --save /etc/pacman.d/mirrorlist; then
+    if sudo reflector "${reflector_args[@]}" --save /etc/pacman.d/mirrorlist; then
         success "Mirrors updated and saved successfully."
-        TAG="UPDATE MIRRORS"
+        tag="UPDATE MIRRORS"
     else
         error "Failed to update mirrors. Check your internet connection."
     fi
@@ -319,9 +319,9 @@ refresh_mirrors() {
 
 fix_keys() {
     step "Starting GPG key recovery..."
-    "$backend" -S archlinux-keyring --noconfirm --needed 2>&1 | tee "$TMP_OUT"
-    if [[ -f "$TMP_OUT" ]]; then
-        local keys=$(grep -oP '(?<=key\s)([A-F0-9]{16,})|(?<=ID\s)([A-F0-9]{16,})' "$TMP_OUT" | sort -u)
+    "$backend" -S archlinux-keyring --noconfirm --needed 2>&1 | tee "$tmp_out"
+    if [[ -f "$tmp_out" ]]; then
+        local keys=$(grep -oP '(?<=key\s)([A-F0-9]{16,})|(?<=ID\s)([A-F0-9]{16,})' "$tmp_out" | sort -u)
         if [[ -n "$keys" ]]; then
             for key in $keys; do
                 step "Importing key: $key"
@@ -337,30 +337,30 @@ fix_keys() {
 }
 
 backup_func() {
-    case "$BACKUP_ACTION" in
+    case "$backup_action" in
         "create")
             step "Creating backup of packages..."
             mkdir -p "$BACKUP_DIR"
             "$backend" -Qqa > "$BACKUP_FILE"
-            CHECKSUM=$(sha256sum "$BACKUP_FILE" | cut -d' ' -f1)
-            echo "$CHECKSUM" > "$BACKUP_DIR/backup.sha256"
+            checksum=$(sha256sum "$BACKUP_FILE" | cut -d' ' -f1)
+            echo "$checksum" > "$BACKUP_DIR/backup.sha256"
             success "Backup created successfully in $BACKUP_FILE"
             logger "CREATED BACKUP" "$BACKUP_FILE"
             exit 0
         ;;
         "restore")
-            [[ -n "$CUSTOM_PATH" ]] && BACKUP_FILE="$CUSTOM_PATH"
+            [[ -n "$custom_path" ]] && BACKUP_FILE="$custom_path"
             if [[ ! -f "$BACKUP_FILE" ]]; then
                 error "Backup file not found."
             fi
             local backup_base="${BACKUP_FILE%.*}"
-            CHECKSUM_FILE="${backup_base}.sha256"
-            if [[ ! -f "$CHECKSUM_FILE" ]]; then
+            checksum_file="${backup_base}.sha256"
+            if [[ ! -f "$checksum_file" ]]; then
                 error "Validation key not found. Backup may be invalid or corrupted."
             fi
             step "Validating backup integrity..."
             local stored_hash
-            stored_hash=$(cat "$CHECKSUM_FILE")
+            stored_hash=$(cat "$checksum_file")
             local actual_hash
             actual_hash=$(sha256sum "$BACKUP_FILE" | cut -d' ' -f1)
             if [[ "$stored_hash" != "$actual_hash" ]]; then
@@ -370,10 +370,10 @@ backup_func() {
             step "Searching for available backups..."
             success "Backup file found: $BACKUP_FILE"
             step "Restoring backup..."
-            mapfile -t PKG_LIST < "$BACKUP_FILE"
-            if "$backend" -S "${PKG_LIST[@]}" --needed; then
+            mapfile -t pkg_list < "$BACKUP_FILE"
+            if "$backend" -S "${pkg_list[@]}" --needed; then
                 success "Backup restored."
-                logger "BACKUP RESTORATION" "Reinstalled ${#PKG_LIST[@]} packages"
+                logger "BACKUP RESTORATION" "Reinstalled ${#pkg_list[@]} packages"
                 exit 0
             else
                 error "Restore failed."
@@ -385,23 +385,19 @@ backup_func() {
 ## !LOGGER
 
 log_acts() {
-    case "$LOG_FUNC" in
+    case "$log_func" in
         "sl")
-            cmd() { tail -n "$LOG_LINES" "$LOG_FILE"; }
-            [[ "$LOG_LINES" == "" || "$LOG_LINES" == "null" ]] && cmd() { cat "$LOG_FILE"; }
             [[ ! -s "$LOG_FILE" ]] && echo "$NOTE The log file is empty." && exit 0
-            cmd
-        ;;
-        "cl")
-            > "$LOG_FILE"
-            echo "$COMPLETE Cleared log file"
-            exit 0
-        ;;
+            if [[ -n "$log_lines" && "$log_lines" =~ ^[0-9]+$ ]]; then
+                tail -n "$log_lines" "$LOG_FILE"
+            else
+                cat "$LOG_FILE"
+            fi
     esac
-}
+    }
 
 logger() {
-    local status="${EXIT_CODE:-0}"
+    local status="${exit_code:-0}"
     local tag="$1"
     local info="$2"
     printf -v date_str '%(%Y-%m-%d - %H:%M:%S)T' -1
@@ -411,15 +407,15 @@ logger() {
 ## !SEARCH
 searcher() {
     tester
-    CMD="-Ss"
-    TAG="SEARCHED"
-    FLAT_CMD="search"
+    cmd="-Ss"
+    tag="SEARCHED"
+    flat_cmd="search"
 }
 
 query() {
-    CMD="-Qs"
-    TAG="LOCAL QUERY"
-    [[ "$PTBIN" == true ]] && get_package_path "${FINAL_ARGS[@]}" && TAG="SKIP" && return
+    cmd="-Qs"
+    tag="LOCAL QUERY"
+    [[ "$ptbin" == true ]] && get_package_path "${final_args[@]}" && tag="SKIP" && return
 }
 
 check_updates() {
@@ -434,7 +430,7 @@ check_updates() {
     local pid_aur=$!
     local pid_flat=""
     local tmp_flat=""
-    if [[ "$USE_FLATPAK" == "true" ]] && command -v flatpak &>/dev/null; then
+    if [[ "$use_flatpak" == "true" ]] && command -v flatpak &>/dev/null; then
         tmp_flat=$(mktemp)
         flatpak remote-ls --updates > "$tmp_flat" 2>/dev/null &
         pid_flat=$!
@@ -451,15 +447,15 @@ check_updates() {
         return
     fi
     local flat_info=""
-    [[ "$USE_FLATPAK" == "true" ]] && flat_info=" and $upds_flat_n in Flatpak"
+    [[ "$use_flatpak" == "true" ]] && flat_info=" and $upds_flat_n in Flatpak"
     echo -e "${YELLOW} $NOTE $total Updates found ($upds_aur_n in AUR$flat_info):${NC}"
     [[ "$upds_n" -gt 0 ]] && echo -e "\nOfficial upds:\n${CYAN}$(cat "$tmp_repo")${NC}"
     [[ "$upds_aur_n" -gt 0 ]] && echo -e "\nUpdates in AUR:\n${GREEN}$(cat "$tmp_aur")${NC}"
-    if [[ "$USE_FLATPAK" == "true" && "$upds_flat_n" -gt 0 ]]; then
+    if [[ "$use_flatpak" == "true" && "$upds_flat_n" -gt 0 ]]; then
         echo -e "\nUpdates in Flatpak:\n${YELLOW}$(cat "$tmp_flat")${NC}"
     fi
     rm -f "$tmp_repo" "$tmp_aur" ${tmp_flat:+"$tmp_flat"}
-    logger "FOUND UPDATES" "$total updates (Flatpak: $USE_FLATPAK)"
+    logger "FOUND UPDATES" "$total updates (Flatpak: $use_flatpak)"
 }
 
 get_package_path() {
@@ -480,15 +476,15 @@ get_package_path() {
 [[ ! -w "$LOG_FILE" ]] && sudo chown "${SUDO_USER:-$USER}":"${SUDO_USER:-$USER}" "$LOG_FILE" 2>/dev/null
 [[ -z "$1" ]] && usage
 
-RAW_CMD="$*"; USE_FLATPAK=false; PTBIN=false; AGRESSIVE_MODE=false; FINAL_ARGS=(); YAY_FLAGS=(); LOG_LINES=""
+raw_cmd="$*"; use_flatpak=false; ptbin=false; agressive_mode=false; final_args=(); yay_flags=(); log_lines=""
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
         stats|--list-aur|--pacdiff|--ping|--create-backup|--restore-backup|install|-i|remove|-r|update|-u|search|-s|query|-q|cache|-c|orphan|-o|mirrors|-m|slog|-sl|--fix-keys|clog|-cl|--check-updates)
-            [[ -z "$ACTION" ]] && ACTION="$1" || FINAL_ARGS+=("$1")
+            [[ -z "$action" ]] && action="$1" || final_args+=("$1")
         ;;
         --view)
-            [[ -z "$ACTION" ]] && ACTION="--view" || FINAL_ARGS+=("$1")
+            [[ -z "$action" ]] && action="--view" || final_args+=("$1")
         ;;
         --backend)
             shift
@@ -501,48 +497,49 @@ while [[ $# -gt 0 ]]; do
         --path)
             shift
             [[ -z "$1" ]] && error "--path requires a file path argument"
-            CUSTOM_PATH="$1"
+            custom_path="$1"
         ;;
         --lines)
             shift
-            LOG_LINES="$1"
-            [[ -z "$LOG_LINES" || "$LOG_LINES" == "" ]] && LOG_LINES="null"
+            [[ -z "$log_lines" || "$log_lines" == "" ]] && log_lines="null"
+            log_lines="$1"
         ;;
         -h|--help) help_message ;;
         --info) inform; exit 0 ;;
-        -f|f|\--flatpak) USE_FLATPAK=true ;;
-        --flatpak-only) ONLY_FLATPAK=true ;;
-        -v|--version) ver_msg; exit 0 ;;
-        -A) AGRESSIVE_MODE=true ;;
-        --path-to-binary) PTBIN=true ;;
-        nc|--noconfirm) YAY_FLAGS+=("--noconfirm") ;;
-        -) ACTION="-" && err01 ;;
-        -*) ACTION="$1" && err01 ;;
-        *) FINAL_ARGS+=("$1") ;;
+        -f|f|--flatpak) use_flatpak=true ;;
+        --flatpak-only) only_flatpak=true ;;
+        -v|--version) display_ver; exit 0 ;;
+        -A) agressive_mode=true ;;
+        --path-to-binary) ptbin=true ;;
+        nc|--noconfirm) yay_flags+=("--noconfirm") ;;
+        -) action="-" && err01 ;;
+        -*) action="$1" && err01 ;;
+        *) final_args+=("$1") ;;
     esac
     shift
 done
 
-[[ -z "$ACTION" && ${#FINAL_ARGS[@]} -gt 0 ]] && ACTION="${FINAL_ARGS[0]}" && FINAL_ARGS=("${FINAL_ARGS[@]:1}")
+[[ -z "$action" && ${#final_args[@]} -gt 0 ]] && action="${final_args[0]}" && final_args=("${final_args[@]:1}")
 
-[[ "$ACTION" =~ ^(install|remove|-i|-r)$ && ${#FINAL_ARGS[@]} -eq 0 ]] && error "specify at least one package"
+[[ "$action" =~ ^(install|remove|-i|-r)$ && ${#final_args[@]} -eq 0 ]] && error "specify at least one package"
 
 ! command -v "$backend" &>/dev/null && err03
 
-TMP_OUT=$(mktemp) || err02
-trap 'rm -f "$TMP_OUT" 2>/dev/null' EXIT
+tmp_out=$(mktemp) || err02
+trap 'rm -f "$tmp_out" 2>/dev/null' EXIT
 
-if [[ -n "$ACTION" ]]; then
-    [[ "$AGRESSIVE_MODE" == "true" ]] && echo -e "${RED} $NOTE Agressive mode enabled!${NC}"
+[[ -f /var/lib/pacman/db.lck ]] && sudo rm /var/lib/pacman/db.lck && success "Database lock removed."
+
+if [[ -n "$action" ]]; then
+    [[ "$agressive_mode" == "true" ]] && echo -e "${RED} $NOTE Agressive mode enabled!${NC}"
     { pgrep -x pacman >/dev/null || pgrep -x "$backend" >/dev/null; } && error "Pacman/$backend is already running."
-    [[ -f /var/lib/pacman/db.lck ]] && sudo rm /var/lib/pacman/db.lck && success "Database lock removed."
 fi
 
-[[ "$ONLY_FLATPAK" == "true" ]] && flatpak_only
+[[ "$only_flatpak" == "true" ]] && flatpak_only
 
-case "$ACTION" in
-    show-logs|slog|-sl) LOG_FUNC="sl"; log_acts ;;
-    clear-logs|clog|-cl) LOG_FUNC="cl"; log_acts ;;
+case "$action" in
+    show-logs|slog|-sl) log_func="sl"; log_acts ;;
+    clear-logs|clog|-cl) log_func="cl"; log_acts ;;
     --ping) tester && logger "TEST FOR NETWORK" "available" && exit 0 ;;
     i|in|ins|install|-i) ins ;;
     r|rm|rem|remove|-r|-rm) rmv ;;
@@ -556,34 +553,38 @@ case "$ACTION" in
     fk|--fix-keys) fix_keys ;;
     pd|--pacdiff) check_conf ;;
     stats|--statistics) show_stats ;;
-    cb|--create-backup) BACKUP_ACTION="create"; backup_func ;;
-    rb|--restore-backup) BACKUP_ACTION="restore"; backup_func ;;
+    cb|--create-backup) backup_action="create"; backup_func ;;
+    rb|--restore-backup) backup_action="restore"; backup_func ;;
     la|--list-aur) list_aur ;;
-    vi|--view) view_pkgbuild "${FINAL_ARGS[0]}"; exit 0 ;;
+    vi|--view) view_pkgbuild "${final_args[0]}"; exit 0 ;;
     *) err01 ;;
 esac
 
-[[ "$TAG" == "SKIP" ]] && exit 0
+[[ "$tag" == "SKIP" ]] && exit 0
 
-case "$ACTION" in
+case "$action" in
     search|-s)
-        "$backend" "$CMD" "${FINAL_ARGS[@]}" "${YAY_FLAGS[@]}" 2>&1 | tee "$TMP_OUT"
-        EXIT_CODE=${PIPESTATUS[0]}
+        "$backend" "$cmd" "${final_args[@]}" "${yay_flags[@]}" 2>&1 | tee "$tmp_out"
+        exit_code=${PIPESTATUS[0]}
         run_flatpak
     ;;
     *)
-        if [[ -n "$CMD" ]]; then
-            "$backend" "$CMD" "${FINAL_ARGS[@]}" "${YAY_FLAGS[@]}" 2>&1 | tee "$TMP_OUT"
-            EXIT_CODE=${PIPESTATUS[0]}
+        if [[ -n "$cmd" ]]; then
+            "$backend" "$cmd" "${final_args[@]}" "${yay_flags[@]}" 2>&1 | tee "$tmp_out"
+            exit_code=${PIPESTATUS[0]}
             run_flatpak
         fi
     ;;
 esac
 
-if [[ "$EXIT_CODE" -eq 0 && -n "$TAG" ]]; then
-    if grep -qiE "could not find|nenhum pacote|target not found" "$TMP_OUT"; then
-        logger "NOT FOUND" "${RAW_CMD}"
+if [[ "$exit_code" -eq 0 && -n "$tag" ]]; then
+    if grep -qiE "could not find|nenhum pacote|target not found" "$tmp_out"; then
+        logger "NOT FOUND" "${raw_cmd}"
     else
-        logger "${TAG:-SYSTEM}" "${RAW_CMD}"
+        logger "${tag:-SYSTEM}" "${raw_cmd}"
     fi
 fi
+
+## Changelogs: 
+## Ver 5.3.1 -> 5.4
+## Rename almost every variable name for better system compatibility
