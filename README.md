@@ -1,46 +1,36 @@
-[![Bash](https://img.shields.io/badge/Language-Bash-4EAA25?style=flat-square&logo=gnu-bash&logoColor=white)](https://www.gnu.org/software/bash/)
-[![Arch Linux](https://img.shields.io/badge/OS-Arch_Linux-1793D1?style=flat-square&logo=arch-linux&logoColor=white)](https://archlinux.org/)
-[![Jay-bin](https://img.shields.io/badge/JAY_BIN-v6-1793D1?style=flat-square&logo=arch-linux&logoColor=white)](https://aur.archlinux.org/packages/jay-bin)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](https://opensource.org/licenses/MIT)
-
 # JAY — Just Another Yogourt
 
-**A lightweight, human-friendly wrapper for `yay` with Flatpak integration.**
+A lightweight, human-friendly wrapper for `yay` with Flatpak integration, multi-language support, and automated system safety.
 
-JAY is a **powerful yet simple** wrapper designed to make AUR management intuitive. No more memorizing cryptic flags like `-Syu` — just use plain English and let JAY handle the rest
+JAY is a powerful yet simple wrapper designed to make Arch Linux and AUR management intuitive. No more memorizing cryptic flags like `-Syu` — just use plain syntax and let JAY handle the heavy lifting.
 
 ---
 
-## What's new in v6
+## What's new in v7.0 ('Catupiry')
 
-- **`pin`** — Toggle `IgnorePkg` in `pacman.conf` without editing it manually
-- **`why` / `dp`** — Reverse dependency tree with suggested removal order
-- **`stats`** — System statistics with top 10 heaviest packages
-- **Log rotation** — Auto-cleaner when `jay.log` exceeds 500KB
-- **`slog --lines N`** — Filter log output to last N lines
-- **Multi-backend** — Seamless support for `yay`, `paru`, and `pikaur`
-- **Refactor** — Cleaner codebase, better variable naming, unified visual style
+- Native Multilingual Support — JAY now automatically detects your system language (en, pt, es) and translates all outputs, warnings, and system status messages seamlessly.
+- `--dry-run` Mode — Want to see what a command does before changing anything? Append `--dry-run` to simulate installations, updates, database changes, and snapshots safely.
+- Automated System Snapshots — Integrated with `timeshift`. Running a system update (`jay -u`) now checks and automatically generates a dynamic system restore point beforehand.
+- `snap` / `--create-snapshot` — New dedicated action to manual trigger a dynamic BTRFS/RSYNC snapshot through Timeshift directly from JAY.
+- Interactive Network Spinner — Rewritten network latency tester (`--ping`) featuring a real-time terminal loader animation with continuous stdout line clearing.
+- Robust Dependency Management — The `why` command now checks for `pacman-contrib` and auto-installs it using your selected backend if missing.
 
 ---
 
 ## Key Features
 
-- **Human Syntax** — Use `install`, `update`, or `remove` instead of complex flags
-- **Multi-backend** — Works with `yay`, `paru`, `pikaur`, or falls back to `pacman`
-- **Hybrid Mode (`-f`)** — Seamless fallback to Flathub if a package isn't found in the AUR
-- **Aggressive Mode (`-A`)** — Purge packages along with all unneeded dependencies (`-Rsn`)
-- **Auto-Logging** — Every action is recorded in `~/.cache/jay.log`
-- **Orphan Purge** — One-command removal of unused dependencies
-- **Dependency Inspector** — See what depends on a package before removing it
-- **Package Pinning** — Ignore specific packages on updates via `pacman.conf`
+- Human Syntax — Use `install`, `update`, or `remove` instead of complex, hard-to-remember arguments.
+- Multi-backend Support — Dynamically hooks into `yay`, `paru`, `pikaur`, or cleanly falls back to a limited `pacman` instance.
+- Hybrid Mode (`-f`) — Seamless fallback to Flathub if an application isn't hosted or found natively in the Arch Repositories/AUR.
+- Aggressive Mode (`-A`) — Purge target packages along with their entire unused cascading dependency tree (`-Rsn`).
+- Auto-Logging & Rotation — Records detailed logs in `~/.cache/jay.log` with a built-in automated 500KB rotater mechanism.
+- Package Pinning — Toggle `IgnorePkg` entries in your `/etc/pacman.conf` safely on-the-fly without manual text editing.
 
 ---
 
 ## Prerequisites
 
-```bash
 sudo pacman -S --needed git base-devel
-```
 
 ---
 
@@ -48,132 +38,117 @@ sudo pacman -S --needed git base-devel
 
 ### From source
 
-```bash
 git clone https://github.com/xmlzitos154/jay.git
 cd jay
 chmod +x install.sh
 sudo ./install.sh
-```
 
 ### From the AUR
 
-```bash
 # with yay
 yay -S jay-bin
 
 # with paru
 paru -S jay-bin
-```
 
 ---
 
 ## Usage
 
-```
 jay [command] [options] [packages]
-```
 
 ### Primary Commands
 
 | Command | Alias | Description |
 |---------|-------|-------------|
-| `install` | `-i` | Sync and install packages (AUR/Repo) |
-| `remove` | `-r` | Remove packages from the system |
-| `update` | `-u` | Full system update (AUR + Flatpaks) |
-| `search` | `-s` | Search for packages in repositories |
-| `query` | `-q` | Search locally installed packages |
-| `orphan` | `-o` | Remove all orphaned dependencies |
-| `cache` | `-c` | Clear Pacman and AUR cache |
-| `mirrors` | `-m` | Optimize mirrorlist with Reflector |
-| `why`, `dp` | | Show reverse dependencies of a package |
-| `pin`, `--ignore` | | Toggle package ignore on updates |
-| `stats` | | Show system and package statistics |
-| `--check-updates` | `check` | Search for available updates |
-| `--pacdiff` | `pd` | Manage `.pacnew` / `.pacsave` files |
-| `--view` | `vi` | Read PKGBUILD of AUR packages |
-| `--list-aur` | `la` | List all AUR installed packages |
-| `--ping` | | Test network connectivity |
-| `--fix-keys` | `fk` | Fix GPG key issues |
-| `--create-backup` | `cb` | Create a backup of installed packages |
-| `--restore-backup` | `rb` | Restore packages from a backup file |
+| install | -i | Sync and install packages (AUR/Repo/Flatpak) |
+| remove | -r | Cleanly remove packages from the system |
+| update | -u | Full system update (AUR packages + Snapshots + Flatpaks) |
+| search | -s | Query packages globally across repositories |
+| query | -q | Search through locally installed system packages |
+| orphan | -o | Find and purge unneeded orphaned dependencies |
+| cache | -c | Flush Pacman, Flatpak and AUR backend cache storage |
+| mirrors | -m | Optimize and sort fastest mirrorlists via Reflector |
+| why, dp | | Generate reverse dependency maps with suggested removal orders |
+| snap, --create-snapshot | | Instantly generate a system state checkpoint via Timeshift |
+| pin, --ignore | | Toggle specific package blocks during upgrade runs |
+| stats | | View package disk usage, installation birth-date, and top 10 heaviest structures |
+| --check-updates | check | Search and print pending available updates |
+| --pacdiff | pd | Safely manage emergent `.pacnew` / `.pacsave` configurations |
+| --view | vi | Directly audit the PKGBUILD source file of AUR packages |
+| --list-aur | la | List exclusively all custom packages pulled from the AUR |
+| --ping | | Fire an animated terminal health-check against network infrastructure |
+| --fix-keys | fk | Wipe and re-import corrupted GPG keys |
+| --create-backup | cb | Backup local package maps complete with SHA256 integrity validation |
+| --restore-backup | rb | Mass-reinstall packages structured within an active JAY backup list |
 
 ### Power-User Options
 
 | Option | Description |
 |--------|-------------|
-| `-f`, `--flatpak` | Enable hybrid AUR + Flatpak mode |
-| `--flatpak-only` | Use only Flatpak as package manager |
-| `-A` | Aggressive mode — equivalent to `-Rsn` (use with `remove`) |
-| `--noconfirm` | Skip confirmation prompts |
-| `--backend` | Switch AUR helper (`yay`, `paru`, `pikaur`) |
-| `--path-to-binary` | Show binary path of a package (use with `query`) |
-| `--lines N` | Show last N lines of the log (use with `slog`) |
+| -f, --flatpak | Trigger explicit cross-hybrid package lookups (Native Repos + Flathub) |
+| --flatpak-only | Enforce full sandboxed Flatpak-only isolation boundaries |
+| -A | Active Aggressive mode — maps operations to a destructive package purge (`-Rsn`) |
+| --dry-run | Intercept execution and mirror command layouts without applying filesystem modifications |
+| nc, --noconfirm | Bypass package compilation interactive prompt menus |
+| --backend | Override default helper logic manually (yay, paru, pikaur) |
+| --path-to-binary | Trace real absolute paths of binaries (combine with query) |
+| --lines N | Truncate and tail explicit log outputs (combine with slog) |
 
 ---
 
 ## Examples
 
-```bash
-# Install a package
-jay install firefox
+# Safely simulate a heavy installation process
+jay install blender --dry-run
 
-# Remove with aggressive mode
-jay remove spotify-launcher -A
+# Force a standalone system checkpoint right now
+jay --create-snapshot
 
-# Check what depends on a package before removing
-jay why python
-
-# Pin a package to ignore it on updates (toggle)
-jay pin linux-zen
-
-# Show system stats
-jay stats
-
-# Search in AUR and Flatpak
-jay search obsidian -f
-
-# Update everything including Flatpaks
+# Update all packages, update flatpaks, and auto-generate an upgrade snapshot
 jay update -f
 
-# Use paru instead of yay
+# Remove an infrastructure block alongside hidden configurations aggressively
+jay remove docker -A
+
+# Check software dependencies before invoking structural changes
+jay why electron
+
+# Toggle package ignore rules programmatically
+jay pin linux-lts
+
+# Query an application across multiple isolated ecosystems
+jay search postman -f
+
+# Switch engines temporarily for a specific routine
 jay --backend paru update
 
-# Show last 10 log entries
-jay slog --lines 10
-
-# Restore backup from custom path
-jay --restore-backup --path ~/backups/packages.txt
-```
+# Review the last 15 actions committed by JAY
+jay slog --lines 15
 
 ---
 
 ## Log Management
 
-JAY logs every action to `~/.cache/jay.log`.
+JAY acts transparently by journaling runtime operations directly inside `~/.cache/jay.log`.
 
-```bash
-jay slog              # show full log
-jay slog --lines 20   # show last 20 entries
-```
+jay slog              # view the total history stream
+jay slog --lines 25   # inspect the recent 25 events
 
-Log rotation is automatic — when the file exceeds 500KB, JAY will ask to archive it as `jay.log.1`.
+Log files are monitored dynamically. When total allocations push past 500KB, JAY engages the user to handle clean rotation to `jay.log.1`.
 
 ---
 
-## Backup Management
+## Backup and Restores
 
-```bash
-jay --create-backup                          # create backup at default path
-jay --restore-backup                         # restore from default path
-jay --restore-backup --path ~/my-backup.txt  # restore from custom path
-```
+Backups generated through JAY map system configurations explicitly and bundle precise SHA256 checksum validations to counter bit-rot or payload manipulation.
 
-Backups are validated with SHA256 checksums to prevent corruption.
+jay --create-backup                          # dumps safe structures inside default directories
+jay --restore-backup                         # verifies integrity hashes and applies syncs
+jay --restore-backup --path ~/safe_state.txt # handles targets outside default environment caches
 
 ---
 
 ## License
 
-Distributed under the MIT License. Created by [xmlzitos154](https://github.com/xmlzitos154).
-
-> If you like JAY, don't forget to leave a ⭐ to support the project!
+Distributed under the MIT License. Developed with love by xmlzitos154.
