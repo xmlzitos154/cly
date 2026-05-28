@@ -259,7 +259,7 @@ tester() {
 }
 ## !BASE
 help_message() {
-    inform
+    display_ver
     echo -e "Usage: jay [command] [options] [packages]"
     echo -e "Usage: jay [-i | -r | -s | -u | check] [-f | --flatpak] [--noconfirm]"
     echo -e "Usage: jay [-q | query] [--list-aur] [--path-to-binary]"
