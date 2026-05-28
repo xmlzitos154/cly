@@ -2,7 +2,7 @@
 
 ## JAY - A Semantic AUR helper wrapper written in bash
 
-ver="7.0"; rc="1"
+ver="7.0.1"; rc="1"
 
 set -o pipefail
 REAL_HOME=$(getent passwd "${SUDO_USER:-$USER}" 2>/dev/null | cut -d: -f6); REAL_HOME=${REAL_HOME:-$HOME}
