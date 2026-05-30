@@ -1,6 +1,6 @@
 [![Bash](https://img.shields.io/badge/Language-Bash-4EAA25?style=flat-square&logo=gnu-bash&logoColor=white)](https://www.gnu.org/software/bash/)
 [![Arch Linux](https://img.shields.io/badge/OS-Arch_Linux-1793D1?style=flat-square&logo=arch-linux&logoColor=white)](https://archlinux.org/)
-[![Jay-bin](https://img.shields.io/badge/JAY_BIN-v7.1-1793D1?style=flat-square&logo=arch-linux&logoColor=white)](https://aur.archlinux.org/packages/jay-bin)
+[![Jay-bin](https://img.shields.io/badge/JAY_BIN-v7.1.1-1793D1?style=flat-square&logo=arch-linux&logoColor=white)](https://aur.archlinux.org/packages/jay-bin)
 
 # JAY — Just Another Yogourt
 
@@ -10,22 +10,23 @@ JAY is a powerful yet simple wrapper designed to make Arch Linux and AUR managem
 
 ---
 
-## Changelog (v7.1 'Catupiry')
+## Changelog (v7.1.1 'Catupiry')
 
-### New Features & Improvements
-- **Native Multilingual Support** — JAY now automatically detects your system language (`en`, `pt`, `es`) and translates all outputs, help menus, warnings, and system status messages seamlessly.
-- **`--dry-run` Mode** — Want to see what a command does before changing anything? Append `--dry-run` to simulate installations, updates, database changes, and snapshots safely.
-- **Automated System Snapshots** — Integrated with `timeshift`. Running a system update (`jay -u`) now checks and automatically generates a dynamic system restore point beforehand.
-- **`snap` / `--create-snapshot`** — New dedicated action to manually trigger a dynamic BTRFS/RSYNC snapshot through Timeshift directly from JAY.
-- **Log Cleaning Action** — Added a new action `clear-logs` (aliases: `clog` / `-cl`) to quickly flush and reset the JAY log file.
-- **Interactive Network Spinner** — Rewritten network latency tester (`--ping`) featuring a real-time terminal loader animation with continuous stdout line clearing.
-- **Robust Dependency Management** — The `why` command now checks for `pacman-contrib` and auto-installs it using your selected backend if missing.
+### Full Internationalization Pipeline (100% i18n)
+- **Global In-Line Localization** — Extracted and removed all remaining hardcoded English strings across core runtime routines, cleanly mapping them into dynamic localization variables inside `load_language()`. JAY now natively operates in **Portuguese (`pt`)**, **Spanish (`es`)**, and **English (`*`)** seamlessly from end to end.
+- **Utility Diagnostics Localization** — Fully translated internal structural messaging for advanced maintenance processes, including:
+  - Unused Orphan Purging (`remove_orphans`)
+  - Cache Allocation Cleanup (`cache_mgr`)
+  - Emerging File Conflicts Auditing (`check_conf` / `pacdiff`)
+  - Reverse Dependency Infrastructure Tree mapping (`depends` / `why`)
+  - Remote AUR Source Blueprint Inspection (`view_pkgbuild`)
+- **System Telemetry Localization** — The hardware and package reporting engine (`jay stats`) is now fully localized, adjusting structural subtitles like native totals, cache file-size allocations, and system installation timestamps dynamically according to the active regional locale.
 
-### Bug Fixes & Code Refactoring
-- **Fixed Reflector Scope Leak** — Fixed a bug where `detect_country` failed to export the `mirror_country` variable globally. The lookup is now executed directly inside `refresh_mirrors` at runtime, ensuring correct localized mirrorlist optimizations.
-- **Graceful Failures for Headless Systems** — Replaced the old crash behavior when no AUR helpers were present. JAY now cleanly alerts the user with a translated `$MSG_AUR_HELPER_NOT_FOUND` block and halts with exit code `1` instead of getting stuck or failing silently.
-- **Padded Version Display** — Improved the `inform` ASCII banner formatting by introducing dynamic string padding (`printf -v version_padded`) to prevent visual breakages in the alignment regardless of the version string size.
-- **Refactored Interactive Prompts** — Fixed mirror override configurations by allowing users to hit `Enter` (defaulting to Yes) when prompting to download system dependencies like `reflector`.
+### Refactoring, Bug Fixes & System Safety
+- **Log Accumulation Defect Repair (`log_rotate`)** — Overhauled the log-rotation mechanism to solve continuous storage allocation. The routine now implements immediate, native truncation operators (`>`) to seamlessly wipe out operational logs upon confirmation, guaranteeing real disk space recovery and fixing an architecture flaw where consecutive old archives persisted needlessly.
+- **Dry-Run Mode Formatting Consistency** — Fixed simulation interception banners (`--dry-run`), properly unifying regional translation tags and scrubbing legacy structural hybrids that compromised visual output fidelity.
+- **Dynamic Interactive Prompts** — Refactored user-input capture parameters (`read -p`) to intelligently acknowledge localized confirmation signals across multiple languages (such as `S/s` for Sim/Sí alongside traditional `Y/y` blocks) interchangeably.
+- **Dynamic Identity Header (`inform`)** — Integrated dynamic regional labeling into version tracking assets (`jay --version`) and ASCII visual banners, rendering script telemetry cleanly according to environment metrics.
 
 ---
 
