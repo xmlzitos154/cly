@@ -1,32 +1,12 @@
 [![Bash](https://img.shields.io/badge/Language-Bash-4EAA25?style=flat-square&logo=gnu-bash&logoColor=white)](https://www.gnu.org/software/bash/)
 [![Arch Linux](https://img.shields.io/badge/OS-Arch_Linux-1793D1?style=flat-square&logo=arch-linux&logoColor=white)](https://archlinux.org/)
-[![Jay-bin](https://img.shields.io/badge/JAY_BIN-v7.1.1-1793D1?style=flat-square&logo=arch-linux&logoColor=white)](https://aur.archlinux.org/packages/jay-bin)
+[![Jay-bin](https://img.shields.io/badge/JAY_BIN-v7.2-1793D1?style=flat-square&logo=arch-linux&logoColor=white)](https://aur.archlinux.org/packages/jay-bin)
 
 # JAY — Just Another Yogourt
 
 A lightweight, human-friendly wrapper for `yay` with Flatpak integration, multi-language support, and automated system safety.
 
 JAY is a powerful yet simple wrapper designed to make Arch Linux and AUR management intuitive. No more memorizing cryptic flags like `-Syu` — just use plain syntax and let JAY handle the heavy lifting.
-
----
-
-## Changelog (v7.1.1 'Catupiry')
-
-### Full Internationalization Pipeline (100% i18n)
-- **Global In-Line Localization** — Extracted and removed all remaining hardcoded English strings across core runtime routines, cleanly mapping them into dynamic localization variables inside `load_language()`. JAY now natively operates in **Portuguese (`pt`)**, **Spanish (`es`)**, and **English (`*`)** seamlessly from end to end.
-- **Utility Diagnostics Localization** — Fully translated internal structural messaging for advanced maintenance processes, including:
-  - Unused Orphan Purging (`remove_orphans`)
-  - Cache Allocation Cleanup (`cache_mgr`)
-  - Emerging File Conflicts Auditing (`check_conf` / `pacdiff`)
-  - Reverse Dependency Infrastructure Tree mapping (`depends` / `why`)
-  - Remote AUR Source Blueprint Inspection (`view_pkgbuild`)
-- **System Telemetry Localization** — The hardware and package reporting engine (`jay stats`) is now fully localized, adjusting structural subtitles like native totals, cache file-size allocations, and system installation timestamps dynamically according to the active regional locale.
-
-### Refactoring, Bug Fixes & System Safety
-- **Log Accumulation Defect Repair (`log_rotate`)** — Overhauled the log-rotation mechanism to solve continuous storage allocation. The routine now implements immediate, native truncation operators (`>`) to seamlessly wipe out operational logs upon confirmation, guaranteeing real disk space recovery and fixing an architecture flaw where consecutive old archives persisted needlessly.
-- **Dry-Run Mode Formatting Consistency** — Fixed simulation interception banners (`--dry-run`), properly unifying regional translation tags and scrubbing legacy structural hybrids that compromised visual output fidelity.
-- **Dynamic Interactive Prompts** — Refactored user-input capture parameters (`read -p`) to intelligently acknowledge localized confirmation signals across multiple languages (such as `S/s` for Sim/Sí alongside traditional `Y/y` blocks) interchangeably.
-- **Dynamic Identity Header (`inform`)** — Integrated dynamic regional labeling into version tracking assets (`jay --version`) and ASCII visual banners, rendering script telemetry cleanly according to environment metrics.
 
 ---
 
@@ -188,5 +168,7 @@ jay --restore-backup --path ~/safe_state.txt # handles targets outside default e
 ---
 
 ## License
+
+Current version: 7.2 (Cheesecake)
 
 Distributed under the MIT License. Developed with love by xmlzitos154.
