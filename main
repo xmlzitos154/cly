@@ -2,7 +2,7 @@
 
 ## JAY - A Semantic AUR helper wrapper written in bash
 
-ver="7.2"; rc="stable-1"; codename="Cheesecake"
+ver="7.2.1"; rc="stable-1"; codename="Cheesecake"
 
 set -o pipefail
 REAL_HOME=$(getent passwd "${SUDO_USER:-$USER}" 2>/dev/null | cut -d: -f6); REAL_HOME=${REAL_HOME:-$HOME}
@@ -146,6 +146,7 @@ load_language() {
             HLP_STATS="Mostra estatísticas do sistema e dos pacotes"
             HLP_FLAT_ONLY="Usa o Flatpak como backend exclusivo"
             HLP_BACKEND="Alterna o AUR helper entre yay e paru a ser usado (Padrão: yay)"
+            HLP_NO_LOG="Não registra o comando executado"
             MSG_ERR01="argumento inválido"
             MSG_ERR02="Não foi possível criar o arquivo temporário"
             MSG_ERR03="o AUR Helper especificado ($backend) não foi encontrado"
@@ -287,6 +288,7 @@ load_language() {
             HLP_STATS="Muestra estadísticas del sistema y de los paquetes"
             HLP_FLAT_ONLY="Utiliza Flatpak como backend exclusivo"
             HLP_BACKEND="Cambia el AUR helper entre yay y paru a utilizar (Por defecto: yay)"
+            HLP_NO_LOG="No registra el comando ejecutado"
             MSG_ERR01="argumento no válido"
             MSG_ERR02="No se pudo crear el archivo temporal"
             MSG_ERR03="no se encontró el AUR Helper especificado ($backend)"
@@ -428,6 +430,7 @@ load_language() {
             HLP_STATS="Show packages and system statistics"
             HLP_FLAT_ONLY="Use flatpak as backend"
             HLP_BACKEND="Switches the aur helper between yay and paru to be used (Default: yay)"
+            HLP_NO_LOG="Don't log the executed command"
             MSG_ERR01="invalid argument"
             MSG_ERR02="Cannot create temporary file"
             MSG_ERR03="the specified AUR Helper ($backend) not found"
@@ -646,6 +649,7 @@ help_message() {
     echo -e "--ping                   $HLP_PING"
     echo -e "--lines                  $HLP_LINES"
     echo -e "--view                   $HLP_VIEW"
+    echo -e "--no-log                 $HLP_NO_LOG"
     echo -e "--dry-run                $HLP_DRY"
     echo -e "--statistics, stats      $HLP_STATS"
     echo -e "--flatpak-only           $HLP_FLAT_ONLY"
@@ -1003,6 +1007,7 @@ cl() {
 }
 
 logger() {
+    [[ "$make_log" == false ]] && exit 0
     local status="${exit_code:-0}"
     local tag="$1"
     local info="$2"
@@ -1078,11 +1083,11 @@ get_package_path() {
     fi
 }
 
-[[ -f "$LOG_FILE" ]] || touch "$LOG_FILE"
+[[ -f "$LOG_FILE" ]] || : > "$LOG_FILE"
 [[ ! -w "$LOG_FILE" ]] && sudo chown "${SUDO_USER:-$USER}":"${SUDO_USER:-$USER}" "$LOG_FILE" 2>/dev/null
 [[ -z "$1" ]] && usage
 
-raw_cmd="$*"; use_flatpak=false; ptbin=false; agressive_mode=false; final_args=(); yay_flags=(); log_lines=""; dry_run=false; ls_aur=false
+raw_cmd="$*"; use_flatpak=false; ptbin=false; agressive_mode=false; final_args=(); yay_flags=(); log_lines=""; dry_run=false; ls_aur=false; make_log=true
 log_rotate
 
 while [[ $# -gt 0 ]]; do
@@ -1110,6 +1115,7 @@ while [[ $# -gt 0 ]]; do
             shift
             log_lines="$1"
         ;;
+        --no-log) make_log=false ;;
         -h|--help) help_message ;;
         --info) inform; exit 0 ;;
         -f|--flatpak) use_flatpak=true ;;

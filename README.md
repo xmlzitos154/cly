@@ -1,6 +1,6 @@
 [![Bash](https://img.shields.io/badge/Language-Bash-4EAA25?style=flat-square&logo=gnu-bash&logoColor=white)](https://www.gnu.org/software/bash/)
 [![Arch Linux](https://img.shields.io/badge/OS-Arch_Linux-1793D1?style=flat-square&logo=arch-linux&logoColor=white)](https://archlinux.org/)
-[![Jay-bin](https://img.shields.io/badge/JAY_BIN-v7.2-1793D1?style=flat-square&logo=arch-linux&logoColor=white)](https://aur.archlinux.org/packages/jay-bin)
+[![Jay-bin](https://img.shields.io/badge/JAY_BIN-v7.2.1-1793D1?style=flat-square&logo=arch-linux&logoColor=white)](https://aur.archlinux.org/packages/jay-bin)
 
 # JAY — Just Another Yogourt
 
@@ -84,6 +84,7 @@ jay [command] [options] [packages]
 | `--list-aur` | `la` | List exclusively all custom packages pulled from the AUR |
 | `--ping` |  | Fire an animated terminal health-check against network infrastructure |
 | `--fix-keys` | `fk` | Wipe and re-import corrupted GPG keys |
+| `--no-log` |  | Don't log the executed command |
 | `--create-backup` | `cb` | Backup local package maps complete with SHA256 integrity validation |
 | `--restore-backup` | `rb` | Mass-reinstall packages structured within an active JAY backup list |
 
@@ -169,6 +170,6 @@ jay --restore-backup --path ~/safe_state.txt # handles targets outside default e
 
 ## License
 
-Current version: 7.2 (Cheesecake)
+Current version: 7.2.1 (Cheesecake)
 
 Distributed under the MIT License. Developed with love by xmlzitos154.
