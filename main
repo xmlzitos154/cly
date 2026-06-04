@@ -2,7 +2,7 @@
 
 ## JAY - A Semantic AUR helper wrapper written in bash
 
-ver="7.2.1"; rc="stable-1"; codename="Cheesecake"
+ver="7.2.2"; rc="stable-1"; codename="Cheesecake"
 
 set -o pipefail
 REAL_HOME=$(getent passwd "${SUDO_USER:-$USER}" 2>/dev/null | cut -d: -f6); REAL_HOME=${REAL_HOME:-$HOME}
@@ -457,14 +457,7 @@ step() { echo -e "${BOLD}${GREEN}$CC ${1}${NC}"; }
 success() { echo -e "${GREEN} $COMPLETE ${NC}${1}"; }
 error() { echo -e "${RED} $ERROR ${NC}${1}"; exit 1; }
 
-err01() { echo -e "$ALERT $MSG_ERR01 '$action'"; exit 1; }
-err02() { echo -e "${RED}$ERROR $MSG_ERR02"; exit 1; }
-err03() { echo -e "${RED}$ERROR $MSG_ERR03"; exit 1; }
-err04() { echo -e "${RED}$ERROR $MSG_ERR04"; exit 1; }
-err05() { echo -e "${RED}$ERROR $MSG_ERR05"; exit 1; }
-err06() { echo -e "${RED}$ERROR $MSG_ERR06"; exit 1; }
-err07() { echo -e "${RED}$ERROR $MSG_ERR07"; exit 1; }
-err08() { echo -e "${RED}$ERROR $MSG_ERR08"; exit 1; }
+err() { echo -e "${RED}$ERROR $1${NC}"; exit 1; }
 usage() { echo -e "$HLP_USAGE: jay [$USG1] [$USG2] [$USG3]"; exit 1; }
 
 if command -v yay &>/dev/null; then
@@ -483,8 +476,8 @@ fi
 
 load_language
 
-[[ "$backend" == "pacman" && "$EUID" -ne 0 ]] && err07
-[[ "$backend" != "pacman" && "$EUID" -eq 0 ]] && err05
+[[ "$backend" == "pacman" && "$EUID" -ne 0 ]] && err "$MSG_ERR07"
+[[ "$backend" != "pacman" && "$EUID" -eq 0 ]] && err "$MSG_ERR05"
 
 ## !JAY UPDATE CHECKER
 
@@ -529,7 +522,7 @@ inform() {
 }
 
 flatpak_only() {
-    ! command -v flatpak &>/dev/null && err06
+    ! command -v flatpak &>/dev/null && err "$MSG_ERR06"
     echo -e "${BOLD}${GREEN} $CC $MSG_USING_FLATPAK${NC}"
     
     case "$action" in
@@ -568,7 +561,7 @@ run_flatpak() {
     fi
     
     [[ "$use_flatpak" != "true" ]] && return
-    command -v flatpak &>/dev/null || err06
+    command -v flatpak &>/dev/null || err "$MSG_ERR06"
     case "$action" in
         update|-u)
             step "$MSG_FLAT_UPDATING"
@@ -756,10 +749,8 @@ pin() {
     local pkg="${final_args[0]}"
     local conf="/etc/pacman.conf"
     [[ -z "$pkg" ]] && error "$MSG_DEPS_SPECIFY"
-    
     local current
     current=$(grep -oP '(?<=^IgnorePkg = ).*' "$conf")
-    
     if echo "$current" | grep -qw "$pkg"; then
         local new
         new=$(echo "$current" | sed "s/\b$pkg\b//" | tr -s ' ' | sed 's/^ //;s/ $//')
@@ -843,7 +834,7 @@ show_stats() {
 }
 
 view_pkgbuild() {
-    [[ "$backend" == "pacman" ]] && err08
+    [[ "$backend" == "pacman" ]] && err "$MSG_ERR08"
     local pkg="$1"
     [[ -z $pkg ]] && echo "$NOTE $MSG_PKGB_SPECIFY" && exit 1
     step "$MSG_PKGB_SEARCHING $pkg..."
@@ -860,7 +851,7 @@ view_pkgbuild() {
 }
 
 list_aur() {
-    [[ "$backend" == "pacman" ]] && err08
+    [[ "$backend" == "pacman" ]] && err "$MSG_ERR08"
     step "$MSG_AUR_FILTERING"
     "$backend" -Qqm | column -t
     tag="LOCAL_QUERY (AUR)"
@@ -1103,7 +1094,7 @@ while [[ $# -gt 0 ]]; do
             if [[ "$1" == "paru" || "$1" == "yay" || "$1" == "pikaur" ]]; then
                 backend="$1"
             else
-                err04
+                err "$MSG_ERR04"
             fi
         ;;
         --path)
@@ -1125,8 +1116,8 @@ while [[ $# -gt 0 ]]; do
         --dry-run) dry_run=true ;;
         -ls-aur|--list-aur) list_aur=true ;;
         nc|--noconfirm) yay_flags+=("--noconfirm") ;;
-        -) action="-" && err01 ;;
-        -*) action="$1" && err01 ;;
+        -) action="-" && err "$MSG_ERR01 '$1'" ;;
+        -*) action="$1" && err "$MSG_ERR01 '$1'" ;;
         *) final_args+=("$1") ;;
     esac
     shift
@@ -1136,9 +1127,9 @@ done
 
 [[ "$action" =~ ^(-ra|remove-agressive|ra| install|remove|-i|-r|i|r|in|rm|ins|rem)$ && ${#final_args[@]} -eq 0 ]] && error "$MSG_SPECIFY_PKG"
 
-! command -v "$backend" &>/dev/null && err03
+! command -v "$backend" &>/dev/null && load_language && err "$MSG_ERR03"
 
-tmp_out=$(mktemp) || err02
+tmp_out=$(mktemp) || err "$MSG_ERR02"
 trap 'rm -f "$tmp_out" 2>/dev/null' EXIT
 
 if [[ -f /var/lib/pacman/db.lck ]]; then
@@ -1170,8 +1161,8 @@ case "$action" in
     pin|--ignore) pin ;;
     dp|why) depends ;;
     vi|--view) view_pkgbuild "${final_args[0]}"; exit 0 ;;
-    stats|statistics) show_stats ;;
-    *) err01 ;;
+    stats|--statistics) show_stats ;;
+    *) err "$MSG_ERR01 '$1'" ;;
 esac
 
 [[ "$tag" == "SKIP" ]] && exit 0

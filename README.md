@@ -1,6 +1,6 @@
 [![Bash](https://img.shields.io/badge/Language-Bash-4EAA25?style=flat-square&logo=gnu-bash&logoColor=white)](https://www.gnu.org/software/bash/)
 [![Arch Linux](https://img.shields.io/badge/OS-Arch_Linux-1793D1?style=flat-square&logo=arch-linux&logoColor=white)](https://archlinux.org/)
-[![Jay-bin](https://img.shields.io/badge/JAY_BIN-v7.2.1-1793D1?style=flat-square&logo=arch-linux&logoColor=white)](https://aur.archlinux.org/packages/jay-bin)
+[![Jay-bin](https://img.shields.io/badge/JAY_BIN-v7.2.2-1793D1?style=flat-square&logo=arch-linux&logoColor=white)](https://aur.archlinux.org/packages/jay-bin)
 
 # JAY — Just Another Yogourt
 
@@ -15,7 +15,7 @@ JAY is a powerful yet simple wrapper designed to make Arch Linux and AUR managem
 - **Human Syntax** — Use `install`, `update`, or `remove` instead of complex, hard-to-remember arguments.
 - **Multi-backend Support** — Dynamically hooks into `yay`, `paru`, `pikaur`, or cleanly falls back to a limited `pacman` instance.
 - **Hybrid Mode (`-f`)** — Seamless fallback to Flathub if an application isn't hosted or found natively in the Arch Repositories/AUR.
-- **Aggressive Mode (`-A`)** — Purge target packages along with their entire unused cascading dependency tree (`-Rsn`).
+- **Aggressive Mode (`ra`)** — Purge target packages along with their entire unused cascading dependency tree (`-Rsn`).
 - **Auto-Logging & Rotation** — Records detailed logs in `~/.cache/jay.log` with a built-in automated 500KB rotater mechanism.
 - **Package Pinning** — Toggle `IgnorePkg` entries in your `/etc/pacman.conf` safely on-the-fly without manual text editing.
 
@@ -170,6 +170,6 @@ jay --restore-backup --path ~/safe_state.txt # handles targets outside default e
 
 ## License
 
-Current version: 7.2.1 (Cheesecake)
+Current version: 7.2.2 (Cheesecake)
 
 Distributed under the MIT License. Developed with love by xmlzitos154.
