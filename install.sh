@@ -7,10 +7,7 @@ REAL_HOME=${REAL_HOME:-/home/$REAL_USER}
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SOURCE="$SCRIPT_DIR/main"
 
-if [[ -f "$SOURCE" ]]; then
-    VER=$(sed -n 's/^VER="\(.*\)"/\1/p' "$SOURCE" | head -1)
-    [[ -z "$VER" ]] && VER="unk"
-else
+if [[ ! -f "$SOURCE" ]]; then
     echo -e "${R}Error: File 'main' not found.${NC}"
     exit 1
 fi
@@ -19,7 +16,7 @@ BIN_NAME="jay"
 INSTALL_PATH="/usr/bin/$BIN_NAME"
 [[ $EUID -ne 0 ]] && { echo -e "${Y}>>${NC} Soliciting root..."; exec sudo "$0" "$@"; }
 
-title() { clear; echo -e "${C}${B}JAY SETUP${NC} — v$VER"; echo -e "${C}──────────────────────────────${NC}"; }
+title() { clear; echo -e "${C}${B}JAY SETUP - VER 1.0 ${NC}"; echo -e "${C}──────────────────────────────${NC}"; }
 step() { echo -e "${C}  [..]${NC} $1"; sleep 0.3; }
 success() { echo -e "${G}  [OK]${NC} $1"; }
 
