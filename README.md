@@ -1,6 +1,6 @@
 [![Bash](https://img.shields.io/badge/Language-Bash-4EAA25?style=flat-square&logo=gnu-bash&logoColor=white)](https://www.gnu.org/software/bash/)
 [![Arch Linux](https://img.shields.io/badge/OS-Arch_Linux-1793D1?style=flat-square&logo=arch-linux&logoColor=white)](https://archlinux.org/)
-[![Jay-bin](https://img.shields.io/badge/JAY_BIN-v7.2.2-1793D1?style=flat-square&logo=arch-linux&logoColor=white)](https://aur.archlinux.org/packages/jay-bin)
+[![Jay-bin](https://img.shields.io/badge/JAY_BIN-v7.2.3.1793D1?style=flat-square&logo=arch-linux&logoColor=white)](https://aur.archlinux.org/packages/jay-bin)
 
 # JAY — Just Another Yogourt
 
@@ -67,7 +67,7 @@ jay [command] [options] [packages]
 | Command | Alias | Description |
 | --- | --- | --- |
 | `install` | `-i` | Sync and install packages (AUR/Repo/Flatpak) |
-| `remove` | `-r` | Cleanly remove packages from the system |
+| `remove` | `-r` | Cleanly remove packages from the system (Use -ra / remove-agressive to remove dependencies too) |
 | `update` | `-u` | Full system update (AUR packages + Snapshots + Flatpaks) |
 | `search` | `-s` | Query packages globally across repositories |
 | `query` | `-q` | Search through locally installed system packages |
@@ -94,7 +94,6 @@ jay [command] [options] [packages]
 | --- | --- |
 | `-f`, `--flatpak` | Trigger explicit cross-hybrid package lookups (Native Repos + Flathub) |
 | `--flatpak-only` | Enforce full sandboxed Flatpak-only isolation boundaries |
-| `-A` | Active Aggressive mode — maps operations to a destructive package purge (`-Rsn`) |
 | `--dry-run` | Intercept execution and mirror command layouts without applying filesystem modifications |
 | `nc`, `--noconfirm` | Bypass package compilation interactive prompt menus |
 | `--backend` | Override default helper logic manually (yay, paru, pikaur) |
@@ -170,6 +169,6 @@ jay --restore-backup --path ~/safe_state.txt # handles targets outside default e
 
 ## License
 
-Current version: 7.2.2 (Cheesecake)
+Current version: 7.2.3 (Cheesecake)
 
 Distributed under the MIT License. Developed with love by xmlzitos154.
