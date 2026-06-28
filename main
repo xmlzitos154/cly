@@ -2,7 +2,7 @@
 
 ## Just Another Yogourt
 
-ver="7.2.6"; rc="stable-1"; cdname="Cheesecake"
+ver="7.2.7"; rc="stable-1"; cdname="Cheesecake"
 
 set -o pipefail
 REAL_HOME=$(getent passwd "${SUDO_USER:-$USER}" 2>/dev/null | cut -d: -f6); REAL_HOME=${REAL_HOME:-$HOME}
@@ -26,7 +26,7 @@ load_lang() {
             M_ORPHANS_NONE="Nenhum pacote órfão encontrado."
             M_ORPHANS_FOUND="órfãos encontrados"
             M_ORPHANS_REMOVING="Removendo pacotes órfãos..."
-            M_CACHE_CLEANING_BUILDS="Limpando compilações do"
+            M_CACHE_CLEANING_BUILDS="Limpando compilações do $backend"
             M_CACHE_BUILDS_CLEANED="Compilações limpas."
             M_CACHE_CLEANING_FLATPAK="Limpando Flatpaks não utilizados..."
             M_CACHE_FLATPAK_CLEANED="Flatpaks limpos."
@@ -315,10 +315,7 @@ usage() { echo "$H_USAGE: jay [$USG1] [$USG2] [$USG3]"; exit 1; }
 load_lang
 
 logback() {
-    for b in yay paru pikaur; do
-        command -v "$b" &>/dev/null && echo -e "${GREEN}${BOLD}$CC $M_USING_BACKEND $b...${NC}" && return
-    done
-    echo -e "${YELLOW}${BOLD}$M_AUR_HELPER_NOT_FOUND"
+    echo -e "${GREEN}${BOLD}$CC $M_USING_BACKEND $backend...${NC}"
 }
 log_rotate() {
     local max_size=128000
@@ -522,7 +519,7 @@ help_message() {
 chmgr() {
     local cache_dir="$REAL_HOME/.cache/$backend"
     if [[ -d "$cache_dir" ]]; then
-        st "$M_CACHE_CLEANING_BUILDS $backend builds..."
+        st "$M_CACHE_CLEANING_BUILDS"
         find "$cache_dir" -maxdepth 1 -type d -not -path "$cache_dir" -exec rm -rf {} +
         sc "$M_CACHE_BUILDS_CLEANED"
     fi
@@ -611,7 +608,7 @@ depends() {
     ! command -v pactree &>/dev/null && { st "$M_INSTALL_CONTRIB pacman-contrib..."; "$backend" -S pacman-contrib --noconfirm; }
     local pkg="${final_args[0]}"
     [[ -z "$pkg" ]] && echo "$ALERT $M_DEPS_SPECIFY" && exit 1
-    ! pacman -Qi "$pkg" &>/dev/null && echo "$ERROR ${YELLOW}$M_DEPS_NOT_FOUND '$pkg'" && exit 1
+    ! pacman -Qi "$pkg" &>/dev/null && echo -e "$ERROR ${YELLOW}$M_DEPS_NOT_FOUND '$pkg'" && exit 1
     st "$M_DEPS_CHECKING '$pkg'..."
     local deps_n
     local deps
@@ -797,7 +794,7 @@ mklog() {
     local tag="$1"
     local info="$2"
     printf -v date_str '%(%Y-%m-%d - %H:%M:%S)T' -1
-    echo "$date_str [Exit Status $status] [$tag] -> $info" >> "$LOG_FILE"
+    echo "$date_str Exit Status $status $tag -> $info" >> "$LOG_FILE"
 }
 
 check_updates() {
@@ -876,7 +873,7 @@ while [[ $# -gt 0 ]]; do
         ;;
         --backend)
             shift
-            if [[ "$1" == "paru" || "$1" == "yay" || "$1" == "pikaur" ]]; then
+            if [[ "$1" == "yay" || "$1" == "paru" || "$1" == "pikaur" ]]; then
                 backend="$1"
             else
                 err "$E_04"
@@ -892,6 +889,7 @@ while [[ $# -gt 0 ]]; do
         -v|--version)         dpver; exit 0 ;;
         --path-to-binary)     ptbin=1 ;;
         --dry-run)            dry_run=1 ;;
+        --debug) set -x ;;
         -ls-aur|--list-aur)   lsaur=1 ;;
         snap|--create-snapshot)   do_snap="1" ;;
         nc|--noconfirm)       yay_flags+=("--noconfirm") ;;
@@ -954,6 +952,7 @@ if [[ "$dry_run" == "1" ]]; then
     echo -e "${GREEN}$M_DRY_RUN_NONE${NC}\n"
     exit 0
 fi
+
 case "$action" in
     search|-s)
         "$backend" "$cmd" "${final_args[@]}" "${yay_flags[@]}" 2>&1 | tee "$tmp_out"
@@ -968,6 +967,7 @@ case "$action" in
         fi
     ;;
 esac
+
 if [[ "$exit_code" -eq 0 && -n "$tag" ]]; then
     if grep -qiE "could not find|nenhum pacote|target not found" "$tmp_out"; then
         mklog "NOT FOUND" "${raw_cmd}"

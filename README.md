@@ -1,6 +1,6 @@
 [![Bash](https://img.shields.io/badge/Language-Bash-4EAA25?style=flat-square&logo=gnu-bash&logoColor=white)](https://www.gnu.org/software/bash/)
 [![Arch Linux](https://img.shields.io/badge/OS-Arch_Linux-1793D1?style=flat-square&logo=arch-linux&logoColor=white)](https://archlinux.org/)
-[![Jay-bin](https://img.shields.io/badge/JAY_BIN-v7.2.6-1793D1?style=flat-square&logo=arch-linux&logoColor=white)](https://aur.archlinux.org/packages/jay-bin)
+[![Jay-bin](https://img.shields.io/badge/JAY_BIN-v7.2.7-1793D1?style=flat-square&logo=arch-linux&logoColor=white)](https://aur.archlinux.org/packages/jay-bin)
 
 # JAY — Just Another Yogourt
 
@@ -99,6 +99,7 @@ jay [command] [options] [packages]
 | `--backend` | Override default helper logic manually (yay, paru, pikaur) |
 | `--path-to-binary` | Trace real absolute paths of binaries (combine with query) |
 | `--lines N` | Truncate and tail explicit log outputs (combine with slog) |
+| `--debug` | Print Every command that jay is running. |
 
 ---
 
@@ -169,6 +170,6 @@ jay --restore-backup --path ~/safe_state.txt # handles targets outside default e
 
 ## License
 
-Current version: 7.2.6 (Cheesecake)
+Current version: 7.2.7 (Cheesecake)
 
 Distributed under the MIT License. Developed with love by xmlzitos154.
