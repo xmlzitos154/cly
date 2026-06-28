@@ -1,36 +1,40 @@
 [![Bash](https://img.shields.io/badge/Language-Bash-4EAA25?style=flat-square&logo=gnu-bash&logoColor=white)](https://www.gnu.org/software/bash/)
-[![Arch Linux](https://img.shields.io/badge/OS-Arch_Linux-1793D1?style=flat-square&logo=arch-linux&logoColor=white)](https://archlinux.org/)
+[![Arch Linux](https://img.shields.io/badge/OS-Arch_Linux-1793D1?style=flat-square&logo=arch-linux&logoColor=white)](https://archlinux.org/
+
 [![Jay-bin](https://img.shields.io/badge/JAY_BIN-v7.2.7-1793D1?style=flat-square&logo=arch-linux&logoColor=white)](https://aur.archlinux.org/packages/jay-bin)
 
-# JAY — Just Another Yogourt
+# JAY 
+Just Another Yogourt
 
-A lightweight, human-friendly wrapper for `yay` with Flatpak integration, multi-language support, and automated system safety.
+A lightweight, human-friendly AUR helper wrapper with Flatpak integration, multi-language support, and automated system safety.
 
-JAY is a powerful yet simple wrapper designed to make Arch Linux and AUR management intuitive. No more memorizing cryptic flags like `-Syu` — just use plain syntax and let JAY handle the heavy lifting.
+## Features
 
----
-
-## Key Features
-
-- **Human Syntax** — Use `install`, `update`, or `remove` instead of complex, hard-to-remember arguments.
-- **Multi-backend Support** — Dynamically hooks into `yay`, `paru`, `pikaur`, or cleanly falls back to a limited `pacman` instance.
-- **Hybrid Mode (`-f`)** — Seamless fallback to Flathub if an application isn't hosted or found natively in the Arch Repositories/AUR.
-- **Aggressive Mode (`ra`)** — Purge target packages along with their entire unused cascading dependency tree (`-Rsn`).
+- **Human Syntax** —            Use `install`, `update`, or `remove` instead of complex, hard-to-remember arguments.
+- **Multi-backend Support** —   Dynamically hooks into `yay`, `paru`, `pikaur`, or cleanly falls back to a limited `pacman` instance.
+- **Hybrid Mode (`-f`)** —      Seamless fallback to Flathub if an application isn't hosted or found natively in the Arch Repositories/AUR.
+- **Aggressive Mode (`ra`)** —  Purge target packages along with their entire unused cascading dependency tree (`-Rsn`).
 - **Auto-Logging & Rotation** — Records detailed logs in `~/.cache/jay.log` with a built-in automated 500KB rotater mechanism.
 - **Package Pinning** — Toggle `IgnorePkg` entries in your `/etc/pacman.conf` safely on-the-fly without manual text editing.
 
----
+## Installation
 
-## Prerequisites
+### Prerequisites
+
 
 ```bash
 sudo pacman -S --needed git base-devel
 
 ```
 
----
+*It is recommended to have an AUR helper installed on your system.*
 
-## Installation
+**Recommended AUR helpers:**
+
+[![Paru](https://img.shields.io/badge/paru-777777?style=flat-square&logo=github&logoColor=white)](https://github.com/morganamilo/paru)
+[![Yay](https://img.shields.io/badge/yay-777777?style=flat-square&logo=github&logoColor=white)](https://github.com/jguer/yay)
+
+---
 
 ### From source
 
@@ -66,9 +70,9 @@ jay [command] [options] [packages]
 
 | Command | Alias | Description |
 | --- | --- | --- |
-| `install` | `-i` | Sync and install packages (AUR/Repo/Flatpak) |
+| `install` | `-i` | Sync and install packages |
 | `remove` | `-r` | Cleanly remove packages from the system (Use -ra / remove-agressive to remove dependencies too) |
-| `update` | `-u` | Full system update (AUR packages + Snapshots + Flatpaks) |
+| `update` | `-u` | Full system update |
 | `search` | `-s` | Query packages globally across repositories |
 | `query` | `-q` | Search through locally installed system packages |
 | `orphan` | `-o` | Find and purge unneeded orphaned dependencies |
@@ -99,7 +103,7 @@ jay [command] [options] [packages]
 | `--backend` | Override default helper logic manually (yay, paru, pikaur) |
 | `--path-to-binary` | Trace real absolute paths of binaries (combine with query) |
 | `--lines N` | Truncate and tail explicit log outputs (combine with slog) |
-| `--debug` | Print Every command that jay is running. |
+| `--debug` | Print every command that jay is running |
 
 ---
 
@@ -134,7 +138,7 @@ jay --backend paru update
 jay slog --lines 15
 
 # Wipe and clear out the local cache log file completely
-jay cl
+jay clog
 
 ```
 
@@ -147,7 +151,7 @@ JAY acts transparently by journaling runtime operations directly inside `~/.cach
 ```bash
 jay slog              # view the total history stream
 jay slog --lines 25   # inspect the recent 25 events
-jay cl                # clears out the log file completely
+jay clog              # clears out the log file completely
 
 ```
 
@@ -170,6 +174,6 @@ jay --restore-backup --path ~/safe_state.txt # handles targets outside default e
 
 ## License
 
-Current version: 7.2.7 (Cheesecake)
-
 Distributed under the MIT License. Developed with love by xmlzitos154.
+
+Current version: 7.2.7 (Cheesecake)
