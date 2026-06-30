@@ -1,7 +1,7 @@
 [![Bash](https://img.shields.io/badge/Language-Bash-4EAA25?style=flat-square&logo=gnu-bash&logoColor=white)](https://www.gnu.org/software/bash/)
 [![Arch Linux](https://img.shields.io/badge/OS-Arch_Linux-1793D1?style=flat-square&logo=arch-linux&logoColor=white)](https://archlinux.org/
 
-[![Jay-bin](https://img.shields.io/badge/JAY_BIN-v7.2.7-1793D1?style=flat-square&logo=arch-linux&logoColor=white)](https://aur.archlinux.org/packages/jay-bin)
+[![Jay-bin](https://img.shields.io/badge/JAY_BIN-v7.2.8-1793D1?style=flat-square&logo=arch-linux&logoColor=white)](https://aur.archlinux.org/packages/jay-bin)
 
 # JAY 
 Just Another Yogourt
@@ -99,7 +99,7 @@ jay [command] [options] [packages]
 | `-f`, `--flatpak` | Trigger explicit cross-hybrid package lookups (Native Repos + Flathub) |
 | `--flatpak-only` | Enforce full sandboxed Flatpak-only isolation boundaries |
 | `--dry-run` | Intercept execution and mirror command layouts without applying filesystem modifications |
-| `nc`, `--noconfirm` | Bypass package compilation interactive prompt menus |
+| `-nc`, `--noconfirm` | Bypass package compilation interactive prompt menus |
 | `--backend` | Override default helper logic manually (yay, paru, pikaur) |
 | `--path-to-binary` | Trace real absolute paths of binaries (combine with query) |
 | `--lines N` | Truncate and tail explicit log outputs (combine with slog) |
@@ -176,4 +176,4 @@ jay --restore-backup --path ~/safe_state.txt # handles targets outside default e
 
 Distributed under the MIT License. Developed with love by xmlzitos154.
 
-Current version: 7.2.7 (Cheesecake)
+Current version: **7.2.8** (Cheesecake)
