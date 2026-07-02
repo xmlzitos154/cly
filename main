@@ -2,7 +2,7 @@
 
 ## Just Another Yogourt
 
-ver="7.2.8"; rc="stable-1"; cdname="Cheesecake"
+ver="7.2.9"; rc="stable-1"; cdname="Cheesecake"
 
 set -o pipefail
 REAL_HOME=$(getent passwd "${SUDO_USER:-$USER}" 2>/dev/null | cut -d: -f6); REAL_HOME=${REAL_HOME:-$HOME}
@@ -355,36 +355,43 @@ ntest() {
     fi
 }
 proc_func() {
+    tag="$action"
     case "$func" in
         i)
             ntest
             cmd="-S"
-            tag="INSTALLED"
             flat_cmd="install"
+            tag_cmd="install"
+            log_type="1" && mklog $cmd $tag_cmd
         ;;
         r)
             cmd=$([[ "$agrmode" == "1" ]] && echo "-Rsn" || echo "-Rs")
-            tag=$([[ "$agrmode" == "1" ]] && echo "REMOVED WITH -Rsn MODE" || echo "REMOVED")
             [[ "$agrmode" == "1" ]] && echo -e "${RED} $NOTE $M_AGRESSIVE_MODE${NC}"
             flat_cmd="uninstall"
+            tag_cmd="remove"
+            log_type="1" && mklog $cmd $tag_cmd
         ;;
         u)
             ntest
             [[ "$do_snap" == "1" ]] && mksnap
             cmd="-Syu"
-            tag="UPDATED"
             flat_cmd="update"
+            tag_cmd="update"
+            log_type="1" && mklog $cmd $tag_cmd
         ;;
         s)
             ntest
             cmd="-Ss"
-            tag="SEARCHED"
             flat_cmd="search"
+            tag_cmd="search"
+            log_type="1" && mklog $cmd $tag_cmd
         ;;
         q)
             [[ "$lsaur" == 1 ]] && ls_aur && exit 0
             cmd="-Qs"
-            tag="LOCAL QUERY"
+            flat_cmd="list"
+            tag_cmd="query"
+            log_type="1" && mklog $cmd $tag_cmd
             [[ "$ptbin" == 1 ]] && get_package_path "${final_args[@]}" && tag="SKIP" && return
         ;;
         sl)
@@ -790,11 +797,32 @@ backup_func() {
 
 mklog() {
     [[ "$mlog" == 0 ]] && return 0
+    if [[ $flat == "1" ]]; then
+        used_flat="true"
+    else
+        used_flat="false"
+    fi
+    if [[ "$log_type" == "1" ]]; then
+        local info1="$1"
+        local info2="$2"
+        printf -v date_str '%(%Y-%m-%d - %H:%M:%S)T' -1
+        echo "[$date_str] Executing $info1 [$info2] with $backend..." >> "$LOG_FILE"
+        log_type=0
+        return
+    fi
+    if [[ "$log_type" == "2" ]]; then
+        local info1="$1"
+        printf -v date_str '%(%Y-%m-%d - %H:%M:%S)T' -1
+        echo "[$date_str] $info1" >> "$LOG_FILE"
+        log_type=0
+        return
+    fi
     local status="${exit_code:-0}"
     local tag="$1"
     local info="$2"
     printf -v date_str '%(%Y-%m-%d - %H:%M:%S)T' -1
-    echo "$date_str Exit Status $status $tag -> $info" >> "$LOG_FILE"
+    echo "[$date_str] $tag -> $backend $cmd ${final_args[@]} ${yay_flags[@]}; used flatpak = $used_flat - Exit Status $status" >> "$LOG_FILE"
+    echo " " >> "$LOG_FILE"
 }
 
 check_updates() {
@@ -961,6 +989,7 @@ case "$action" in
     ;;
     *)
         if [[ -n "$cmd" ]]; then
+            log_type="2" && mklog "Executing $backend $cmd ${final_args[@]} ${yay_flags[@]}"
             "$backend" "$cmd" "${final_args[@]}" "${yay_flags[@]}" 2>&1 | tee "$tmp_out"
             exit_code=${PIPESTATUS[0]}
             rflat
