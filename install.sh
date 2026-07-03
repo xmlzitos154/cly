@@ -14,34 +14,45 @@ fi
 
 BIN_NAME="jay"
 INSTALL_PATH="/usr/bin/$BIN_NAME"
+MODULE_PATH="/usr/share/jay"
 [[ $EUID -ne 0 ]] && { echo -e "${Y}>>${NC} Soliciting root..."; exec sudo "$0" "$@"; }
 
 title() { clear; echo -e "${C}${B}JAY SETUP - VER 1.0 ${NC}"; echo -e "${C}──────────────────────────────${NC}"; }
 step() { echo -e "${C}  [..]${NC} $1"; sleep 0.3; }
 success() { echo -e "${G}  [OK]${NC} $1"; }
 
-run_installer() {
+install_part_1() {
     title
     step "Installing binary to $INSTALL_PATH..."
     install -Dm755 "$SOURCE" "$INSTALL_PATH"
     success "Binary installed."
+    step "Installing languages modules..."
+    install -Dm644 "$SCRIPT_DIR/languages/en.sh" "$MODULE_PATH/en.sh"
+    install -Dm644 "$SCRIPT_DIR/languages/pt.sh" "$MODULE_PATH/pt.sh"
+    success "Done."
+    step "Adjusting permissions for $REAL_USER"
     chmod +x "$INSTALL_PATH"
-    success "Adjusted permissions for $REAL_USER."
+    success "Done."
     echo -e "\n${G}${B}Done!${NC} Jay installed successfully."
-    read -n1 -s -p "Press any key to back..."
+    read -n1 -s -p "Press any key to exit..."
+    exit 0
 }
 
-run_remove() {
+remover() {
     title
     echo -e "${R}${B}Removing JAY...${NC}\n"
     step "Removing files..."
     rm -f "$INSTALL_PATH"
-    rm -f "/usr/share/fish/vendor_completions.d/jay.fish"
+    success "Binary removed."
     rm -f "$REAL_HOME/.cache/jay.log"
     success "logs removed."
-    success "System clear."
+    rm -fr "$MODULE_PATH"
+    success "modules removed."
+    rm -fr "$REAL_HOME/.local/share/jay"
+    success "Config/backup removed."
     echo -e "\n${Y}Uninstallation complete.${NC}"
-    read -n1 -s -p "Press any key to back..."
+    read -n1 -s -p "Press any key to exit..."
+    exit 0
 }
 
 while true; do
@@ -54,8 +65,8 @@ while true; do
     read -r DO
     
     case "$DO" in
-        1) run_installer ;;
-        2) run_remove ;;
+        1) install_part_1 ;;
+        2) remover ;;
         3) exit 0 ;;
         *) echo -e "${R}Invalid option.${NC}"; sleep 0.5 ;;
     esac
