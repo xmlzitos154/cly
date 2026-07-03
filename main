@@ -2,7 +2,7 @@
 
 ## Just Another Yogourt
 
-ver="7.3.01"; rc="pre_release-1"; cdname="Cheesecake"
+ver="7.3.02"; rc="pre_release-1"; cdname="Cheesecake"
 
 set -o pipefail
 REAL_HOME=$(getent passwd "${SUDO_USER:-$USER}" 2>/dev/null | cut -d: -f6); REAL_HOME=${REAL_HOME:-$HOME}
@@ -90,13 +90,16 @@ proc_func() {
             ntest
             cmd="-S"
             flat_cmd="install"
+            tag="INSTALLED"
             tag_cmd="install"
             log_type="1" && mklog $cmd $tag_cmd
         ;;
         r)
             cmd=$([[ "$agrmode" == "1" ]] && echo "-Rsn" || echo "-Rs")
+            tag="remove"
             [[ "$agrmode" == "1" ]] && echo -e "${RED} $NOTE $M_AGRESSIVE_MODE${NC}"
             flat_cmd="uninstall"
+            tag="uninstall"
             tag_cmd="remove"
             log_type="1" && mklog $cmd $tag_cmd
         ;;
@@ -105,6 +108,7 @@ proc_func() {
             [[ "$do_snap" == "1" ]] && mksnap
             cmd="-Syu"
             flat_cmd="update"
+            tag="update"
             tag_cmd="update"
             log_type="1" && mklog $cmd $tag_cmd
         ;;
@@ -112,6 +116,7 @@ proc_func() {
             ntest
             cmd="-Ss"
             flat_cmd="search"
+            tag="search"
             tag_cmd="search"
             log_type="1" && mklog $cmd $tag_cmd
         ;;
@@ -119,6 +124,7 @@ proc_func() {
             [[ "$lsaur" == 1 ]] && ls_aur && exit 0
             cmd="-Qs"
             flat_cmd="list"
+            tag="list" 
             tag_cmd="query"
             log_type="1" && mklog $cmd $tag_cmd
             [[ "$ptbin" == 1 ]] && get_package_path "${final_args[@]}" && tag="SKIP" && return
@@ -144,11 +150,11 @@ proc_func() {
         ;;
     esac
 }
+
 rflat() {
     [[ "$flat" != "1" ]] && return
     command -v flatpak &>/dev/null || err "$E_06"
-    if [[ "$dry_run" == "1" ]];
-    then
+    if [[ "$dry_run" == "1" ]]; then
         echo -e "\n${YELLOW}$M_DRY_FLATPAK${NC}"
         echo -e "${CYAN}$M_DRY_RUN_RUN${NC} flatpak $flat_cmd ${final_args[*]}"
         echo -e "${GREEN}$M_DRY_RUN_NONE${NC}\n"
@@ -159,50 +165,49 @@ rflat() {
             st "$M_FLAT_UPDATING"
             flatpak update -y 2>&1 | tee -a "$tmp_out"
             flat_exit=${PIPESTATUS[0]}
-            if [[ $flat_exit -eq 0 ]];
-            then
-                mklog "UPDATED (flatpak)" "${raw_cmd}"
-            fi
             exit_code=$flat_exit
         ;;
         search|-s)
-            [[ -n "$flat_cmd" ]] && st "$M_FLAT_SEARCHING" && flatpak "$flat_cmd" "${final_args[@]}"
+            st "$M_FLAT_SEARCHING"
+            flatpak "$flat_cmd" "${final_args[@]}"
         ;;
         *)
-            st "$M_USING_FLATPAK"
             flatpak "$flat_cmd" -y "${final_args[@]}"
-            exit_code=$?
-            [[ $exit_code -eq 0 ]] && tag="FLATPAK"
+            flat_exit=$?
+            [[ $flat_exit -eq 0 ]] && tag="$tag + FLATPAK" || tag="$tag (flatpak failed)"
         ;;
     esac
 }
+
 flatpak_only() {
     ! command -v flatpak &>/dev/null && err "$E_06"
     echo -e "${BOLD}${GREEN} $CC $M_USING_FLATPAK${NC}"
-    
     case "$action" in
-        i|in|ins|install|-i)  flat_cmd="install" ;;
-        r|rm|rem|remove|-r)   flat_cmd="uninstall" ;;
-        u|up|upd|update|-u)   flat_cmd="update" ;;
-        s|sr|src|search|-s)   flat_cmd="search" ;;
-        q|qr|qur|query|-q)    flat_cmd="list" ;;
-        c|cc|cac|cache|-c)    flat_cmd="uninstall --unused" ;;
-        cu|check|--check-updates) flat_cmd="remote-ls --updates" ;;
+        -in|ins|install|-i)       flat_cmd="install" ;;
+        rem|remove|-r|-rm)        flat_cmd="uninstall" ;;
+        -up|upd|update|-u)        flat_cmd="update" ;;
+        -sr|src|search|-s)        flat_cmd="search" ;;
+        -qr|qur|query|-q)         flat_cmd="list" ;;
+        -cc|cac|cache|-c)         flat_cmd="uninstall --unused" ;;
+        --check-upds|--check-updates) flat_cmd="remote-ls --updates" ;;
         *) error "$M_FLAT_NOT_SUP" ;;
     esac
-    
     if [[ "$dry_run" == "1" ]]; then
         echo -e "\n${YELLOW}$M_DRY_FLATPAK${NC}"
         echo -e "${CYAN}$M_DRY_RUN_RUN${NC} flatpak $flat_cmd ${final_args[*]}"
         echo -e "${GREEN}$M_DRY_RUN_NONE${NC}\n"
         exit 0
     fi
+    log_type="1" && mklog "flatpak $flat_cmd ${final_args[*]}" "flatpak-only" "0"
     flatpak $flat_cmd "${final_args[@]}"
     exit_code=$?
-    tag="FLATPAK_ONLY"
-    mklog "$tag" "$flat_cmd ${final_args[*]}"
+    tag="FLATPAK ONLY"
+    printf -v date_str '%(%Y-%m-%d - %H:%M:%S)T' -1
+    echo "[$date_str] $tag -> flatpak $flat_cmd ${final_args[*]}; flatpak=true - Exit Status $exit_code" >> "$LOG_FILE"
+    echo " " >> "$LOG_FILE"
     exit $exit_code
 }
+
 dpver() { echo "jay $ver - release: $rc"; }
 inform() {
     local version_padded
@@ -541,33 +546,32 @@ backup_func() {
 
 mklog() {
     [[ "$mlog" == 0 ]] && return 0
-    if [[ $flat == "1" ]]; then
-        used_flat="true"
-    else
-        used_flat="false"
-    fi
+    printf -v date_str '%(%Y-%m-%d - %H:%M:%S)T' -1
     if [[ "$log_type" == "1" ]]; then
         local info1="$1"
         local info2="$2"
-        printf -v date_str '%(%Y-%m-%d - %H:%M:%S)T' -1
-        echo "[$date_str] Executing $info1 [$info2] with $backend..." >> "$LOG_FILE"
+        [[ "$3" == "0" ]] && prback="" || prback="with $backend..."
+        echo "[$date_str] Executing $info1 [$info2] $prback" >> "$LOG_FILE"
         log_type=0
         return
     fi
     if [[ "$log_type" == "2" ]]; then
-        local info1="$1"
-        printf -v date_str '%(%Y-%m-%d - %H:%M:%S)T' -1
-        echo "[$date_str] $info1" >> "$LOG_FILE"
+        echo "[$date_str] $1" >> "$LOG_FILE"
         log_type=0
         return
     fi
     local status="${exit_code:-0}"
     local tag="$1"
-    local info="$2"
-    printf -v date_str '%(%Y-%m-%d - %H:%M:%S)T' -1
-    [[ -z "${final_args[@]}" ]] && proc_args="" || proc_args="${final_args[@]}"
-    [[ -z "${yay_flags[@]}" ]] && proc_args="" || proc_args="${yay_flags[@]}"
-    echo "[$date_str] $tag -> $backend $cmd $proc_args; used flatpak = $used_flat - Exit Status $status" >> "$LOG_FILE"
+    local cmd_str
+    if [[ -n "$cmd" ]]; then
+        cmd_str="$backend $cmd"
+    else
+        cmd_str="flatpak $flat_cmd"
+    fi
+    [[ ${#final_args[@]} -gt 0 ]] && cmd_str+=" ${final_args[*]}"
+    [[ ${#back_flags[@]} -gt 0 ]] && cmd_str+=" ${back_flags[*]}"
+    local used_flat=$([[ "$flat" == "1" ]] && echo "true" || echo "false")
+    echo "[$date_str] $tag -> $cmd_str; flatpak=$used_flat - Exit Status $status" >> "$LOG_FILE"
     echo " " >> "$LOG_FILE"
 }
 
@@ -635,7 +639,7 @@ get_package_path() {
 [[ ! -w "$LOG_FILE" ]] && sudo chown "${SUDO_USER:-$USER}":"${SUDO_USER:-$USER}" "$LOG_FILE" 2>/dev/null
 [[ -z "$1" ]] && usage
 
-raw_cmd="$*"; flat=0; ptbin=0; agrmode=0; final_args=(); yay_flags=(); log_lines=""; dry_run=0; lsaur=0; mlog=1; func=""; only_flatpak=0; do_snap=0
+raw_cmd="$*"; flat=0; ptbin=0; agrmode=0; final_args=(); back_flags=(); log_lines=""; dry_run=0; lsaur=0; mlog=1; func=""; only_flatpak=0; do_snap=0
 
 log_rotate; detback; load_lang
 
@@ -669,7 +673,7 @@ while [[ $# -gt 0 ]]; do
         --debug)                  set -x ;;
         -ls-aur|--list-aur)       lsaur=1 ;;
         mksnap|--create-snapshot) do_snap="1" ;;
-        -nc|--noconfirm)          yay_flags+=("--noconfirm") ;;
+        -nc|--noconfirm)          back_flags+=("--noconfirm") ;;
         *)                        final_args+=("$1") ;;
     esac
     shift
@@ -720,7 +724,7 @@ esac
 if [[ "$dry_run" == "1" ]]; then
     echo -e "\n${YELLOW}$M_DRY_RUN_SIM${NC}"
     if [[ -n "$cmd" ]]; then
-        echo -e "${CYAN}$M_DRY_RUN_RUN${NC} $backend $cmd ${final_args[*]} ${yay_flags[*]}"
+        echo -e "${CYAN}$M_DRY_RUN_RUN${NC} $backend $cmd ${final_args[*]} ${back_flags[*]}"
     fi
     if [[ "$flat" == "1" && -n "$flat_cmd" ]]; then
         echo -e "${CYAN}$M_DRY_RUN_RUN${NC} flatpak $flat_cmd ${final_args[*]}"
@@ -731,19 +735,21 @@ fi
 
 case "$action" in
     search|-s)
-        "$backend" "$cmd" "${final_args[@]}" "${yay_flags[@]}" 2>&1 | tee "$tmp_out"
+        "$backend" "$cmd" "${final_args[@]}" "${back_flags[@]}" 2>&1 | tee "$tmp_out"
         exit_code=${PIPESTATUS[0]}
         rflat
     ;;
     *)
         if [[ -n "$cmd" ]]; then
-            log_type="2" && mklog "Executing $backend $cmd ${final_args[@]} ${yay_flags[@]}"
-            "$backend" "$cmd" "${final_args[@]}" "${yay_flags[@]}" 2>&1 | tee "$tmp_out"
+            log_type="2" && mklog "Executing $backend $cmd ${final_args[@]} ${back_flags[@]}"
+            "$backend" "$cmd" "${final_args[@]}" "${back_flags[@]}" 2>&1 | tee "$tmp_out"
             exit_code=${PIPESTATUS[0]}
             rflat
         fi
     ;;
 esac
+
+echo "DEBUG: tag=$tag exit_code=$exit_code"
 
 if [[ "$exit_code" -eq 0 && -n "$tag" ]]; then
     if grep -qiE "could not find|nenhum pacote|target not found" "$tmp_out"; then
