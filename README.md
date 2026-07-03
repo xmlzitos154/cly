@@ -1,7 +1,7 @@
 [![Bash](https://img.shields.io/badge/Language-Bash-4EAA25?style=flat-square&logo=gnu-bash&logoColor=white)](https://www.gnu.org/software/bash/)
 [![Arch Linux](https://img.shields.io/badge/OS-Arch_Linux-1793D1?style=flat-square&logo=arch-linux&logoColor=white)](https://archlinux.org)
 
-[![Jay-bin](https://img.shields.io/badge/JAY_BIN-v7.3.0-1793D1?style=flat-square&logo=arch-linux&logoColor=white)](https://aur.archlinux.org/packages/jay-bin)
+[![Jay-bin](https://img.shields.io/badge/JAY_BIN-v7.3.01-1793D1?style=flat-square&logo=arch-linux&logoColor=white)](https://aur.archlinux.org/packages/jay-bin)
 
 # JAY 
 Just Another Yogourt
@@ -176,4 +176,4 @@ jay --restore-backup --path ~/safe_state.txt # handles targets outside default e
 
 Distributed under the MIT License. Developed with love by xmlzitos154.
 
-Current version: **7.3.0** (Cheesecake)
+Current version: **7.3.01** (Cheesecake)
