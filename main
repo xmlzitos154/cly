@@ -2,12 +2,12 @@
 
 ## JAY - Just Another Yogourt
 
-ver="7.3.03"; rc="release-1"
+ver="7.4.0"; rc="pre_release-1"
 
 set -o pipefail
 REAL_HOME=$(getent passwd "${SUDO_USER:-$USER}" 2>/dev/null | cut -d: -f6); REAL_HOME=${REAL_HOME:-$HOME}
 CFG_FOLDER="$REAL_HOME/.local/share/jay"
-LANG_FOLDER="/usr/share/jay"
+MODULES_FOLDER="/usr/share/jay"
 BACKUP_DIR="$CFG_FOLDER/backup"; BACKUP_FILE="$BACKUP_DIR/backup.txt"
 LOG_FILE="$REAL_HOME/.cache/jay.log"
 CYAN='\033[0;36m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; NC='\033[0m'; BOLD='\033[1m'
@@ -20,20 +20,48 @@ detback() {
     backend="pacman"
 }
 
-
 load_lang() {
-    local lang_code="${LANG:0:2}"
-    [[ ! -f "$LANG_FOLDER/pt.sh" && "$lang_code" == "pt" ]] && echo -e "${RED} $ERROR${NC} Módulo do idioma 'pt.sh' não encontrado." && exit 1
-    [[ ! -f "$LANG_FOLDER/en.sh" && "$lang_code" == "en" ]] && echo -e "${RED} $ERROR${NC} Language module 'en.sh' not found." && exit 1
+    lang_code="${LANG:0:2}"
+    [[ ! -f "$MODULES_FOLDER/pt.sh" && "$lang_code" == "pt" ]] && echo -e "${RED} $ERROR${NC} Módulo do idioma 'pt.sh' não encontrado." && exit 1
+    [[ ! -f "$MODULES_FOLDER/en.sh" && "$lang_code" == "en" ]] && echo -e "${RED} $ERROR${NC} Language module 'en.sh' not found." && exit 1
     case "$lang_code" in
         pt)
-            source "$LANG_FOLDER/pt.sh"
+            source "$MODULES_FOLDER/pt.sh"
         ;;
         *)
-            source "$LANG_FOLDER/en.sh"
+            source "$MODULES_FOLDER/en.sh"
         ;;
     esac
 }
+
+load_lang
+
+load_modules() {
+    failed_module="0"
+    if [[ ! -f "$MODULES_FOLDER/base.sh" ]]; then
+        failed_module="base.sh"
+        elif [[ ! -f "$MODULES_FOLDER/logging.sh" ]]; then
+        failed_module="logging.sh"
+        elif [[ ! -f "$MODULES_FOLDER/etc.sh" ]]; then
+        failed_module="etc.sh"
+        elif [[ ! -f "$MODULES_FOLDER/cache.sh" ]]; then
+        failed_module="cache.sh"
+        elif [[ ! -f "$MODULES_FOLDER/flatpak.sh" ]]; then
+        failed_module="flatpak.sh"
+    fi
+    if [[ "$failed_module" != "0" && "$lang_code" == "pt" ]]; then
+        echo -e "${RED} ${ERROR} ${NC}Módulo '$failed_module' não encontrado." && exit 1
+        elif [[ "$failed_module" != "0" && "$lang_code" == "en" ]]; then
+        echo -e "${RED} ${ERROR} ${NC}Module '$failed_module' not found." && exit 1
+    fi
+    source "$MODULES_FOLDER/base.sh"
+    source "$MODULES_FOLDER/logging.sh"
+    source "$MODULES_FOLDER/etc.sh"
+    source "$MODULES_FOLDER/cache.sh"
+    source "$MODULES_FOLDER/flatpak.sh"
+}
+
+load_modules
 
 st() { echo -e "${BOLD}${GREEN} $CC ${NC}${1}"; }
 sc() { echo -e "${GREEN} $COMPLETE ${NC}${1}"; }
@@ -41,609 +69,8 @@ err() { echo -e "${RED} $ERROR ${NC}${1}"; exit 1; }
 error() { err "$1"; }
 usage() { echo "$H_USAGE: jay [$USG1] [$USG2] [$USG3]"; exit 1; }
 
-load_lang
-
 logback() {
     echo -e "${GREEN}${BOLD}$CC $M_USING_BACKEND $backend...${NC}"
-}
-log_rotate() {
-    local max_size=128000
-    local log_size
-    log_size=$(stat -c%s "$LOG_FILE" 2>/dev/null || echo 0)
-    [[ "$log_size" -lt "$max_size" ]] && return
-    local log_size_hr
-    log_size_hr=$(du -sh "$LOG_FILE" | cut -f1)
-    echo -e "\n${YELLOW} $NOTE $M_LARGE_LOG_FILE ($log_size_hr).${NC}"
-    echo -e -n "${CYAN} $CC ${NC}$ASK_ROTATE? [$ASK_1/$ASK_2]"
-    read -r -n 1 opt
-    echo
-    if [[ "$opt" =~ ^(y|Y|s|S)$ ]]; then
-        mv "$LOG_FILE" "${LOG_FILE}.1"
-        touch "$LOG_FILE"
-        sc "$M_ROTATED jay.log.1"
-    fi
-}
-ntest() {
-    st "$M_NET_TEST"
-    ping -c 2 -i 0.2 8.8.8.8 &>/dev/null &
-    local pid=$!
-    local spin='-\|/'
-    while kill -0 $pid 2>/dev/null; do
-        local i=$(( (i+1)%4 ))
-        printf "\r${CYAN} [%c] $M_WAITING...\033[K${NC}" "${spin:$i:1}"
-        sleep 0.1
-    done
-    printf "\r\033[K"
-    if wait $pid; then
-        sc "$M_NET_OK"
-        log_type="net" && mklog "Network test" "available"
-    else
-        echo -e "${RED}$ERROR \033[K${NC}$M_NET_ERR"
-        log_type="net" && mklog "Network test" "unavailable"
-        exit 1
-    fi
-}
-proc_func() {
-    tag="$action"
-    case "$func" in
-        i)
-            ntest
-            cmd="-S"
-            flat_cmd="install"
-            tag="install"
-            tag_cmd="install"
-            log_type="1" && mklog $action $tag_cmd
-        ;;
-        r)
-            cmd=$([[ "$agrmode" == "1" ]] && echo "-Rsn" || echo "-Rs")
-            tag="remove"
-            [[ "$agrmode" == "1" ]] && echo -e "${RED} $NOTE $M_AGRESSIVE_MODE${NC}"
-            flat_cmd="uninstall"
-            tag="uninstall"
-            tag_cmd="remove"
-            log_type="1" && mklog $action $tag_cmd
-        ;;
-        u)
-            ntest
-            [[ "$do_snap" == "1" ]] && mksnap
-            cmd="-Syu"
-            flat_cmd="update"
-            tag="update"
-            tag_cmd="update"
-            log_type="1" && mklog $action $tag_cmd
-        ;;
-        s)
-            ntest
-            cmd="-Ss"
-            flat_cmd="search"
-            tag="search"
-            tag_cmd="search"
-            log_type="1" && mklog $action $tag_cmd
-        ;;
-        q)
-            [[ "$lsaur" == 1 ]] && ls_aur && exit 0
-            cmd="-Qs"
-            flat_cmd="list"
-            tag="list"
-            tag_cmd="query"
-            log_type="1" && mklog $action $tag_cmd
-            [[ "$ptbin" == 1 ]] && get_package_path "${final_args[@]}" && tag="SKIP" && return
-        ;;
-        sl)
-            [[ ! -s "$LOG_FILE" ]] && echo -e "${YELLOW}$NOTE $M_EMPTY_LOG" && exit 0
-            if [[ -n "$log_lines" && "$log_lines" =~ ^[0-9]+$ ]]; then
-                tail -n "$log_lines" "$LOG_FILE"
-                exit 0
-            else
-                cat "$LOG_FILE"
-                exit 0
-            fi
-        ;;
-        cl)
-            [[ ! -s "$LOG_FILE" ]] && echo "$NOTE $M_EMPTY_LOG" && exit 0
-            : > "$LOG_FILE"
-            sc "$M_DONE"
-            exit 0
-        ;;
-        *)
-            err "var func not defined"
-        ;;
-    esac
-}
-
-rflat() {
-    [[ "$flat" != "1" ]] && return
-    command -v flatpak &>/dev/null || err "$E_06"
-    if [[ "$dry_run" == "1" ]]; then
-        echo -e "\n${YELLOW}$M_DRY_FLATPAK${NC}"
-        echo -e "${CYAN}$M_DRY_RUN_RUN${NC} flatpak $flat_cmd ${final_args[*]}"
-        echo -e "${GREEN}$M_DRY_RUN_NONE${NC}\n"
-        exit 0
-    fi
-    case "$action" in
-        update|-u)
-            st "$M_FLAT_UPDATING"
-            flatpak update -y 2>&1 | tee -a "$tmp_out"
-            flat_exit=${PIPESTATUS[0]}
-            exit_code=$flat_exit
-        ;;
-        search|-s)
-            st "$M_FLAT_SEARCHING"
-            flatpak "$flat_cmd" "${final_args[@]}"
-        ;;
-        *)
-            flatpak "$flat_cmd" -y "${final_args[@]}"
-            flat_exit=$?
-            [[ $flat_exit -eq 0 ]] && tag="$tag + FLATPAK" || tag="$tag (flatpak failed)"
-        ;;
-    esac
-}
-
-flatpak_only() {
-    ! command -v flatpak &>/dev/null && err "$E_06"
-    echo -e "${BOLD}${GREEN} $CC $M_USING_FLATPAK${NC}"
-    case "$action" in
-        -in|ins|install|-i)       flat_cmd="install" ;;
-        rem|remove|-r|-rm)        flat_cmd="uninstall" ;;
-        -up|upd|update|-u)        flat_cmd="update" ;;
-        -sr|src|search|-s)        flat_cmd="search" ;;
-        -qr|qur|query|-q)         flat_cmd="list" ;;
-        -cc|cac|cache|-c)         flat_cmd="uninstall --unused" ;;
-        --check-upds|--check-updates) flat_cmd="remote-ls --updates" ;;
-        *) error "$M_FLAT_NOT_SUP" ;;
-    esac
-    if [[ "$dry_run" == "1" ]]; then
-        echo -e "\n${YELLOW}$M_DRY_FLATPAK${NC}"
-        echo -e "${CYAN}$M_DRY_RUN_RUN${NC} flatpak $flat_cmd ${final_args[*]}"
-        echo -e "${GREEN}$M_DRY_RUN_NONE${NC}\n"
-        exit 0
-    fi
-    log_type="1" && mklog "flatpak $flat_cmd ${final_args[*]}" "flatpak-only" "0"
-    flatpak $flat_cmd "${final_args[@]}"
-    exit_code=$?
-    tag="FLATPAK ONLY"
-    printf -v date_str '%(%Y-%m-%d - %H:%M:%S)T' -1
-    echo "[$date_str] $tag -> flatpak $flat_cmd ${final_args[*]}; flatpak=true - Exit Status $exit_code" >> "$LOG_FILE"
-    echo " " >> "$LOG_FILE"
-    exit $exit_code
-}
-
-dpver() { echo "jay $ver - release: $rc"; }
-inform() {
-    local version_padded
-    printf -v version_padded "v%-6s" "$ver"
-    
-    echo -e "${BOLD}${CYAN}        __"
-    echo -e "${BOLD}${CYAN}       / /___ ___  __"
-    echo -e "${BOLD}${CYAN}  __  / / __  / / / /"
-    echo -e "${BOLD}${CYAN} / /_/ / /_/ / /_/ /"
-    echo -e "${BOLD}${CYAN} \____/\__,_/\__, /"
-    echo -e "${BOLD}${CYAN}  ${version_padded}   /____/"
-    echo -e "\n ${YELLOW}$M_RELEASE ${CYAN}$rc\n ${YELLOW}$M_MADE_BY ${CYAN}xml.dev\n${GREEN} $M_THANKS\n ${NC}"
-    exit 0
-}
-help_message() {
-    echo "$H_USAGE: jay [$USG1] [$USG2] [$USG3]"
-    echo "$H_USAGE: jay [-i | -r | -s | -u | check] [-f | --flatpak] [--noconfirm]"
-    echo "$H_USAGE: jay [-q | query] [--list-aur] [--path-to-binary]"
-    echo "$H_USAGE: jay [--restore-backup] [--path /path/to/backup/file.txt]"
-    echo "$H_USAGE: jay [--backend] [yay | paru]"
-    echo "$H_USAGE: jay [slog|-sl] [--lines X]"
-    echo -e "\n$H_OPTIONS:\n"
-    echo "-h, --help               $H_HELP"
-    echo "-v, --version            $H_VERSION"
-    echo "-i, install              $H_INSTALL"
-    echo "-r, remove               $H_REMOVE"
-    echo "-u, update               $H_UPDATE"
-    echo "-s, search               $H_SEARCH"
-    echo "-q, query                $H_QUERY"
-    echo "-o, orphan               $H_ORPHAN"
-    echo "-c, cache                $H_CACHE"
-    echo "-m, mirrors              $H_MIRRORS"
-    echo "dp, why                  $H_WHY"
-    echo "snap, --create-snapshot  $H_SNAP"
-    echo "pin, --ignore            $H_PIN"
-    echo "--check-updates          $H_CHECK_UPD"
-    echo "--info                   $H_INFO"
-    echo "--fix-keys               $H_FIX_KEYS"
-    echo "--pacdiff                $H_PACDIFF"
-    echo "--create-backup          $H_CREATE_BKp"
-    echo "--restore-backup         $H_RESTORE_BKp"
-    echo "--path-to-binary         $H_PATH_BIN"
-    echo "--ping                   $H_PING"
-    echo "--view                   $H_VIEW"
-    echo "--no-log                 $H_NO_LOG"
-    echo "--dry-run                $H_DRY"
-    echo "--statistics, stats      $H_STATS"
-    echo "--flatpak-only           $H_FLAT_ONLY"
-    echo -e "--backend             $H_BACKEND\n"
-    dpver
-    exit 0
-}
-chmgr() {
-    log_type="1" && mklog "-Sc" "clean-cache"
-    local cache_dir="$REAL_HOME/.cache/$backend"
-    if [[ -d "$cache_dir" ]]; then
-        st "$M_CACHE_CLEANING_BUILDS"
-        find "$cache_dir" -maxdepth 1 -type d -not -path "$cache_dir" -exec rm -rf {} +
-        sc "$M_CACHE_BUILDS_CLEANED"
-    fi
-    if command -v flatpak &>/dev/null; then
-        st "$M_CACHE_CLEANING_FLATPAK"
-        flatpak uninstall --unused -y &>/dev/null
-        sc "$M_CACHE_FLATPAK_CLEANED"
-    fi
-    st "$M_CACHE_CLEANING_PACMAN"
-    cmd="-Sc"
-    tag="Wiped cache"
-}
-rmorps() {
-    log_type="1" && mklog "-Qtqd" "remove-orphans"
-    st "$M_ORPHANS_SEARCHING"
-    mapfile -t final_args < <("$backend" -Qqtd 2>/dev/null)
-    orphans_n=${#final_args[@]}
-    [[ "$orphans_n" -eq 0 ]] && { sc "$M_ORPHANS_NONE"; mklog "SEARCHED ORPHANS" "clean"; exit 0; }
-    echo "$NOTE $orphans_n $M_ORPHANS_FOUND"
-    printf '%s\n' "${final_args[@]}"
-    st "$M_ORPHANS_REMOVING"
-    cmd="-Rsn"
-    tag="REMOVED ORPHANS"
-}
-
-ckconf() {
-    log_type="1" && mklog "pacnews" "conf-merge" "0"
-    st "$M_CONF_SEARCHING"
-    local pacnews=$(find /etc -regextype posix-extended -regex ".+\.pac(new|save)" 2>/dev/null)
-    if [[ -z "$pacnews" ]]; then sc "$M_CONF_NONE"; else
-        echo -e "${YELLOW} $NOTE $M_CONF_PENDING${NC}"
-        echo "$pacnews"
-        echo -e "\n${CYAN} $CC ${NC}$M_CONF_MERGE_PROMPT"
-        read -r -n 1 opt
-        echo
-        [[ "$opt" =~ ^[yYsS]$ ]] && sudo pacdiff
-    fi
-    tag="CLEAR DIFFS"
-}
-mksnap() {
-    log_type="1" && mklog "timeshift" "System snapshot" "0"
-    if [[ "$dry_run" == "1" ]]; then
-        echo -e "${CYAN}[DRY RUN] Would run:${NC} sudo timeshift --create --comments \"JAY Auto-Snapshot\" --tags D"
-        return
-    fi
-    st "$M_SNAP_CHECK"
-    if command -v timeshift &>/dev/null; then
-        st "$M_SNAP_CREATING"
-        if sudo timeshift --create --comments "JAY Auto-Snapshot before update" --tags D; then
-            sc "$M_SNAP_sc"
-        else
-            echo -e "${YELLOW} $NOTE Warning: Snapshot backup failed, but continuing update...${NC}"
-        fi
-    else
-        echo -e "${YELLOW} $NOTE $M_SNAP_NOT_FOUND${NC}"
-    fi
-}
-
-pin() {
-    log_type="1" && mklog "pin" "pin a package" "0"
-    local pkg="${final_args[0]}"
-    local conf="/etc/pacman.conf"
-    [[ -z "$pkg" ]] && error "$M_DEPS_SPECIFY"
-    ! pacman -Qi "$pkg" &>/dev/null && err "$M_DEPS_NOT_FOUND '$pkg'"
-    local current
-    current=$(grep -oP '(?<=^IgnorePkg = ).*' "$conf")
-    if echo "$current" | grep -qw "$pkg"; then
-        local new
-        new=$(echo "$current" | sed "s/\b$pkg\b//" | tr -s ' ' | sed 's/^ //;s/ $//')
-        sudo sed -i "s/^IgnorePkg = .*/IgnorePkg = $new/" "$conf"
-        sc "$pkg unpinned."
-        mklog "UNPIN" "$pkg"
-    elif grep -q "^IgnorePkg" "$conf";
-    then
-        sudo sed -i "s/^IgnorePkg = .*/IgnorePkg = $current $pkg/" "$conf"
-        sc "$pkg pinned."
-        mklog "PIN" "$pkg"
-    elif grep -q "^#IgnorePkg" "$conf";
-    then
-        sudo sed -i "s/^#IgnorePkg.*/IgnorePkg = $pkg/" "$conf"
-        sc "$pkg pinned."
-        mklog "PIN" "$pkg"
-    else
-        sudo sed -i "/^\[options\]/a IgnorePkg = $pkg" "$conf"
-        sc "$pkg pinned."
-        mklog "PIN" "$pkg"
-    fi
-}
-
-depends() {
-    log_type="1" && mklog "pactree" "Check for dependencies" "0"
-    ! command -v pactree &>/dev/null && { st "$M_INSTALL_CONTRIB pacman-contrib..."; "$backend" -S pacman-contrib --noconfirm; }
-    local pkg="${final_args[0]}"
-    [[ -z "$pkg" ]] && echo "$ALERT $M_DEPS_SPECIFY" && exit 1
-    ! pacman -Qi "$pkg" &>/dev/null && echo -e "$ERROR ${YELLOW}$M_DEPS_NOT_FOUND '$pkg'" && exit 1
-    st "$M_DEPS_CHECKING '$pkg'..."
-    local deps_n
-    local deps
-    deps=$(pactree -r "$pkg" 2>/dev/null | tail -n +2)
-    deps_n=$(echo "$deps" | wc -l)
-    if [[ -z "$deps" ]];
-    then
-        sc "$M_DEPS_NONE $pkg."
-        mklog "WHY" "$pkg -> No dependencies"
-        exit 0
-    fi
-    echo -e "\n $NOTE $deps_n $M_DEPS_FOUND_COUNT"
-    echo -e "${YELLOW} $CC '$pkg' $M_DEPS_REQUIRED_BY${NC}"
-    echo "$deps" | sed 's/^/  /'
-    echo -e "\n${CYAN} $NOTE $M_DEPS_SUGGESTED_ORDER${NC}"
-    local pkgs
-    pkgs=$(echo "$deps" | grep -oP '[\w][\w.+@-]+' | awk '!seen[$0]++' | tr '\n' ' ')
-    echo "  jay -r $pkgs"
-    mklog "WHY" "$pkg"
-}
-
-show_stats() {
-    st "$M_STATS_GATHERING"
-    local native_pkgs=$(pacman -Qn | wc -l)
-    local aur_pkgs=$(pacman -Qm | wc -l)
-    local flat_pkgs=0
-    if command -v flatpak &>/dev/null;
-    then
-        flat_pkgs=$(flatpak list --app | wc -l)
-    fi
-    local cache_size=$(du -sh /var/lib/pacman | cut -f1)
-    local install_date=$(head -n1 /var/log/pacman.log | cut -d' ' -f1 | tr -d '[]' | cut -d'T' -f1)
-    local aur_cache_size="0"
-    [[ -d "$REAL_HOME/.cache/$backend" ]] && aur_cache_size=$(du -sh "$REAL_HOME/.cache/$backend" | cut -f1)
-    echo -e "\n${YELLOW}$M_STATS_TITLE${NC}"
-    echo -e "${GREEN}$M_STATS_PACKAGES${NC}"
-    echo "  $CC $M_STATS_NATIVE $native_pkgs"
-    echo "  $CC AUR:    $aur_pkgs"
-    [[ $flat_pkgs -gt 0 ]] && echo "  $CC Flatpak: $flat_pkgs"
-    echo -e "\n${CYAN}$M_STATS_DISK_USAGE${NC}"
-    echo "  $CC $M_STATS_PACMAN_DB $cache_size"
-    echo "  $CC $M_STATS_BORN_ON $install_date"
-    echo "  $CC $backend Cache: $aur_cache_size"
-    if command -v expac &>/dev/null;
-    then
-        echo -e "\n${YELLOW}$M_STATS_HEAVIEST${NC}"
-        expac "%m %n" | sort -rn | head -10 | awk '{printf "  %s MB\t%s\n", $1/1024/1024, $2}'
-    else
-        echo -e "\n${YELLOW}$NOTE $M_STATS_EXPAC_WARN${NC}"
-    fi
-    echo -e "${CYAN}------------------------${NC}"
-    tag="STATS"
-}
-
-view_pkgbuild() {
-    log_type="1" && mklog "-Gp" "View PKGBUILD file"
-    [[ "$backend" == "pacman" ]] && err "$E_08"
-    local pkg="$1"
-    [[ -z $pkg ]] && echo "$NOTE $M_PKGB_SPECIFY" && exit 1
-    st "$M_PKGB_SEARCHING $pkg..."
-    local content
-    content=$("$backend" -Gp "$pkg" 2>/dev/null)
-    if [[ -n "$content" ]];
-    then
-        echo -e "${CYAN}--- PKGBUILD: $pkg ---${NC}\n"
-        echo "$content" | less -R
-        tag="VIEW PKGBUILD"
-    else
-        error "$M_PKGB_NOT_FOUND '$pkg'. $M_PKGB_AUR_QUESTION"
-    fi
-}
-
-ls_aur() {
-    log_type="1" && mklog "-Qqm" "List AUR packages"
-    [[ "$backend" == "pacman" ]] && err "$E_08"
-    st "$M_AUR_FILTERING"
-    local pkgs; pkgs=$("$backend" -Qqm)
-    echo "$pkgs" | column -t
-    local count=$(echo "$pkgs" | wc -l)
-    tag="LOCAL_QUERY (AUR)"
-    echo -e "\n${GREEN}$COMPLETE${NC} $M_AUR_TOTAL_FOUND $count $M_AUR_PKGS_FOUND"
-}
-
-refresh_mirrors() {
-    ntest
-    log_type="1" && mklog "reflector" "Refresh mirrors"
-    st "$M_MIRROR_START"
-    if ! command -v reflector &>/dev/null; then
-        echo -e "${YELLOW}$NOTE $M_REFLECTOR_NOT_FOUND${NC}"
-        read -p "$M_INSTALL_REFLECTOR_PROMPT" -n 1 -r
-        if [[ "$REPLY" =~ ^[YySs]$ || -z "$REPLY" ]]; then
-            echo
-            sudo pacman -S reflector --noconfirm
-        else
-            echo
-            error "$M_REFLECTOR_REQUIRED"
-        fi
-    fi
-    mirror_country="$(curl -s --max-time 2 https://ipinfo.io/country 2>/dev/null)"
-    reflector_args=(--latest 20 --protocol https --sort rate)
-    if [[ -n "$mirror_country" ]]; then
-        st "$M_USING_MIRRORS_FROM $mirror_country"
-        reflector_args+=(--country "$mirror_country")
-    else
-        st "$M_NO_COUNTRY_WORLDWIDE"
-    fi
-    
-    st "$M_MIRROR_BACKUP"
-    sudo cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.bak
-    st "$M_FETCHING_MIRRORS"
-    
-    if sudo reflector "${reflector_args[@]}" --save /etc/pacman.d/mirrorlist; then
-        sc "$M_MIRRORS_sc"
-        tag="UPDATE MIRRORS"
-    else
-        error "$M_MIRRORS_FAILED"
-    fi
-}
-
-fix_keys() {
-    log_type="1" && mklog "gpg" "Recovery gpg keys"
-    st "$M_GPG_START"
-    if ! yay -Qs archlinux-keyring; then "$backend" -S archlinux-keyring --noconfirm --needed 2>&1 | tee "$tmp_out"; fi
-    if [[ -f "$tmp_out" ]]; then
-        local keys=$(grep -oP '(?<=key\s)([A-F0-9]{16,})|(?<=ID\s)([A-F0-9]{16,})' "$tmp_out" | sort -u)
-        if [[ -n "$keys" ]]; then
-            for key in $keys; do
-                st "$M_IMPORTING_KEY $key"
-                gpg --recv-keys "$key" || gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys "$key"
-            done
-        fi
-    fi
-    st "$M_CLEANING_KEY_CACHE"
-    sudo find /etc/pacman.d/gnupg -type f -name "*.lck" -delete
-    sudo pacman-key --init
-    sudo pacman-key --populate archlinux
-    sc "$M_DONE"
-}
-
-backup_func() {
-    log_type="1" && mklog "backup" "Create / restore backups" "0"
-    case "$backup_action" in
-        "create")
-            st "Creating backup of packages..."
-            mkdir -p "$BACKUP_DIR"
-            "$backend" -Qqa > "$BACKUP_FILE"
-            checksum=$(sha256sum "$BACKUP_FILE" | cut -d' ' -f1)
-            echo "$checksum" > "$BACKUP_DIR/backup.sha256"
-            sc "Backup created successfully in $BACKUP_FILE"
-            mklog "CREATED BACKUP" "$BACKUP_FILE"
-            exit 0
-        ;;
-        "restore")
-            [[ -n "$custom_path" ]] && BACKUP_FILE="$custom_path"
-            if [[ ! -f "$BACKUP_FILE" ]]; then
-                error "Backup file not found."
-            fi
-            local backup_base="${BACKUP_FILE%.*}"
-            checksum_file="${backup_base}.sha256"
-            if [[ ! -f "$checksum_file" ]]; then
-                error "Validation key not found. Backup may be invalid or corrupted."
-            fi
-            st "Validating backup integrity..."
-            local stored_hash
-            stored_hash=$(cat "$checksum_file")
-            local actual_hash
-            actual_hash=$(sha256sum "$BACKUP_FILE" | cut -d' ' -f1)
-            if [[ "$stored_hash" != "$actual_hash" ]]; then
-                error "Backup validation failed. File may be corrupted or tampered."
-            fi
-            sc "Backup integrity verified."
-            st "Restoring backup..."
-            mapfile -t pkg_list < "$BACKUP_FILE"
-            if "$backend" -S "${pkg_list[@]}" --needed; then
-                sc "Backup restored."
-                mklog "BACKUP RESTORATION" "Reinstalled ${#pkg_list[@]} packages"
-                exit 0
-            else
-                error "Restore failed."
-            fi
-        ;;
-    esac
-}
-
-mklog() {
-    [[ "$mlog" == 0 ]] && return 0
-    printf -v date_str '%(%Y-%m-%d - %H:%M:%S)T' -1
-    
-    if [[ "$log_type" == "1" ]]; then
-        local info1="$1"
-        local info2="$2"
-        [[ "$3" == "0" ]] && prback="" || prback="with $backend..."
-        echo "[$date_str] Executing $info1 [$info2] $prback" >> "$LOG_FILE"
-        log_type=0
-        return
-    fi
-
-    if [[ "$log_type" == "2" ]]; then
-        echo "[$date_str] $1" >> "$LOG_FILE"
-        log_type=0
-        return
-    fi
-
-    if [[ "$log_type" == "net" ]]; then
-        info1="$1"
-        info2="$2"
-        log_type="0"
-        echo "[$date_str] $1 -> $2" >> "$LOG_FILE"
-        return
-    fi
-
-    local status="${exit_code:-0}"
-    local tag="$1"
-    local cmd_str
-    if [[ -n "$cmd" ]]; then
-        cmd_str="$backend $cmd"
-    else
-        cmd_str="flatpak $flat_cmd"
-    fi
-    [[ ${#final_args[@]} -gt 0 ]] && cmd_str+=" ${final_args[*]}"
-    [[ ${#back_flags[@]} -gt 0 ]] && cmd_str+=" ${back_flags[*]}"
-    local used_flat=$([[ "$flat" == "1" ]] && echo "true" || echo "false")
-    echo "[$date_str] $tag -> $cmd_str - flatpak = $used_flat - Exit Status $status" >> "$LOG_FILE"
-    echo " " >> "$LOG_FILE"
-}
-
-check_updates() {
-    ntest
-    log_type="1" && mklog "-Qua" "Search for updates"
-    [[ "$backend" == "pacman" ]] && return 0
-    if "$backend" -Qua 2>/dev/null | grep -qi "jay-bin"; then
-        echo -e "$M_JAY_UPD_FOUND"
-    fi
-    ! command -v checkupdates &>/dev/null && { st "$M_INSTALL_DEPS"; "$backend" -S pacman-contrib --noconfirm; }
-    st "$M_SEARCHING_UPDATES"
-    local tmp_repo=$(mktemp)
-    local tmp_aur=$(mktemp)
-    checkupdates > "$tmp_repo" 2>/dev/null &
-    local pid_repo=$!
-    local pid_aur=""
-    if [[ "$backend" == "pacman" ]]; then
-        touch "$tmp_aur"
-    else
-        "$backend" -Qua > "$tmp_aur" 2>/dev/null &
-        pid_aur=$!
-    fi
-    local pid_flat=""
-    local tmp_flat=""
-    if [[ "$flat" == "1" ]] && command -v flatpak &>/dev/null; then
-        tmp_flat=$(mktemp)
-        flatpak remote-ls --updates > "$tmp_flat" 2>/dev/null &
-        pid_flat=$!
-    fi
-    wait $pid_repo ${pid_aur:+$pid_aur} ${pid_flat:+$pid_flat}
-    local upds_n=$(wc -l < "$tmp_repo")
-    local upds_aur_n=$(wc -l < "$tmp_aur")
-    local upds_flat_n=0
-    [[ -f "$tmp_flat" ]] && upds_flat_n=$(wc -l < "$tmp_flat")
-    local total=$((upds_n + upds_aur_n + upds_flat_n))
-    if [[ "$total" -eq 0 ]]; then
-        sc "$M_SYSTEM_UPDATE"
-        rm -f "$tmp_repo" "$tmp_aur" ${tmp_flat:+"$tmp_flat"}
-        return
-    fi
-    local flat_info=""
-    [[ "$flat" == "1" ]] && flat_info=" $M_AND $upds_flat_n $M_IN_FLATPAK"
-    echo -e "${YELLOW} $NOTE $total $M_UPDATES_FOUND ($upds_aur_n $M_IN_AUR$flat_info):${NC}"
-    [[ "$upds_n" -gt 0 ]] && echo -e "\n$M_OFFICIAL_UPDATES\n${CYAN}$(cat "$tmp_repo")${NC}"
-    [[ "$upds_aur_n" -gt 0 ]] && echo -e "\n$M_AUR_UPDATES\n${GREEN}$(cat "$tmp_aur")${NC}"
-    if [[ "$flat" == "1" && "$upds_flat_n" -gt 0 ]]; then
-        echo -e "\n$M_FLATPAK_UPDATES\n${YELLOW}$(cat "$tmp_flat")${NC}"
-    fi
-    rm -f "$tmp_repo" "$tmp_aur" ${tmp_flat:+"$tmp_flat"}
-    mklog "FOUND UPDATES" "$total updates (Flatpak: $flat)"
-}
-get_package_path() {
-    log_type="1" && mklog "-Ql" "get package path"
-    local pkg="$1"
-    local bins=$(pacman -Ql "$pkg" 2>/dev/null | awk '/\/bin\// {print $2}')
-    if [[ -n "$bins" ]]; then
-        echo -e "${GREEN}Binaries found:${NC}\n$bins"
-    else
-        st "No binaries found in $pkg"
-    fi
 }
 
 [[ -f "$LOG_FILE" ]] || : > "$LOG_FILE"

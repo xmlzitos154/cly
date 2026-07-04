@@ -21,7 +21,7 @@ title() { clear; echo -e "${C}${B}JAY SETUP - VER 1.1 ${NC}"; echo -e "${C}â”€â”
 step() { echo -e "${C}  [..]${NC} $1"; sleep 0.3; }
 success() { echo -e "${G}  [OK]${NC} $1"; }
 
-install_part_1() {
+installer() {
     title
     step "Installing binary to $INSTALL_PATH..."
     install -Dm755 "$SOURCE" "$INSTALL_PATH"
@@ -30,6 +30,12 @@ install_part_1() {
     install -Dm644 "$SCRIPT_DIR/languages/en.sh" "$MODULE_PATH/en.sh"
     install -Dm644 "$SCRIPT_DIR/languages/pt.sh" "$MODULE_PATH/pt.sh"
     success "Done."
+    step "Installing main modules..."
+    install -Dm644 "$SCRIPT_DIR/modules/base.sh" "$MODULE_PATH/base.sh"
+    install -Dm644 "$SCRIPT_DIR/modules/logging.sh" "$MODULE_PATH/logging.sh"
+    install -Dm644 "$SCRIPT_DIR/modules/cache.sh" "$MODULE_PATH/cache.sh"
+    install -Dm644 "$SCRIPT_DIR/modules/flatpak.sh" "$MODULE_PATH/flatpak.sh"
+    install -Dm644 "$SCRIPT_DIR/modules/etc.sh" "$MODULE_PATH/etc.sh"
     step "Adjusting permissions for $REAL_USER"
     chmod +x "$INSTALL_PATH"
     success "Done."
@@ -65,7 +71,7 @@ while true; do
     read -r DO
     
     case "$DO" in
-        1) install_part_1 ;;
+        1) installer ;;
         2) remover ;;
         3) exit 0 ;;
         *) echo -e "${R}Invalid option.${NC}"; sleep 0.5 ;;
