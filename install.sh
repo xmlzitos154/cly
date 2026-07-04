@@ -17,7 +17,7 @@ INSTALL_PATH="/usr/bin/$BIN_NAME"
 MODULE_PATH="/usr/share/jay"
 [[ $EUID -ne 0 ]] && { echo -e "${Y}>>${NC} Soliciting root..."; exec sudo "$0" "$@"; }
 
-title() { clear; echo -e "${C}${B}JAY SETUP - VER 1.0 ${NC}"; echo -e "${C}──────────────────────────────${NC}"; }
+title() { clear; echo -e "${C}${B}JAY SETUP - VER 1.1 ${NC}"; echo -e "${C}──────────────────────────────${NC}"; }
 step() { echo -e "${C}  [..]${NC} $1"; sleep 0.3; }
 success() { echo -e "${G}  [OK]${NC} $1"; }
 
