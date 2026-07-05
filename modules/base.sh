@@ -2,7 +2,7 @@
 
 ntest() {
     st "$M_NET_TEST"
-    ping -c 2 -i 0.2 8.8.8.8 &>/dev/null &
+    ping -c 1 -i 0.2 8.8.8.8 &>/dev/null &
     local pid=$!
     local spin='-\|/'
     while kill -0 $pid 2>/dev/null; do
@@ -66,22 +66,6 @@ proc_func() {
             tag_cmd="query"
             log_type="1" && mklog $action $tag_cmd
             [[ "$ptbin" == 1 ]] && get_package_path "${final_args[@]}" && tag="SKIP" && return
-        ;;
-        sl)
-            [[ ! -s "$LOG_FILE" ]] && echo -e "${YELLOW}$NOTE $M_EMPTY_LOG" && exit 0
-            if [[ -n "$log_lines" && "$log_lines" =~ ^[0-9]+$ ]]; then
-                tail -n "$log_lines" "$LOG_FILE"
-                exit 0
-            else
-                cat "$LOG_FILE"
-                exit 0
-            fi
-        ;;
-        cl)
-            [[ ! -s "$LOG_FILE" ]] && echo "$NOTE $M_EMPTY_LOG" && exit 0
-            : > "$LOG_FILE"
-            sc "$M_DONE"
-            exit 0
         ;;
         *)
             err "var func not defined"

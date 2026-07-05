@@ -59,3 +59,27 @@ mklog() {
     echo "[$date_str] $tag -> $cmd_str - flatpak = $used_flat - Exit Status $status" >> "$LOG_FILE"
     echo " " >> "$LOG_FILE"
 }
+
+proc_log_func() {
+    case "$log_func" in
+        sl)
+            [[ ! -s "$LOG_FILE" ]] && echo -e "${YELLOW}$NOTE $M_EMPTY_LOG" && exit 0
+            if [[ -n "$log_lines" && "$log_lines" =~ ^[0-9]+$ ]]; then
+                tail -n "$log_lines" "$LOG_FILE"
+                exit 0
+            else
+                cat "$LOG_FILE"
+                exit 0
+            fi
+        ;;
+        cl)
+            [[ ! -s "$LOG_FILE" ]] && echo "$NOTE $M_EMPTY_LOG" && exit 0
+            : > "$LOG_FILE"
+            sc "$M_DONE"
+            exit 0
+        ;;
+        *)
+            err "logging var not defined."   
+        ;;
+    esac
+}

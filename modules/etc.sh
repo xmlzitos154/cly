@@ -2,10 +2,6 @@
 
 mksnap() {
     log_type="1" && mklog "timeshift" "System snapshot" "0"
-    if [[ "$dry_run" == "1" ]]; then
-        echo -e "${CYAN}[DRY RUN] Would run:${NC} sudo timeshift --create --comments \"JAY Auto-Snapshot\" --tags D"
-        return
-    fi
     st "$M_SNAP_CHECK"
     if command -v timeshift &>/dev/null; then
         st "$M_SNAP_CREATING"

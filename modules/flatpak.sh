@@ -3,12 +3,7 @@
 rflat() {
     [[ "$flat" != "1" ]] && return
     command -v flatpak &>/dev/null || err "$E_06"
-    if [[ "$dry_run" == "1" ]]; then
-        echo -e "\n${YELLOW}$M_DRY_FLATPAK${NC}"
-        echo -e "${CYAN}$M_DRY_RUN_RUN${NC} flatpak $flat_cmd ${final_args[*]}"
-        echo -e "${GREEN}$M_DRY_RUN_NONE${NC}\n"
-        exit 0
-    fi
+    echo -e "${BOLD}${GREEN} $CC $M_USING_FLATPAK${NC}"
     case "$action" in
         update|-u)
             st "$M_FLAT_UPDATING"
@@ -41,12 +36,6 @@ flatpak_only() {
         --check-upds|--check-updates) flat_cmd="remote-ls --updates" ;;
         *) error "$M_FLAT_NOT_SUP" ;;
     esac
-    if [[ "$dry_run" == "1" ]]; then
-        echo -e "\n${YELLOW}$M_DRY_FLATPAK${NC}"
-        echo -e "${CYAN}$M_DRY_RUN_RUN${NC} flatpak $flat_cmd ${final_args[*]}"
-        echo -e "${GREEN}$M_DRY_RUN_NONE${NC}\n"
-        exit 0
-    fi
     log_type="1" && mklog "flatpak $flat_cmd ${final_args[*]}" "flatpak-only" "0"
     flatpak $flat_cmd "${final_args[@]}"
     exit_code=$?

@@ -5,13 +5,15 @@ chmgr() {
     local cache_dir="$REAL_HOME/.cache/$backend"
     if [[ -d "$cache_dir" ]]; then
         st "$M_CACHE_CLEANING_BUILDS"
-        find "$cache_dir" -maxdepth 1 -type d -not -path "$cache_dir" -exec rm -rf {} +
+        rm -rf "${cache_dir:?}"/*/
         sc "$M_CACHE_BUILDS_CLEANED"
     fi
-    if command -v flatpak &>/dev/null; then
-        st "$M_CACHE_CLEANING_FLATPAK"
-        flatpak uninstall --unused -y &>/dev/null
-        sc "$M_CACHE_FLATPAK_CLEANED"
+    if [[ "$flat" == "1" ]]; then
+        if command -v flatpak &>/dev/null; then
+            st "$M_CACHE_CLEANING_FLATPAK"
+            flatpak uninstall --unused -y &>/dev/null
+            sc "$M_CACHE_FLATPAK_CLEANED"
+        fi
     fi
     st "$M_CACHE_CLEANING_PACMAN"
     cmd="-Sc"

@@ -2,7 +2,7 @@
 
 ## JAY - Just Another Yogourt
 
-ver="7.4.0"; rc="pre_release-1"
+ver="7.4.1"; rc="release-1"
 
 set -o pipefail
 REAL_HOME=$(getent passwd "${SUDO_USER:-$USER}" 2>/dev/null | cut -d: -f6); REAL_HOME=${REAL_HOME:-$HOME}
@@ -25,19 +25,28 @@ load_lang() {
     [[ ! -f "$MODULES_FOLDER/pt.sh" && "$lang_code" == "pt" ]] && echo -e "${RED} $ERROR${NC} Módulo do idioma 'pt.sh' não encontrado." && exit 1
     [[ ! -f "$MODULES_FOLDER/en.sh" && "$lang_code" == "en" ]] && echo -e "${RED} $ERROR${NC} Language module 'en.sh' not found." && exit 1
     case "$lang_code" in
-        pt)
-            source "$MODULES_FOLDER/pt.sh"
-        ;;
-        *)
-            source "$MODULES_FOLDER/en.sh"
-        ;;
+        pt) source "$MODULES_FOLDER/pt.sh" ;;
+        *)  source "$MODULES_FOLDER/en.sh" ;;
     esac
 }
 
 load_lang
 
+logback() {
+    echo -e "${GREEN}${BOLD}$CC $M_USING_BACKEND $backend...${NC}"
+}
+
+st() { echo -e "${BOLD}${GREEN} $CC ${NC}${1}"; }
+sc() { echo -e "${GREEN} $COMPLETE ${NC}${1}"; }
+err() { echo -e "${RED} $ERROR ${NC}${1}"; exit 1; }
+error() { err "$1"; }
+usage() { echo "$H_USAGE: jay [$USG1] [$USG2] [$USG3]"; exit 1; }
+
+modules_test=0
+
 load_modules() {
-    failed_module="0"
+    failed_module=0
+    [[ "$modules_test" == "1" ]] && echo -e "DEBUG: Modules folder = $MODULES_FOLDER"
     if [[ ! -f "$MODULES_FOLDER/base.sh" ]]; then
         failed_module="base.sh"
         elif [[ ! -f "$MODULES_FOLDER/logging.sh" ]]; then
@@ -62,16 +71,6 @@ load_modules() {
 }
 
 load_modules
-
-st() { echo -e "${BOLD}${GREEN} $CC ${NC}${1}"; }
-sc() { echo -e "${GREEN} $COMPLETE ${NC}${1}"; }
-err() { echo -e "${RED} $ERROR ${NC}${1}"; exit 1; }
-error() { err "$1"; }
-usage() { echo "$H_USAGE: jay [$USG1] [$USG2] [$USG3]"; exit 1; }
-
-logback() {
-    echo -e "${GREEN}${BOLD}$CC $M_USING_BACKEND $backend...${NC}"
-}
 
 [[ -f "$LOG_FILE" ]] || : > "$LOG_FILE"
 [[ ! -w "$LOG_FILE" ]] && sudo chown "${SUDO_USER:-$USER}":"${SUDO_USER:-$USER}" "$LOG_FILE" 2>/dev/null
@@ -111,6 +110,7 @@ while [[ $# -gt 0 ]]; do
         --debug)                  set -x ;;
         -ls-aur|--list-aur)       lsaur=1 ;;
         mksnap|--create-snapshot) do_snap="1" ;;
+        --modules-test)           MODULES_FOLDER="./modules"; modules_test=1; load_modules ;;
         -nc|--noconfirm)          back_flags+=("--noconfirm") ;;
         *)                        final_args+=("$1") ;;
     esac
@@ -129,6 +129,7 @@ if [[ -f /var/lib/pacman/db.lck ]]; then
 fi
 
 [[ "$only_flatpak" == "1" ]] && flatpak_only
+
 logback
 
 case "$action" in
@@ -136,8 +137,8 @@ case "$action" in
     -cb|--create-backup)          backup_action="create"; backup_func ;;
     -rb|--restore-backup)         backup_action="restore"; backup_func ;;
     -ra|--remove-agressive|ra)    agrmode=1; func="r"; proc_func ;;
-    --show-logs|slog|-sl)         func="sl"; proc_func ;;
-    --clear-logs|clog|-cl)        func="cl"; proc_func ;;
+    --show-logs|slog|-sl)         log_func="sl"; proc_log_func ;;
+    --clear-logs|clog|-cl)        log_func="cl"; proc_log_func ;;
     -in|ins|install|-i)           func="i"; proc_func ;;
     rem|remove|-r|-rm)            func="r"; proc_func ;;
     -up|upd|update|-u)            func="u"; proc_func ;;
@@ -161,12 +162,8 @@ esac
 
 if [[ "$dry_run" == "1" ]]; then
     echo -e "\n${YELLOW}$M_DRY_RUN_SIM${NC}"
-    if [[ -n "$cmd" ]]; then
-        echo -e "${CYAN}$M_DRY_RUN_RUN${NC} $backend $cmd ${final_args[*]} ${back_flags[*]}"
-    fi
-    if [[ "$flat" == "1" && -n "$flat_cmd" ]]; then
-        echo -e "${CYAN}$M_DRY_RUN_RUN${NC} flatpak $flat_cmd ${final_args[*]}"
-    fi
+    [[ -n "$cmd" ]] && echo -e "${CYAN}$M_DRY_RUN_RUN${NC} $backend $cmd ${final_args[*]} ${back_flags[*]}"
+    [[ "$flat" == "1" && -n "$flat_cmd" ]] && echo -e "${CYAN}$M_DRY_RUN_RUN${NC} flatpak $flat_cmd ${final_args[*]}"
     echo -e "${GREEN}$M_DRY_RUN_NONE${NC}\n"
     exit 0
 fi
