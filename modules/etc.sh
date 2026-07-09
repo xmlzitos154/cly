@@ -28,21 +28,21 @@ pin() {
         new=$(echo "$current" | sed "s/\b$pkg\b//" | tr -s ' ' | sed 's/^ //;s/ $//')
         sudo sed -i "s/^IgnorePkg = .*/IgnorePkg = $new/" "$conf"
         sc "$pkg unpinned."
-        mklog "UNPIN" "$pkg"
+        mklog "Unpin" "$pkg"
     elif grep -q "^IgnorePkg" "$conf";
     then
         sudo sed -i "s/^IgnorePkg = .*/IgnorePkg = $current $pkg/" "$conf"
         sc "$pkg pinned."
-        mklog "PIN" "$pkg"
+        mklog "Pin" "$pkg"
     elif grep -q "^#IgnorePkg" "$conf";
     then
         sudo sed -i "s/^#IgnorePkg.*/IgnorePkg = $pkg/" "$conf"
         sc "$pkg pinned."
-        mklog "PIN" "$pkg"
+        mklog "Pin" "$pkg"
     else
         sudo sed -i "/^\[options\]/a IgnorePkg = $pkg" "$conf"
         sc "$pkg pinned."
-        mklog "PIN" "$pkg"
+        mklog "Pin" "$pkg"
     fi
 }
 
@@ -75,15 +75,15 @@ depends() {
 
 show_stats() {
     st "$M_STATS_GATHERING"
-    local native_pkgs=$(pacman -Qn | wc -l)
-    local aur_pkgs=$(pacman -Qm | wc -l)
+    local native_pkgs; native_pkgs=$(pacman -Qn | wc -l)
+    local aur_pkgs; aur_pkgs=$(pacman -Qm | wc -l)
     local flat_pkgs=0
     if command -v flatpak &>/dev/null;
     then
         flat_pkgs=$(flatpak list --app | wc -l)
     fi
-    local cache_size=$(du -sh /var/lib/pacman | cut -f1)
-    local install_date=$(head -n1 /var/log/pacman.log | cut -d' ' -f1 | tr -d '[]' | cut -d'T' -f1)
+    local cache_size; cache_size=$(du -sh /var/lib/pacman | cut -f1)
+    local install_date; install_date=$(head -n1 /var/log/pacman.log | cut -d' ' -f1 | tr -d '[]' | cut -d'T' -f1)
     local aur_cache_size="0"
     [[ -d "$REAL_HOME/.cache/$backend" ]] && aur_cache_size=$(du -sh "$REAL_HOME/.cache/$backend" | cut -f1)
     echo -e "\n${YELLOW}$M_STATS_TITLE${NC}"
@@ -165,7 +165,7 @@ refresh_mirrors() {
     
     if sudo reflector "${reflector_args[@]}" --save /etc/pacman.d/mirrorlist; then
         sc "$M_MIRRORS_sc"
-        tag="UPDATE MIRRORS"
+        tag="Mirrors refresh"
     else
         error "$M_MIRRORS_FAILED"
     fi
@@ -174,7 +174,7 @@ refresh_mirrors() {
 fix_keys() {
     log_type="1" && mklog "gpg" "Recovery gpg keys"
     st "$M_GPG_START"
-    if ! yay -Qs archlinux-keyring; then "$backend" -S archlinux-keyring --noconfirm --needed 2>&1 | tee "$tmp_out"; fi
+    if ! $backend -Qs archlinux-keyring; then "$backend" -S archlinux-keyring --noconfirm --needed 2>&1 | tee "$tmp_out"; fi
     if [[ -f "$tmp_out" ]]; then
         local keys=$(grep -oP '(?<=key\s)([A-F0-9]{16,})|(?<=ID\s)([A-F0-9]{16,})' "$tmp_out" | sort -u)
         if [[ -n "$keys" ]]; then

@@ -36,7 +36,7 @@ rmorps() {
 ckconf() {
     log_type="1" && mklog "pacnews" "conf-merge" "0"
     st "$M_CONF_SEARCHING"
-    local pacnews=$(find /etc -regextype posix-extended -regex ".+\.pac(new|save)" 2>/dev/null)
+    local pacnews; pacnews=$(find /etc -regextype posix-extended -regex ".+\.pac(new|save)" 2>/dev/null)
     if [[ -z "$pacnews" ]]; then sc "$M_CONF_NONE"; else
         echo -e "${YELLOW} $NOTE $M_CONF_PENDING${NC}"
         echo "$pacnews"

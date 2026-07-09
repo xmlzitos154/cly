@@ -37,7 +37,6 @@ proc_func() {
             tag="remove"
             [[ "$agrmode" == "1" ]] && echo -e "${RED} $NOTE $M_AGRESSIVE_MODE${NC}"
             flat_cmd="uninstall"
-            tag="uninstall"
             tag_cmd="remove"
             log_type="1" && mklog $action $tag_cmd
         ;;

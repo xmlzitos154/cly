@@ -2,7 +2,7 @@
 
 ## JAY - Just Another Yogourt
 
-ver="7.4.1"; rc="release-1"
+ver="7.4.1"; rc="stable_release-2"
 
 set -o pipefail
 REAL_HOME=$(getent passwd "${SUDO_USER:-$USER}" 2>/dev/null | cut -d: -f6); REAL_HOME=${REAL_HOME:-$HOME}
