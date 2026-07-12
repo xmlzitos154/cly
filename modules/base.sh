@@ -58,8 +58,8 @@ proc_func() {
             log_type="1" && mklog $action $tag_cmd
         ;;
         q)
-            [[ "$lsaur" == 1 ]] && ls_aur && exit 0
             cmd="-Qs"
+            [[ "$lsaur" == 1 ]] && cmd="-Qqm"
             flat_cmd="list"
             tag="list"
             tag_cmd="query"

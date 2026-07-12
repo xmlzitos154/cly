@@ -124,17 +124,6 @@ view_pkgbuild() {
     fi
 }
 
-ls_aur() {
-    log_type="1" && mklog "-Qqm" "List AUR packages"
-    [[ "$backend" == "pacman" ]] && err "$E_08"
-    st "$M_AUR_FILTERING"
-    local pkgs; pkgs=$("$backend" -Qqm)
-    echo "$pkgs" | column -t
-    local count=$(echo "$pkgs" | wc -l)
-    tag="LOCAL_QUERY (AUR)"
-    echo -e "\n${GREEN}$COMPLETE${NC} $M_AUR_TOTAL_FOUND $count $M_AUR_PKGS_FOUND"
-}
-
 refresh_mirrors() {
     ntest
     log_type="1" && mklog "reflector" "Refresh mirrors"

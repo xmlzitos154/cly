@@ -2,7 +2,7 @@
 
 ## JAY - Just Another Yogourt
 
-ver="7.4.1"; rc="stable_release-2"
+ver="7.4.2"; rc="release-1"
 
 set -o pipefail
 REAL_HOME=$(getent passwd "${SUDO_USER:-$USER}" 2>/dev/null | cut -d: -f6); REAL_HOME=${REAL_HOME:-$HOME}
@@ -85,7 +85,7 @@ log_rotate; detback; load_lang
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        ra|--create-snapshot|dp|why|--ignore|pin|stats|--list-aur|--pacdiff|--ping|--create-backup|--restore-backup|install|-i|remove|-r|update|-u|search|-s|query|-q|cache|-c|orphan|-o|mirrors|-m|slog|-cl|-sl|--fix-keys|--check-updates)
+        ra|--create-snapshot|dp|why|--ignore|pin|stats|--pacdiff|--ping|--create-backup|--restore-backup|install|-i|remove|-r|update|-u|search|-s|query|-q|cache|-c|orphan|-o|mirrors|-m|slog|-cl|-sl|--fix-keys|--check-updates)
             [[ -z "$action" ]] && action="$1" || final_args+=("$1")
         ;;
         --backend)
@@ -108,7 +108,7 @@ while [[ $# -gt 0 ]]; do
         --path-to-binary)         ptbin=1 ;;
         --dry-run)                dry_run=1 ;;
         --debug)                  set -x ;;
-        -ls-aur|--list-aur)       lsaur=1 ;;
+        --list-aur|-ls-aur)       lsaur=1 ;;
         mksnap|--create-snapshot) do_snap="1" ;;
         --modules-test)           MODULES_FOLDER="./modules"; modules_test=1; load_modules ;;
         -nc|--noconfirm)          back_flags+=("--noconfirm") ;;
