@@ -1,6 +1,6 @@
 [![Bash](https://img.shields.io/badge/Language-Bash-4EAA25?style=for-the-badge&logo=gnu-bash&logoColor=white)](https://www.gnu.org/software/bash/)
 [![Arch Linux](https://img.shields.io/badge/OS-Arch_Linux-1793D1?style=for-the-badge&logo=arch-linux&logoColor=white)](https://archlinux.org)
-[![Jay-bin](https://img.shields.io/badge/JAY_AUR-v7.4.2-1793D1?style=for-the-badge&logo=arch-linux&logoColor=white)](https://aur.archlinux.org/packages/jay-aur)
+[![Jay-bin](https://img.shields.io/badge/JAY_AUR-v7.4.3-1793D1?style=for-the-badge&logo=arch-linux&logoColor=white)](https://aur.archlinux.org/packages/jay-aur)
 
   # jay
 
@@ -192,6 +192,6 @@ jay --restore-backup --path ~/safe_state.txt # handles targets outside default e
 
 ## License
 
-Distributed under the MIT License. Developed with love by xml.dev
+Distributed under the MIT License. Developed with <3 by xml.dev
 
-Current version: **7.4.2**
+Current version: **7.4.3**

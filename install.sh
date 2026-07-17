@@ -5,7 +5,7 @@ REAL_USER="${SUDO_USER:-$USER}"
 REAL_HOME=$(getent passwd "$REAL_USER" 2>/dev/null | cut -d: -f6)
 REAL_HOME=${REAL_HOME:-/home/$REAL_USER}
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SOURCE="$SCRIPT_DIR/main"
+SOURCE="$SCRIPT_DIR/main.sh"
 
 if [[ ! -f "$SOURCE" ]]; then
     echo -e "${R}Error: File 'main' not found.${NC}"
