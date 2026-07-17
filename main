@@ -2,7 +2,7 @@
 
 ## JAY - Just Another Yogourt
 
-ver="7.4.2"; rc="release-1"
+ver="7.4.3"; rc="pre_release-1"
 
 set -o pipefail
 REAL_HOME=$(getent passwd "${SUDO_USER:-$USER}" 2>/dev/null | cut -d: -f6); REAL_HOME=${REAL_HOME:-$HOME}
@@ -85,7 +85,7 @@ log_rotate; detback; load_lang
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        ra|--create-snapshot|dp|why|--ignore|pin|stats|--pacdiff|--ping|--create-backup|--restore-backup|install|-i|remove|-r|update|-u|search|-s|query|-q|cache|-c|orphan|-o|mirrors|-m|slog|-cl|-sl|--fix-keys|--check-updates)
+        ra|--create-snapshot|dp|why|--ignore|pin|statsb|--pacdiff|--ping|--create-backup|--restore-backup|install|-i|remove|-r|update|-u|search|-s|query|-q|cache|-c|orphan|-o|mirrors|-m|slog|-cl|-sl|--fix-keys|--check-updates)
             [[ -z "$action" ]] && action="$1" || final_args+=("$1")
         ;;
         --backend)
@@ -139,11 +139,11 @@ case "$action" in
     -ra|--remove-agressive|ra)    agrmode=1; func="r"; proc_func ;;
     --show-logs|slog|-sl)         log_func="sl"; proc_log_func ;;
     --clear-logs|clog|-cl)        log_func="cl"; proc_log_func ;;
-    -in|ins|install|-i)           func="i"; proc_func ;;
-    rem|remove|-r|-rm)            func="r"; proc_func ;;
-    -up|upd|update|-u)            func="u"; proc_func ;;
-    -sr|src|search|-s)            func="s"; proc_func ;;
-    -qr|qur|query|-q)             func="q"; proc_func ;;
+    -S|-in|ins|install|-i)           func="i"; proc_func ;;
+    -R|rem|remove|-r|-rm)            func="r"; proc_func ;;
+    -Syu|-up|upd|update|-u)            func="u"; proc_func ;;
+    -Ss|-sr|src|search|-s)            func="s"; proc_func ;;
+    -Q|-qr|qur|query|-q)             func="q"; proc_func ;;
     --ping)                       ntest; exit 0 ;;
     mksnap|--create-snapshot)     mksnap; exit 0 ;;
     -cc|cac|cache|-c)             chmgr ;;

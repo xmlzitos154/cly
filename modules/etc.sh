@@ -229,7 +229,7 @@ check_updates() {
     ntest
     log_type="1" && mklog "-Qua" "Search for updates"
     [[ "$backend" == "pacman" ]] && return 0
-    if "$backend" -Qua 2>/dev/null | grep -qi "jay-bin"; then
+    if "$backend" -Qua 2>/dev/null | grep -qi "jay-aur"; then
         echo -e "$M_JAY_UPD_FOUND"
     fi
     ! command -v checkupdates &>/dev/null && { st "$M_INSTALL_DEPS"; "$backend" -S pacman-contrib --noconfirm; }
