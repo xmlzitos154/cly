@@ -1,5 +1,5 @@
-pkgname=jay-bin
-pkgver=7.4.2
+pkgname=jay-aur
+pkgver=7.4.3
 pkgrel=1
 pkgdesc="A lightweight, semantic AUR helper wrapper for Arch Linux"
 arch=('any')
@@ -22,7 +22,7 @@ pkgver() {
 
 package() {
     cd jay
-    install -Dm755 main "$pkgdir/usr/bin/jay"
+    install -Dm755 main.sh "$pkgdir/usr/bin/jay"
     install -Dm644 README.md "$pkgdir/usr/share/doc/jay/README.md"
     install -Dm644 modules/base.sh "$pkgdir/usr/share/jay/base.sh"
     install -Dm644 modules/logging.sh "$pkgdir/usr/share/jay/logging.sh"
