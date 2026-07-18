@@ -2,16 +2,28 @@
 
 ## JAY - Just Another Yogourt
 
-ver="7.4.3"; rc="pre_release-1"
+ver="7.4.4"; rc="release-1"
 
 set -o pipefail
+
 REAL_HOME=$(getent passwd "${SUDO_USER:-$USER}" 2>/dev/null | cut -d: -f6); REAL_HOME=${REAL_HOME:-$HOME}
-CFG_FOLDER="$REAL_HOME/.local/share/jay"
+CONFIG_FOLDER="$REAL_HOME/.local/share/jay"
 MODULES_FOLDER="/usr/share/jay"
-BACKUP_DIR="$CFG_FOLDER/backup"; BACKUP_FILE="$BACKUP_DIR/backup.txt"
+BACKUP_DIR="$CONFIG_FOLDER/backup"; BACKUP_FILE="$BACKUP_DIR/backup.txt"
 LOG_FILE="$REAL_HOME/.cache/jay.log"
-CYAN='\033[0;36m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; NC='\033[0m'; BOLD='\033[1m'
-ALERT="[!]"; ERROR="[ERROR]"; COMPLETE="[✓]"; NOTE="[*]"; CC="::"
+
+CYAN='\033[0;36m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+NC='\033[0m'
+BOLD='\033[1m'
+
+ALERT="[!]"
+ERROR="[ERROR]"
+COMPLETE="[✓]"
+NOTE="[*]"
+CC="::"
 
 detback() {
     for b in yay paru; do
@@ -22,11 +34,11 @@ detback() {
 
 load_lang() {
     lang_code="${LANG:0:2}"
-    [[ ! -f "$MODULES_FOLDER/pt.sh" && "$lang_code" == "pt" ]] && echo -e "${RED} $ERROR${NC} Módulo do idioma 'pt.sh' não encontrado." && exit 1
-    [[ ! -f "$MODULES_FOLDER/en.sh" && "$lang_code" == "en" ]] && echo -e "${RED} $ERROR${NC} Language module 'en.sh' not found." && exit 1
+    [[ ! -f "$MODULES_FOLDER/lang_mod_pt.sh" && "$lang_code" == "pt" ]] && echo -e "${RED} $ERROR${NC} Módulo do idioma 'lang_mod_pt.sh' não encontrado." && exit 1
+    [[ ! -f "$MODULES_FOLDER/lang_mod_en.sh" && "$lang_code" == "en" ]] && echo -e "${RED} $ERROR${NC} Language module 'lang_mod_en.sh' not found." && exit 1
     case "$lang_code" in
-        pt) source "$MODULES_FOLDER/pt.sh" ;;
-        *)  source "$MODULES_FOLDER/en.sh" ;;
+        pt) source "$MODULES_FOLDER/lang_mod_pt.sh" ;;
+        *)  source "$MODULES_FOLDER/lang_mod_en.sh" ;;
     esac
 }
 
@@ -46,35 +58,42 @@ modules_test=0
 
 load_modules() {
     failed_module=0
-    [[ "$modules_test" == "1" ]] && echo -e "DEBUG: Modules folder = $MODULES_FOLDER"
-    if [[ ! -f "$MODULES_FOLDER/base.sh" ]]; then
-        failed_module="base.sh"
-        elif [[ ! -f "$MODULES_FOLDER/logging.sh" ]]; then
-        failed_module="logging.sh"
-        elif [[ ! -f "$MODULES_FOLDER/etc.sh" ]]; then
-        failed_module="etc.sh"
-        elif [[ ! -f "$MODULES_FOLDER/cache.sh" ]]; then
-        failed_module="cache.sh"
-        elif [[ ! -f "$MODULES_FOLDER/flatpak.sh" ]]; then
-        failed_module="flatpak.sh"
+    [[ "$modules_test" == "1" ]] && echo -e "MODULES TEST: Modules Folder: $MODULES_FOLDER"
+    if [[ ! -f "$MODULES_FOLDER/mod_01.sh" ]]; then
+        failed_module="1"
+        elif [[ ! -f "$MODULES_FOLDER/mod_02.sh" ]]; then
+        failed_module="1"
+        elif [[ ! -f "$MODULES_FOLDER/mod_03.sh" ]]; then
+        failed_module="1"
+        elif [[ ! -f "$MODULES_FOLDER/mod_04.sh" ]]; then
+        failed_module="1"
+        elif [[ ! -f "$MODULES_FOLDER/mod_05.sh" ]]; then
+        failed_module="1"
     fi
-    if [[ "$failed_module" != "0" && "$lang_code" == "pt" ]]; then
-        echo -e "${RED} ${ERROR} ${NC}Módulo '$failed_module' não encontrado." && exit 1
-        elif [[ "$failed_module" != "0" && "$lang_code" == "en" ]]; then
-        echo -e "${RED} ${ERROR} ${NC}Module '$failed_module' not found." && exit 1
+    if [[ "$failed_module" == "1" ]]; then
+        case "$lang_code" in
+            pt)
+                echo -e "${RED} ${ERROR} ${NC}Um ou mais módulos falharam ou não foram encontrados."
+                exit 1
+            ;;
+            *)
+                echo -e "${RED} ${ERROR} ${NC}Can't find some modules or they failed."
+                exit 1
+            ;;
+        esac
     fi
-    source "$MODULES_FOLDER/base.sh"
-    source "$MODULES_FOLDER/logging.sh"
-    source "$MODULES_FOLDER/etc.sh"
-    source "$MODULES_FOLDER/cache.sh"
-    source "$MODULES_FOLDER/flatpak.sh"
+    source "$MODULES_FOLDER/mod_01.sh"
+    source "$MODULES_FOLDER/mod_02.sh"
+    source "$MODULES_FOLDER/mod_03.sh"
+    source "$MODULES_FOLDER/mod_04.sh"
+    source "$MODULES_FOLDER/mod_05.sh"
 }
 
 load_modules
 
 [[ -f "$LOG_FILE" ]] || : > "$LOG_FILE"
 [[ ! -w "$LOG_FILE" ]] && sudo chown "${SUDO_USER:-$USER}":"${SUDO_USER:-$USER}" "$LOG_FILE" 2>/dev/null
-[[ -z "$1" ]] && usage
+[[ -z "$1" ]] && help_message
 
 raw_cmd="$*"; flat=0; ptbin=0; agrmode=0; final_args=(); back_flags=(); log_lines=""; dry_run=0; lsaur=0; mlog=1; func=""; only_flatpak=0; do_snap=0
 
@@ -139,11 +158,11 @@ case "$action" in
     -ra|--remove-agressive|ra)    agrmode=1; func="r"; proc_func ;;
     --show-logs|slog|-sl)         log_func="sl"; proc_log_func ;;
     --clear-logs|clog|-cl)        log_func="cl"; proc_log_func ;;
-    -S|-in|ins|install|-i)           func="i"; proc_func ;;
-    -R|rem|remove|-r|-rm)            func="r"; proc_func ;;
-    -Syu|-up|upd|update|-u)            func="u"; proc_func ;;
-    -Ss|-sr|src|search|-s)            func="s"; proc_func ;;
-    -Q|-qr|qur|query|-q)             func="q"; proc_func ;;
+    -S|-in|ins|install|-i)        func="i"; proc_func ;;
+    -R|rem|remove|-r|-rm)         func="r"; proc_func ;;
+    -Syu|-up|upd|update|-u)       func="u"; proc_func ;;
+    -Ss|-sr|src|search|-s)        func="s"; proc_func ;;
+    -Q|-qr|qur|query|-q)          func="q"; proc_func ;;
     --ping)                       ntest; exit 0 ;;
     mksnap|--create-snapshot)     mksnap; exit 0 ;;
     -cc|cac|cache|-c)             chmgr ;;

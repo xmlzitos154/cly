@@ -27,15 +27,23 @@ installer() {
     install -Dm755 "$SOURCE" "$INSTALL_PATH"
     success "Binary installed."
     step "Installing languages modules..."
-    install -Dm644 "$SCRIPT_DIR/languages/en.sh" "$MODULE_PATH/en.sh"
-    install -Dm644 "$SCRIPT_DIR/languages/pt.sh" "$MODULE_PATH/pt.sh"
+    if [[ ! -f "$SCRIPT_DIR/languages/lang_mod_en.sh" || ! -f "$SCRIPT_DIR/languages/lang_mod_pt.sh" ]]; then
+        echo "Can't find one or more language modules."
+        exit 1
+    fi
+    install -Dm644 "$SCRIPT_DIR/languages/lang_mod_en.sh" "$MODULE_PATH/lang_mod_en.sh"
+    install -Dm644 "$SCRIPT_DIR/languages/lang_mod_pt.sh" "$MODULE_PATH/lang_mod_pt.sh"
     success "Done."
     step "Installing main modules..."
-    install -Dm644 "$SCRIPT_DIR/modules/base.sh" "$MODULE_PATH/base.sh"
-    install -Dm644 "$SCRIPT_DIR/modules/logging.sh" "$MODULE_PATH/logging.sh"
-    install -Dm644 "$SCRIPT_DIR/modules/cache.sh" "$MODULE_PATH/cache.sh"
-    install -Dm644 "$SCRIPT_DIR/modules/flatpak.sh" "$MODULE_PATH/flatpak.sh"
-    install -Dm644 "$SCRIPT_DIR/modules/etc.sh" "$MODULE_PATH/etc.sh"
+    if [[ ! -f "$SCRIPT_DIR/modules/mod_01.sh" ||  ! -f "$SCRIPT_DIR/modules/mod_02.sh" || ! -f "$SCRIPT_DIR/modules/mod_03.sh" || ! -f "$SCRIPT_DIR/modules/mod_04.sh" || ! -f "$SCRIPT_DIR/modules/mod_05.sh" ]]; then
+        echo "Can't find one or more modules."
+        exit 1
+    fi
+    install -Dm644 "$SCRIPT_DIR/modules/mod_01.sh" "$MODULE_PATH/mod_01.sh"
+    install -Dm644 "$SCRIPT_DIR/modules/mod_02.sh" "$MODULE_PATH/mod_02.sh"
+    install -Dm644 "$SCRIPT_DIR/modules/mod_03.sh" "$MODULE_PATH/mod_03.sh"
+    install -Dm644 "$SCRIPT_DIR/modules/mod_04.sh" "$MODULE_PATH/mod_04.sh"
+    install -Dm644 "$SCRIPT_DIR/modules/mod_05.sh" "$MODULE_PATH/mod_05.sh"
     step "Adjusting permissions for $REAL_USER"
     chmod +x "$INSTALL_PATH"
     success "Done."
