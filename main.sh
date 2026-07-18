@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 
-## JAY - Just Another Yogourt
+## CLY - A Semantic AUR Helper wrapper written in bash
 
-ver="7.4.4"; rc="release-1"
+ver="7.5.0"; rc="release-1"
 
 set -o pipefail
 
 REAL_HOME=$(getent passwd "${SUDO_USER:-$USER}" 2>/dev/null | cut -d: -f6); REAL_HOME=${REAL_HOME:-$HOME}
-CONFIG_FOLDER="$REAL_HOME/.local/share/jay"
-MODULES_FOLDER="/usr/share/jay"
+CONFIG_FOLDER="$REAL_HOME/.local/share/cly"
+MODULES_FOLDER="/usr/share/cly"
 BACKUP_DIR="$CONFIG_FOLDER/backup"; BACKUP_FILE="$BACKUP_DIR/backup.txt"
-LOG_FILE="$REAL_HOME/.cache/jay.log"
+LOG_FILE="$REAL_HOME/.cache/cly.log"
 
 CYAN='\033[0;36m'
 GREEN='\033[0;32m'
@@ -52,7 +52,7 @@ st() { echo -e "${BOLD}${GREEN} $CC ${NC}${1}"; }
 sc() { echo -e "${GREEN} $COMPLETE ${NC}${1}"; }
 err() { echo -e "${RED} $ERROR ${NC}${1}"; exit 1; }
 error() { err "$1"; }
-usage() { echo "$H_USAGE: jay [$USG1] [$USG2] [$USG3]"; exit 1; }
+usage() { echo "$H_USAGE: cly [$USG1] [$USG2] [$USG3]"; exit 1; }
 
 modules_test=0
 

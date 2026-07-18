@@ -5,7 +5,7 @@ mksnap() {
     st "$M_SNAP_CHECK"
     if command -v timeshift &>/dev/null; then
         st "$M_SNAP_CREATING"
-        if sudo timeshift --create --comments "JAY Auto-Snapshot before update" --tags D; then
+        if sudo timeshift --create --comments "CLY Auto-Snapshot before update" --tags D; then
             sc "$M_SNAP_sc"
         else
             echo -e "${YELLOW} $NOTE Warning: Snapshot backup failed, but continuing update...${NC}"
@@ -69,7 +69,7 @@ depends() {
     echo -e "\n${CYAN} $NOTE $M_DEPS_SUGGESTED_ORDER${NC}"
     local pkgs
     pkgs=$(echo "$deps" | grep -oP '[\w][\w.+@-]+' | awk '!seen[$0]++' | tr '\n' ' ')
-    echo "  jay -r $pkgs"
+    echo "  cly -r $pkgs"
     mklog "WHY" "$pkg"
 }
 
@@ -229,8 +229,8 @@ check_updates() {
     ntest
     log_type="1" && mklog "-Qua" "Search for updates"
     [[ "$backend" == "pacman" ]] && return 0
-    if "$backend" -Qua 2>/dev/null | grep -qi "jay-aur"; then
-        echo -e "$M_JAY_UPD_FOUND"
+    if "$backend" -Qua 2>/dev/null | grep -qi "cly"; then
+        echo -e "$M_CLY_UPD_FOUND"
     fi
     ! command -v checkupdates &>/dev/null && { st "$M_INSTALL_DEPS"; "$backend" -S pacman-contrib --noconfirm; }
     st "$M_SEARCHING_UPDATES"

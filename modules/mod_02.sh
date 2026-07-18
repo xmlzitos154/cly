@@ -14,7 +14,7 @@ log_rotate() {
     if [[ "$opt" =~ ^(y|Y|s|S)$ ]]; then
         mv "$LOG_FILE" "${LOG_FILE}.1"
         touch "$LOG_FILE"
-        sc "$M_ROTATED jay.log.1"
+        sc "$M_ROTATED cly.log.1"
     fi
 }
 

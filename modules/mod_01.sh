@@ -72,29 +72,29 @@ proc_func() {
     esac
 }
 
-dpver() { echo "jay $ver - release: $rc"; }
+dpver() { echo "cly $ver - release: $rc"; }
 
 inform() {
     local version_padded
     printf -v version_padded "v%-6s" "$ver"
     
-    echo -e "${BOLD}${CYAN}        __                  "
-    echo -e "${BOLD}${CYAN}       / /___ ___  __       "
-    echo -e "${BOLD}${CYAN}  __  / / __  / / / /       "
-    echo -e "${BOLD}${CYAN} / /_/ / /_/ / /_/ /        "
-    echo -e "${BOLD}${CYAN} \____/\__,_/\__, /         "
-    echo -e "${BOLD}${CYAN}  ${version_padded}   /____/"
+echo -e "${CYAN}${BOLD}         __      "     
+echo -e "${CYAN}${BOLD}   _____/ /_  __ "
+echo -e "${CYAN}${BOLD}  / ___/ / / / / "
+echo -e "${CYAN}${BOLD} / /__/ / /_/ /  "
+echo -e "${CYAN}${BOLD} \___/_/\__, /   "
+echo -e "${CYAN}${BOLD}       /____/    "
     echo -e "\n ${YELLOW}$M_RELEASE ${CYAN}$rc\n ${YELLOW}$M_MADE_BY ${CYAN}xml.dev\n${GREEN} $M_THANKS\n ${NC}"
     exit 0
 }
 
 help_message() {
-    echo "$H_USAGE: jay [$USG1] [$USG2] [$USG3]"
-    echo "$H_USAGE: jay [-i | -r | -s | -u | check] [-f | --flatpak] [--noconfirm]"
-    echo "$H_USAGE: jay [-q | query] [--list-aur] [--path-to-binary]"
-    echo "$H_USAGE: jay [--restore-backup] [--path /path/to/backup/file.txt]"
-    echo "$H_USAGE: jay [--backend] [yay | paru]"
-    echo "$H_USAGE: jay [slog|-sl] [--lines X]"
+    echo "$H_USAGE: cly [$USG1] [$USG2] [$USG3]"
+    echo "$H_USAGE: cly [-i | -r | -s | -u | check] [-f | --flatpak] [--noconfirm]"
+    echo "$H_USAGE: cly [-q | query] [--list-aur] [--path-to-binary]"
+    echo "$H_USAGE: cly [--restore-backup] [--path /path/to/backup/file.txt]"
+    echo "$H_USAGE: cly [--backend] [yay | paru]"
+    echo "$H_USAGE: cly [slog|-sl] [--lines X]"
     echo -e "\n$H_OPTIONS:\n"
     echo "-h, --help               $H_HELP"
     echo "-v, --version            $H_VERSION"

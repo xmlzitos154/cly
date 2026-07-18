@@ -12,12 +12,12 @@ if [[ ! -f "$SOURCE" ]]; then
     exit 1
 fi
 
-BIN_NAME="jay"
+BIN_NAME="cly"
 INSTALL_PATH="/usr/bin/$BIN_NAME"
-MODULE_PATH="/usr/share/jay"
+MODULE_PATH="/usr/share/cly"
 [[ $EUID -ne 0 ]] && { echo -e "${Y}>>${NC} Soliciting root..."; exec sudo "$0" "$@"; }
 
-title() { clear; echo -e "${C}${B}JAY SETUP - VER 1.1 ${NC}"; echo -e "${C}──────────────────────────────${NC}"; }
+title() { clear; echo -e "${C}${B}CLY SETUP - VER 1.1 ${NC}"; echo -e "${C}──────────────────────────────${NC}"; }
 step() { echo -e "${C}  [..]${NC} $1"; sleep 0.3; }
 success() { echo -e "${G}  [OK]${NC} $1"; }
 
@@ -47,22 +47,22 @@ installer() {
     step "Adjusting permissions for $REAL_USER"
     chmod +x "$INSTALL_PATH"
     success "Done."
-    echo -e "\n${G}${B}Done!${NC} Jay installed successfully."
+    echo -e "\n${G}${B}Done!${NC} CLY installed successfully."
     read -n1 -s -p "Press any key to exit..."
     exit 0
 }
 
 remover() {
     title
-    echo -e "${R}${B}Removing JAY...${NC}\n"
+    echo -e "${R}${B}Removing CLY...${NC}\n"
     step "Removing files..."
     rm -f "$INSTALL_PATH"
     success "Binary removed."
-    rm -f "$REAL_HOME/.cache/jay.log"
+    rm -f "$REAL_HOME/.cache/cly.log"
     success "logs removed."
     rm -fr "$MODULE_PATH"
     success "modules removed."
-    rm -fr "$REAL_HOME/.local/share/jay"
+    rm -fr "$REAL_HOME/.local/share/cly"
     success "Config/backup removed."
     echo -e "\n${Y}Uninstallation complete.${NC}"
     read -n1 -s -p "Press any key to exit..."

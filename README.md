@@ -1,11 +1,10 @@
 [![Bash](https://img.shields.io/badge/Language-Bash-4EAA25?style=for-the-badge&logo=gnu-bash&logoColor=white)](https://www.gnu.org/software/bash/)
 [![Arch Linux](https://img.shields.io/badge/OS-Arch_Linux-1793D1?style=for-the-badge&logo=arch-linux&logoColor=white)](https://archlinux.org)
-[![Jay-bin](https://img.shields.io/badge/JAY_AUR-v7.4.4-1793D1?style=for-the-badge&logo=arch-linux&logoColor=white)](https://aur.archlinux.org/packages/jay-aur)
+[![cly](https://img.shields.io/badge/CLY-v7.4.4-1793D1?style=for-the-badge&logo=arch-linux&logoColor=white)](https://aur.archlinux.org/packages/cly)
 
-  # jay
+# cly
 
-Just Another Yogourt - A lightweight, human-friendly AUR helper wrapper with Flatpak integration and multi-language support
-
+A lightweight, human-friendly AUR helper wrapper with Flatpak integration and multi-language support
 
 ## Features
 
@@ -13,12 +12,12 @@ Just Another Yogourt - A lightweight, human-friendly AUR helper wrapper with Fla
 - Dynamically hooks into `yay`, `paru`, `pikaur`, or cleanly falls back to a limited `pacman` instance.
 - Seamless fallback to Flathub if an application isn't hosted or found natively in the Arch Repositories/AUR.
 - Purge target packages along with their entire unused cascading dependency tree (`-Rsn`).
-- Records detailed logs in `~/.cache/jay.log` with a built-in automated 500KB rotater mechanism.
+- Records detailed logs in `~/.cache/cly.log` with a built-in automated 500KB rotater mechanism.
 - Toggle `IgnorePkg` entries in your `/etc/pacman.conf` safely on-the-fly without manual text editing.
 
 ## Installation
 
-*It is recommended to have an AUR helper installed on your system.*
+_It is recommended to have an AUR helper installed on your system._
 
 **Recommended AUR helpers:**
 
@@ -31,8 +30,8 @@ Just Another Yogourt - A lightweight, human-friendly AUR helper wrapper with Fla
 
 ```bash
 sudo pacman -S --needed git base-devel
-git clone https://github.com/xmlzitos154/jay.git
-cd jay
+git clone https://github.com/xmlzitos154/cly.git
+cd cly
 chmod +x install.sh
 sudo ./install.sh
 
@@ -41,7 +40,7 @@ sudo ./install.sh
 If you want to do all of this at once, we can chain the commands like so:
 
 ```bash
-sudo pacman -S --needed git base-devel && git clone https://github.com/xmlzitos154/jay.git && cd jay && chmod +x install.sh && sudo ./install.sh
+sudo pacman -S --needed git base-devel && git clone https://github.com/xmlzitos154/cly.git && cd cly && chmod +x install.sh && sudo ./install.sh
 
 ```
 
@@ -52,15 +51,15 @@ GitHub Actions.
 
 ```bash
 sudo pacman -S --needed git base-devel
-git clone https://aur.archlinux.org/jay-bin.git
-cd jay-bin
+git clone https://aur.archlinux.org/cly.git
+cd cly
 makepkg -si
 ```
 
 If you want to do all of this at once, we can chain the commands like so:
 
 ```bash
-sudo pacman -S --needed git base-devel && git clone https://aur.archlinux.org/jay-bin.git && cd jay-bin && makepkg -si
+sudo pacman -S --needed git base-devel && git clone https://aur.archlinux.org/cly.git && cd cly && makepkg -si
 
 ```
 
@@ -68,10 +67,10 @@ sudo pacman -S --needed git base-devel && git clone https://aur.archlinux.org/ja
 
 ```bash
 # with yay
-yay -S jay-bin
+yay -S cly
 
 # with paru
-paru -S jay-bin
+paru -S cly
 
 ```
 
@@ -80,48 +79,48 @@ paru -S jay-bin
 ## Usage
 
 ```bash
-jay [command] [options] [packages]
+cly [command] [options] [packages]
 
 ```
 
 ### Primary Commands
 
-| Command | Alias | Description |
-| --- | --- | --- |
-| `install` | `-i` | Sync and install packages |
-| `remove` | `-r` | Cleanly remove packages from the system (Use -ra / remove-agressive to remove dependencies too) |
-| `update` | `-u` | Full system update |
-| `search` | `-s` | Query packages globally across repositories |
-| `query` | `-q` | Search through locally installed system packages |
-| `orphan` | `-o` | Find and purge unneeded orphaned dependencies |
-| `cache` | `-c` | Flush Pacman, Flatpak and AUR backend cache storage |
-| `mirrors` | `-m` | Optimize and sort fastest mirrorlists via Reflector |
-| `why`, `dp` |  | Generate reverse dependency maps with suggested removal orders |
-| `snap`, `--create-snapshot` |  | Instantly generate a system state checkpoint via Timeshift |
-| `pin`, `--ignore` |  | Toggle specific package blocks during upgrade runs |
-| `stats` |  | View package disk usage, installation birth-date, and top 10 heaviest structures |
-| `--check-updates` | `check` | Search and print pending available updates |
-| `--pacdiff` | `pd` | Safely manage emergent `.pacnew` / `.pacsave` configurations |
-| `--view` | `vi` | Directly audit the PKGBUILD source file of AUR packages |
-| `--list-aur` | `la` | List exclusively all custom packages pulled from the AUR |
-| `--ping` |  | Fire an animated terminal health-check against network infrastructure |
-| `--fix-keys` | `fk` | Wipe and re-import corrupted GPG keys |
-| `--no-log` |  | Don't log the executed command |
-| `--create-backup` | `cb` | Backup local package maps complete with SHA256 integrity validation |
-| `--restore-backup` | `rb` | Mass-reinstall packages structured within an active JAY backup list |
+| Command                     | Alias   | Description                                                                                     |
+| --------------------------- | ------- | ----------------------------------------------------------------------------------------------- |
+| `install`                   | `-i`    | Sync and install packages                                                                       |
+| `remove`                    | `-r`    | Cleanly remove packages from the system (Use -ra / remove-agressive to remove dependencies too) |
+| `update`                    | `-u`    | Full system update                                                                              |
+| `search`                    | `-s`    | Query packages globally across repositories                                                     |
+| `query`                     | `-q`    | Search through locally installed system packages                                                |
+| `orphan`                    | `-o`    | Find and purge unneeded orphaned dependencies                                                   |
+| `cache`                     | `-c`    | Flush Pacman, Flatpak and AUR backend cache storage                                             |
+| `mirrors`                   | `-m`    | Optimize and sort fastest mirrorlists via Reflector                                             |
+| `why`, `dp`                 |         | Generate reverse dependency maps with suggested removal orders                                  |
+| `snap`, `--create-snapshot` |         | Instantly generate a system state checkpoint via Timeshift                                      |
+| `pin`, `--ignore`           |         | Toggle specific package blocks during upgrade runs                                              |
+| `stats`                     |         | View package disk usage, installation birth-date, and top 10 heaviest structures                |
+| `--check-updates`           | `check` | Search and print pending available updates                                                      |
+| `--pacdiff`                 | `pd`    | Safely manage emergent `.pacnew` / `.pacsave` configurations                                    |
+| `--view`                    | `vi`    | Directly audit the PKGBUILD source file of AUR packages                                         |
+| `--list-aur`                | `la`    | List exclusively all custom packages pulled from the AUR                                        |
+| `--ping`                    |         | Fire an animated terminal health-check against network infrastructure                           |
+| `--fix-keys`                | `fk`    | Wipe and re-import corrupted GPG keys                                                           |
+| `--no-log`                  |         | Don't log the executed command                                                                  |
+| `--create-backup`           | `cb`    | Backup local package maps complete with SHA256 integrity validation                             |
+| `--restore-backup`          | `rb`    | Mass-reinstall packages structured within an active CLY backup list                             |
 
 ### Power-User Options
 
-| Option | Description |
-| --- | --- |
-| `-f`, `--flatpak` | Trigger explicit cross-hybrid package lookups (Native Repos + Flathub) |
-| `--flatpak-only` | Enforce full sandboxed Flatpak-only isolation boundaries |
-| `--dry-run` | Intercept execution and mirror command layouts without applying filesystem modifications |
-| `-nc`, `--noconfirm` | Bypass package compilation interactive prompt menus |
-| `--backend` | Override default helper logic manually (yay, paru, pikaur) |
-| `--path-to-binary` | Trace real absolute paths of binaries (combine with query) |
-| `--lines N` | Truncate and tail explicit log outputs (combine with slog) |
-| `--debug` | Print every command that jay is running |
+| Option               | Description                                                                              |
+| -------------------- | ---------------------------------------------------------------------------------------- |
+| `-f`, `--flatpak`    | Trigger explicit cross-hybrid package lookups (Native Repos + Flathub)                   |
+| `--flatpak-only`     | Enforce full sandboxed Flatpak-only isolation boundaries                                 |
+| `--dry-run`          | Intercept execution and mirror command layouts without applying filesystem modifications |
+| `-nc`, `--noconfirm` | Bypass package compilation interactive prompt menus                                      |
+| `--backend`          | Override default helper logic manually (yay, paru, pikaur)                               |
+| `--path-to-binary`   | Trace real absolute paths of binaries (combine with query)                               |
+| `--lines N`          | Truncate and tail explicit log outputs (combine with slog)                               |
+| `--debug`            | Print every command that cly is running                                                  |
 
 ---
 
@@ -129,34 +128,34 @@ jay [command] [options] [packages]
 
 ```bash
 # Safely simulate a heavy installation process
-jay install blender --dry-run
+cly install blender --dry-run
 
 # Force a standalone system checkpoint right now
-jay --create-snapshot
+cly --create-snapshot
 
 # Update all packages, update flatpaks, and auto-generate an upgrade snapshot
-jay update -f
+cly update -f
 
 # Remove an infrastructure block alongside hidden configurations aggressively
-jay remove docker -A
+cly remove docker -A
 
 # Check software dependencies before invoking structural changes
-jay why electron
+cly why electron
 
 # Toggle package ignore rules programmatically
-jay pin linux-lts
+cly pin linux-lts
 
 # Query an application across multiple isolated ecosystems
-jay search postman -f
+cly search postman -f
 
 # Switch engines temporarily for a specific routine
-jay --backend paru update
+cly --backend paru update
 
-# Review the last 15 actions committed by JAY
-jay slog --lines 15
+# Review the last 15 actions committed by CLY
+cly slog --lines 15
 
 # Wipe and clear out the local cache log file completely
-jay clog
+cly clog
 
 ```
 
@@ -164,27 +163,27 @@ jay clog
 
 ## Log Management
 
-JAY acts transparently by journaling runtime operations directly inside `~/.cache/jay.log`.
+CLY acts transparently by journaling runtime operations directly inside `~/.cache/cly.log`.
 
 ```bash
-jay slog              # view the total history stream
-jay slog --lines 25   # inspect the recent 25 events
-jay clog              # clears out the log file completely
+cly slog              # view the total history stream
+cly slog --lines 25   # inspect the recent 25 events
+cly clog              # clears out the log file completely
 
 ```
 
-Log files are monitored dynamically. When total allocations push past 500KB, JAY engages the user to handle clean rotation to `jay.log.1`.
+Log files are monitored dynamically. When total allocations push past 500KB, CLY engages the user to handle clean rotation to `cly.log.1`.
 
 ---
 
 ## Backup and Restores
 
-Backups generated through JAY map system configurations explicitly and bundle precise SHA256 checksum validations to counter bit-rot or payload manipulation.
+Backups generated through CLY map system configurations explicitly and bundle precise SHA256 checksum validations to counter bit-rot or payload manipulation.
 
 ```bash
-jay --create-backup                          # dumps safe structures inside default directories
-jay --restore-backup                         # verifies integrity hashes and applies syncs
-jay --restore-backup --path ~/safe_state.txt # handles targets outside default environment caches
+cly --create-backup                          # dumps safe structures inside default directories
+cly --restore-backup                         # verifies integrity hashes and applies syncs
+cly --restore-backup --path ~/safe_state.txt # handles targets outside default environment caches
 
 ```
 
