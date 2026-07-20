@@ -122,6 +122,7 @@ help_message() {
     echo "--dry-run                $H_DRY"
     echo "--statistics, stats      $H_STATS"
     echo "--flatpak-only           $H_FLAT_ONLY"
+    echo "doctor                   $H_DOCTOR"
     echo -e "--backend             $H_BACKEND\n"
     dpver
     exit 0
