@@ -2,7 +2,7 @@
 
 ## CLY - A Semantic AUR Helper wrapper written in bash
 
-ver="7.5.1"; rc="release-1"
+ver="7.5.1"; rc="release-2"
 
 set -o pipefail
 
@@ -102,7 +102,7 @@ detback
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        doctor|ra|--create-snapshot|dp|why|--ignore|pin|statsb|--pacdiff|--ping|--create-backup|--restore-backup|install|-i|remove|-r|update|-u|search|-s|query|-q|cache|-c|orphan|-o|mirrors|-m|slog|-cl|-sl|--fix-keys|--check-updates)
+        updater|doctor|ra|--create-snapshot|dp|why|--ignore|pin|statsb|--pacdiff|--ping|--create-backup|--restore-backup|install|-i|remove|-r|update|-u|search|-s|query|-q|cache|-c|orphan|-o|mirrors|-m|slog|-cl|-sl|--fix-keys|--check-updates)
             [[ -z "$action" ]] && action="$1" || final_args+=("$1")
         ;;
         mksnap|--create-snapshot)  do_snap="1" ;;
@@ -162,6 +162,7 @@ case "$action" in
     --fix-keys)                        fix_keys ;;
     -vi|--view)                        logback; view_pkgbuild "${final_args[0]}"; exit 0 ;;
     --pacdiff)                         logback; ckconf ;;
+    updater)                           cly_updater ;;
     doctor)                            doctor ;;
     --ping)                            ntest; exit 0 ;;
     *)                                 err "$E_01 '$action'" ;;
