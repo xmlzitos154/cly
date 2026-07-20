@@ -1,10 +1,15 @@
 #!/usr/bin/env bash
+
+# CLY INSTALLATION SCRIPT
+
 G='\e[32m'; C='\e[36m'; Y='\e[33m'; R='\e[31m'; B='\e[1m'; NC='\e[0m'
 
-REAL_USER="${SUDO_USER:-$USER}"
+### VARS ###
+
 REAL_HOME=$(getent passwd "$REAL_USER" 2>/dev/null | cut -d: -f6)
-REAL_HOME=${REAL_HOME:-/home/$REAL_USER}
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REAL_HOME=${REAL_HOME:-/home/$REAL_USER}
+REAL_USER="${SUDO_USER:-$USER}"
 SOURCE="$SCRIPT_DIR/main.sh"
 
 if [[ ! -f "$SOURCE" ]]; then
@@ -12,12 +17,15 @@ if [[ ! -f "$SOURCE" ]]; then
     exit 1
 fi
 
-BIN_NAME="cly"
+MODULE_PATH="/usr/share/$BIN_NAME"
 INSTALL_PATH="/usr/bin/$BIN_NAME"
-MODULE_PATH="/usr/share/cly"
+BIN_NAME="cly"
+
 [[ $EUID -ne 0 ]] && { echo -e "${Y}>>${NC} Soliciting root..."; exec sudo "$0" "$@"; }
 
-title() { clear; echo -e "${C}${B}CLY SETUP - VER 1.1 ${NC}"; echo -e "${C}──────────────────────────────${NC}"; }
+### FUNCTIONS ###
+
+title() { clear; echo -e "${C}${B}CLY SETUP ${NC}"; echo -e "${C}──────────────────────────────${NC}"; }
 step() { echo -e "${C}  [..]${NC} $1"; sleep 0.3; }
 success() { echo -e "${G}  [OK]${NC} $1"; }
 
@@ -31,8 +39,8 @@ installer() {
         echo "Can't find one or more language modules."
         exit 1
     fi
-    install -Dm644 "$SCRIPT_DIR/languages/lang_mod_en.sh" "$MODULE_PATH/lang_mod_en.sh"
-    install -Dm644 "$SCRIPT_DIR/languages/lang_mod_pt.sh" "$MODULE_PATH/lang_mod_pt.sh"
+    install -Dm644 "$SCRIPT_DIR/languages/lang_mod_en.sh" "$MODULE_PATH/languages/lang_mod_en.sh"
+    install -Dm644 "$SCRIPT_DIR/languages/lang_mod_pt.sh" "$MODULE_PATH/languages/lang_mod_pt.sh"
     success "Done."
     step "Installing main modules..."
     if [[ ! -f "$SCRIPT_DIR/modules/mod_01.sh" ||  ! -f "$SCRIPT_DIR/modules/mod_02.sh" || ! -f "$SCRIPT_DIR/modules/mod_03.sh" || ! -f "$SCRIPT_DIR/modules/mod_04.sh" || ! -f "$SCRIPT_DIR/modules/mod_05.sh" ]]; then
@@ -68,6 +76,8 @@ remover() {
     read -n1 -s -p "Press any key to exit..."
     exit 0
 }
+
+### RUNNER ###
 
 while true; do
     title
