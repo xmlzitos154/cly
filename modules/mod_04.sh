@@ -289,17 +289,17 @@ get_package_path() {
 doctor() {
     local issues=0
     echo -e "\n${BOLD}${CYAN}:: $M_DOCTOR_SYSTEM${NC}"
-
+    
     local kernel; kernel=$(uname -r)
     st "Kernel: $kernel"
-
+    
     if [[ -f /var/lib/pacman/db.lck ]]; then
         echo -e " ${RED}$ERROR${NC} Pacman lock detectado — rode: sudo rm /var/lib/pacman/db.lck"
         ((issues++))
     else
         sc "$M_DOCTOR_NO_LOCK"
     fi
-
+    
     local outdated; outdated=$(checkupdates 2>/dev/null | wc -l)
     if [[ "$outdated" -gt 0 ]]; then
         echo -e " ${YELLOW}$NOTE${NC} $outdated $M_DOCTOR_OUTDATED — cly -u"
@@ -307,7 +307,7 @@ doctor() {
     else
         sc "$M_DOCTOR_UP_TO_DATE"
     fi
-
+    
     local orphans; orphans=$("$backend" -Qqtd 2>/dev/null | wc -l)
     if [[ "$orphans" -gt 0 ]]; then
         echo -e " ${YELLOW}$NOTE${NC} $orphans $M_DOCTOR_ORPHANS — cly -o"
@@ -315,9 +315,9 @@ doctor() {
     else
         sc "$M_DOCTOR_NO_ORPHANS"
     fi
-
+    
     echo -e "\n${BOLD}${CYAN}:: $M_DOCTOR_STORAGE${NC}"
-
+    
     local pac_cache; pac_cache=$(du -sh /var/cache/pacman/pkg 2>/dev/null | cut -f1)
     local pac_cache_mb; pac_cache_mb=$(du -sm /var/cache/pacman/pkg 2>/dev/null | cut -f1)
     if [[ "$pac_cache_mb" -gt 1024 ]]; then
@@ -326,7 +326,7 @@ doctor() {
     else
         sc "$M_DOCTOR_PAC_CACHE $pac_cache"
     fi
-
+    
     local aur_cache_dir="$REAL_HOME/.cache/$backend"
     if [[ -d "$aur_cache_dir" ]]; then
         local aur_cache; aur_cache=$(du -sh "$aur_cache_dir" 2>/dev/null | cut -f1)
@@ -338,19 +338,19 @@ doctor() {
             sc "$M_DOCTOR_AUR_CACHE $aur_cache"
         fi
     fi
-
+    
     local log_size; log_size=$(du -sh "$LOG_FILE" 2>/dev/null | cut -f1)
     sc "$M_DOCTOR_LOG $log_size"
-
+    
     echo -e "\n${BOLD}${CYAN}:: $M_DOCTOR_NETWORK${NC}"
-
+    
     if ping -c 1 -i 0.2 8.8.8.8 &>/dev/null; then
         sc "$M_NET_OK"
     else
         echo -e " ${RED}$ERROR${NC} $M_NET_ERR"
         ((issues++))
     fi
-
+    
     if command -v reflector &>/dev/null; then
         local mirror_age; mirror_age=$(stat -c %Y /etc/pacman.d/mirrorlist 2>/dev/null)
         local now; now=$(date +%s)
@@ -362,14 +362,22 @@ doctor() {
             sc "$M_DOCTOR_MIRRORS_OK"
         fi
     fi
-
+    
     echo ""
     if [[ "$issues" -eq 0 ]]; then
         echo -e "${GREEN}${BOLD} $COMPLETE $M_DOCTOR_ALL_GOOD${NC}\n"
     else
         echo -e "${YELLOW}${BOLD} $NOTE $issues $M_DOCTOR_ISSUES${NC}\n"
     fi
-
+    
     tag="DOCTOR"
     mklog "DOCTOR" "system check - $issues issues"
+}
+
+cly_updater() {
+    ntest
+    echo -e "${CC} ${M_UPDATING_CLY}..."
+    if $backend -Syu cly; then
+        echo '${GREEN}${COMPLETE} Done.'
+    fi
 }
