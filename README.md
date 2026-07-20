@@ -96,7 +96,7 @@ cly [command] [options] [packages]
 | `cache`                     | `-c`    | Flush Pacman, Flatpak and AUR backend cache storage                                                         |
 | `mirrors`                   | `-m`    | Optimize and sort fastest mirrorlists via Reflector                                                         |
 | `why`, `dp`                 |         | Generate reverse dependency maps with suggested removal orders                                              |
-| `--doctor`                  |         | Runs a system health check reporting issues with suggested fixes (kernel, cache, mirrors, network, orphans) |
+| `doctor`                  |         | Runs a system health check reporting issues with suggested fixes (kernel, cache, mirrors, network, orphans) |
 | `snap`, `--create-snapshot` |         | Instantly generate a system state checkpoint via Timeshift                                                  |
 | `pin`, `--ignore`           |         | Toggle specific package blocks during upgrade runs                                                          |
 | `stats`                     |         | View package disk usage, installation birth-date, and top 10 heaviest structures                            |
