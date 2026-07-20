@@ -1,6 +1,6 @@
 [![Bash](https://img.shields.io/badge/Language-Bash-4EAA25?style=for-the-badge&logo=gnu-bash&logoColor=white)](https://www.gnu.org/software/bash/)
 [![Arch Linux](https://img.shields.io/badge/OS-Arch_Linux-1793D1?style=for-the-badge&logo=arch-linux&logoColor=white)](https://archlinux.org)
-[![cly](https://img.shields.io/badge/CLY-v7.5.0-1793D1?style=for-the-badge&logo=arch-linux&logoColor=white)](https://aur.archlinux.org/packages/cly)
+[![cly](https://img.shields.io/badge/CLY-v7.5.1-1793D1?style=for-the-badge&logo=arch-linux&logoColor=white)](https://aur.archlinux.org/packages/cly)
 
 # cly
 
@@ -85,29 +85,30 @@ cly [command] [options] [packages]
 
 ### Primary Commands
 
-| Command                     | Alias   | Description                                                                                     |
-| --------------------------- | ------- | ----------------------------------------------------------------------------------------------- |
-| `install`                   | `-i`    | Sync and install packages                                                                       |
-| `remove`                    | `-r`    | Cleanly remove packages from the system (Use -ra / remove-agressive to remove dependencies too) |
-| `update`                    | `-u`    | Full system update                                                                              |
-| `search`                    | `-s`    | Query packages globally across repositories                                                     |
-| `query`                     | `-q`    | Search through locally installed system packages                                                |
-| `orphan`                    | `-o`    | Find and purge unneeded orphaned dependencies                                                   |
-| `cache`                     | `-c`    | Flush Pacman, Flatpak and AUR backend cache storage                                             |
-| `mirrors`                   | `-m`    | Optimize and sort fastest mirrorlists via Reflector                                             |
-| `why`, `dp`                 |         | Generate reverse dependency maps with suggested removal orders                                  |
-| `snap`, `--create-snapshot` |         | Instantly generate a system state checkpoint via Timeshift                                      |
-| `pin`, `--ignore`           |         | Toggle specific package blocks during upgrade runs                                              |
-| `stats`                     |         | View package disk usage, installation birth-date, and top 10 heaviest structures                |
-| `--check-updates`           | `check` | Search and print pending available updates                                                      |
-| `--pacdiff`                 | `pd`    | Safely manage emergent `.pacnew` / `.pacsave` configurations                                    |
-| `--view`                    | `vi`    | Directly audit the PKGBUILD source file of AUR packages                                         |
-| `--list-aur`                | `la`    | List exclusively all custom packages pulled from the AUR                                        |
-| `--ping`                    |         | Fire an animated terminal health-check against network infrastructure                           |
-| `--fix-keys`                | `fk`    | Wipe and re-import corrupted GPG keys                                                           |
-| `--no-log`                  |         | Don't log the executed command                                                                  |
-| `--create-backup`           | `cb`    | Backup local package maps complete with SHA256 integrity validation                             |
-| `--restore-backup`          | `rb`    | Mass-reinstall packages structured within an active CLY backup list                             |
+| Command                     | Alias   | Description                                                                                                 |
+| --------------------------- | ------- | ----------------------------------------------------------------------------------------------------------- |
+| `install`                   | `-i`    | Sync and install packages                                                                                   |
+| `remove`                    | `-r`    | Cleanly remove packages from the system (Use -ra / remove-agressive to remove dependencies too)             |
+| `update`                    | `-u`    | Full system update                                                                                          |
+| `search`                    | `-s`    | Query packages globally across repositories                                                                 |
+| `query`                     | `-q`    | Search through locally installed system packages                                                            |
+| `orphan`                    | `-o`    | Find and purge unneeded orphaned dependencies                                                               |
+| `cache`                     | `-c`    | Flush Pacman, Flatpak and AUR backend cache storage                                                         |
+| `mirrors`                   | `-m`    | Optimize and sort fastest mirrorlists via Reflector                                                         |
+| `why`, `dp`                 |         | Generate reverse dependency maps with suggested removal orders                                              |
+| `--doctor`                  |         | Runs a system health check reporting issues with suggested fixes (kernel, cache, mirrors, network, orphans) |
+| `snap`, `--create-snapshot` |         | Instantly generate a system state checkpoint via Timeshift                                                  |
+| `pin`, `--ignore`           |         | Toggle specific package blocks during upgrade runs                                                          |
+| `stats`                     |         | View package disk usage, installation birth-date, and top 10 heaviest structures                            |
+| `--check-updates`           | `check` | Search and print pending available updates                                                                  |
+| `--pacdiff`                 | `pd`    | Safely manage emergent `.pacnew` / `.pacsave` configurations                                                |
+| `--view`                    | `vi`    | Directly audit the PKGBUILD source file of AUR packages                                                     |
+| `--list-aur`                | `la`    | List exclusively all custom packages pulled from the AUR                                                    |
+| `--ping`                    |         | Fire an animated terminal health-check against network infrastructure                                       |
+| `--fix-keys`                | `fk`    | Wipe and re-import corrupted GPG keys                                                                       |
+| `--no-log`                  |         | Don't log the executed command                                                                              |
+| `--create-backup`           | `cb`    | Backup local package maps complete with SHA256 integrity validation                                         |
+| `--restore-backup`          | `rb`    | Mass-reinstall packages structured within an active CLY backup list                                         |
 
 ### Power-User Options
 
@@ -193,4 +194,4 @@ cly --restore-backup --path ~/safe_state.txt # handles targets outside default e
 
 Distributed under the MIT License. Developed with <3 by xml.dev
 
-Current version: **7.5.0**
+Current version: **7.5.1**
