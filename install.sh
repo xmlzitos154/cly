@@ -17,9 +17,9 @@ if [[ ! -f "$SOURCE" ]]; then
     exit 1
 fi
 
+BIN_NAME="cly"
 MODULE_PATH="/usr/share/$BIN_NAME"
 INSTALL_PATH="/usr/bin/$BIN_NAME"
-BIN_NAME="cly"
 
 [[ $EUID -ne 0 ]] && { echo -e "${Y}>>${NC} Soliciting root..."; exec sudo "$0" "$@"; }
 
