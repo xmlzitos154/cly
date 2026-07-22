@@ -335,7 +335,7 @@ doctor() {
             echo -e " ${YELLOW}$NOTE${NC} $M_DOCTOR_AUR_CACHE $aur_cache — cly -c"
             ((issues++))
         else
-            sc "$M_DOCTOR_AUR_CACHE $aur_cache"
+            sc "$M_DOCTOR_AUR_CACHE $backend $aur_cache"
         fi
     fi
     
