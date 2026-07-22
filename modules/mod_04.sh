@@ -377,7 +377,13 @@ doctor() {
 cly_updater() {
     ntest
     echo -e "${CC} ${M_UPDATING_CLY}..."
-    if $backend -Syu cly; then
-        echo '${GREEN}${COMPLETE} Done.'
+    if $backend -Qi cly &>/dev/null; then
+        if "$backend" -S cly; then
+            echo -e "${GREEN} ${COMPLETE}${NC} $M_CLY_UPDATE_DONE"
+        else
+            echo "${RED} ${ERROR}${NC} $M_CLY_UPDATE_FAIL_1"
+        fi
+    else
+        echo "${RED} ${ERROR}${NC} $M_CLY_UPDATE_FAIL_2"
     fi
 }
