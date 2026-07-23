@@ -194,4 +194,4 @@ cly --restore-backup --path ~/safe_state.txt # handles targets outside default e
 
 Distributed under the MIT License. Developed with <3 by xml.dev
 
-version: **7.5.3** - **Release: 4**
+version: **7.5.3**
