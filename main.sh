@@ -2,15 +2,15 @@
 
 ## CLY - A Semantic AUR Helper wrapper written in bash
 
-ver="7.5.2"; rc="release-4"
+ver="7.5.3"; rc="release-1"
 
 set -o pipefail
 
 REAL_HOME=$(getent passwd "${SUDO_USER:-$USER}" 2>/dev/null | cut -d: -f6); REAL_HOME=${REAL_HOME:-$HOME}
 CONFIG_FOLDER="$REAL_HOME/.local/share/cly"
 LOG_FILE="$REAL_HOME/.cache/cly.log"
-BACKUP_FILE="$BACKUP_DIR/backup.txt"
 BACKUP_DIR="$CONFIG_FOLDER/backup"
+BACKUP_FILE="$BACKUP_DIR/backup.txt"
 MODULES_FOLDER="/usr/share/cly"
 
 YELLOW='\033[1;33m'
@@ -128,7 +128,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 [[ -z "$action" && ${#final_args[@]} -gt 0 ]] && action="${final_args[0]}" && final_args=("${final_args[@]:1}")
-[[ "$action" =~ ^(-ra|remove-agressive|ra|install|remove|-i|-r|i|r|in|rm|ins|rem)$ && ${#final_args[@]} -eq 0 ]] && error "$M_SPECIFY_PKG"
+[[ "$action" =~ ^(-S|-in|ins|install|-i|-Rsn|-ra|--remove-agressive|ra|-R|rem|remove|-r|-rm)$ && ${#final_args[@]} -eq 0 ]] && error "$M_SPECIFY_PKG"
 ! command -v "$backend" &>/dev/null && load_lang && err "$E_03"
 tmp_out=$(mktemp) || err "$E_02"
 trap 'rm -f "$tmp_out" 2>/dev/null' EXIT

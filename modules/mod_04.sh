@@ -163,9 +163,9 @@ refresh_mirrors() {
 fix_keys() {
     log_type="1" && mklog "gpg" "Recovery gpg keys"
     st "$M_GPG_START"
-    if ! $backend -Qs archlinux-keyring; then "$backend" -S archlinux-keyring --noconfirm --needed 2>&1 | tee "$tmp_out"; fi
+    if ! "$backend" -Qs archlinux-keyring; then "$backend" -S archlinux-keyring --noconfirm --needed 2>&1 | tee "$tmp_out"; fi
     if [[ -f "$tmp_out" ]]; then
-        local keys=$(grep -oP '(?<=key\s)([A-F0-9]{16,})|(?<=ID\s)([A-F0-9]{16,})' "$tmp_out" | sort -u)
+        local keys; keys=$(grep -oP '(?<=key\s)([A-F0-9]{16,})|(?<=ID\s)([A-F0-9]{16,})' "$tmp_out" | sort -u)
         if [[ -n "$keys" ]]; then
             for key in $keys; do
                 st "$M_IMPORTING_KEY $key"
@@ -253,8 +253,8 @@ check_updates() {
         pid_flat=$!
     fi
     wait $pid_repo ${pid_aur:+$pid_aur} ${pid_flat:+$pid_flat}
-    local upds_n=$(wc -l < "$tmp_repo")
-    local upds_aur_n=$(wc -l < "$tmp_aur")
+    local upds_n; upds_n=$(wc -l < "$tmp_repo")
+    local upds_aur_n; upds_aur_n=$(wc -l < "$tmp_aur")
     local upds_flat_n=0
     [[ -f "$tmp_flat" ]] && upds_flat_n=$(wc -l < "$tmp_flat")
     local total=$((upds_n + upds_aur_n + upds_flat_n))
@@ -294,7 +294,7 @@ doctor() {
     st "Kernel: $kernel"
     
     if [[ -f /var/lib/pacman/db.lck ]]; then
-        echo -e " ${RED}$ERROR${NC} Pacman lock detectado — rode: sudo rm /var/lib/pacman/db.lck"
+        echo -e " ${RED}$ERROR${NC} $M_DOCTOR_LOCK_DETECTED — $M_DOCTOR_RUN sudo rm /var/lib/pacman/db.lck"
         ((issues++))
     else
         sc "$M_DOCTOR_NO_LOCK"
