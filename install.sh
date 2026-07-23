@@ -49,11 +49,16 @@ installer() {
         echo "Can't find one or more modules."
         exit 1
     fi
+    if [[ ! -f "$SCRIPT_DIR/extra_files/infected_packages.txt" ]]; then
+        echo "Can't find 'infected_packages.txt' file. (text file for AUR attack verification.)"
+        exit 1
+    fi
     install -Dm644 "$SCRIPT_DIR/modules/mod_01.sh" "$MODULE_PATH/mod_01.sh"
     install -Dm644 "$SCRIPT_DIR/modules/mod_02.sh" "$MODULE_PATH/mod_02.sh"
     install -Dm644 "$SCRIPT_DIR/modules/mod_03.sh" "$MODULE_PATH/mod_03.sh"
     install -Dm644 "$SCRIPT_DIR/modules/mod_04.sh" "$MODULE_PATH/mod_04.sh"
     install -Dm644 "$SCRIPT_DIR/modules/mod_05.sh" "$MODULE_PATH/mod_05.sh"
+    install -Dm644 "$SCRIPT_DIR/extra_files/infected_packages.txt" "$MODULE_PATH/infected_packages.txt"
     step "Adjusting permissions for $REAL_USER"
     chmod +x "$INSTALL_PATH"
     success "Done."
