@@ -2,7 +2,7 @@
 
 ## CLY - A Semantic AUR Helper wrapper written in bash
 
-ver="7.5.3"; rc="release-1"
+ver="7.5.3"; rc="release-2"
 
 set -o pipefail
 
@@ -94,8 +94,8 @@ flat=0
 mlog=1
 
 log_rotate
-load_lang
 detback
+load_lang
 
 [[ "$backend" == "pacman" && "$EUID" -ne 0 ]] && err "$E_07"
 [[ "$backend" != "pacman" && "$EUID" -eq 0 ]] && err "$E_05"

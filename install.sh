@@ -17,6 +17,8 @@ if [[ ! -f "$SOURCE" ]]; then
     exit 1
 fi
 
+command -v pacman &>/dev/null || { echo -e "This program is made to run on Arch linux. why are you trying to install it?"; exit 1; }
+
 BIN_NAME="cly"
 MODULE_PATH="/usr/share/$BIN_NAME"
 INSTALL_PATH="/usr/bin/$BIN_NAME"
