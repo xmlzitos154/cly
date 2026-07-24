@@ -2,7 +2,7 @@
 
 ## CLY - A Semantic AUR Helper wrapper written in bash
 
-ver="7.5.4"; rc="release-1"
+ver="7.5.4"; rc="release-2"
 
 set -o pipefail
 
@@ -195,10 +195,10 @@ case "$action" in
                         exit 1
                     }
                 done
-                "$backend" "$cmd" "${final_args[@]}" "${back_flags[@]}" 2>&1 | tee "$tmp_out"
-                exit_code=${PIPESTATUS[0]}
-                rflat
             fi
+            "$backend" "$cmd" "${final_args[@]}" "${back_flags[@]}" 2>&1 | tee "$tmp_out"
+            exit_code=${PIPESTATUS[0]}
+            rflat
         fi
     ;;
 esac
