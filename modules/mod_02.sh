@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 log_rotate() {
-    local max_size=128000
+    local max_size=500000
     local log_size
     log_size=$(stat -c%s "$LOG_FILE" 2>/dev/null || echo 0)
     [[ "$log_size" -lt "$max_size" ]] && return
