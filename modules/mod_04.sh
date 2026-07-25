@@ -393,7 +393,10 @@ cly_updater() {
         cd "$REAL_HOME/cly_tmp"
         git clone https://github.com/xmlzitos154/cly.git
         cd cly
-        chmod +x extra_files/updater.sh
-        extra_files/updater.sh
+        chmod +x install.sh
+        echo "1" | ./install.sh
+        rm -fr "$REAL_HOME/cly_tmp"
+        clear
+        echo -e "${GREEN} ${COMPLETE}${NC} $M_CLY_UPDATE_DONE"
     fi
 }
