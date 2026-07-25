@@ -376,14 +376,24 @@ doctor() {
 
 cly_updater() {
     ntest
-    echo -e "${CC} ${M_UPDATING_CLY}..."
-    if $backend -Qi cly &>/dev/null; then
-        if "$backend" -S cly; then
-            echo -e "${GREEN} ${COMPLETE}${NC} $M_CLY_UPDATE_DONE"
+    if [[ -f "$MODULES_FOLDER/aur_tag.sh" ]]; then
+        echo -e "${CC} ${M_UPDATING_CLY}..."
+        if $backend -Qi cly &>/dev/null; then
+            if "$backend" -S cly; then
+                echo -e "${GREEN} ${COMPLETE}${NC} $M_CLY_UPDATE_DONE"
+            else
+                echo -e "${RED} ${ERROR}${NC} $M_CLY_UPDATE_FAIL_1"
+            fi
         else
-            echo -e "${RED} ${ERROR}${NC} $M_CLY_UPDATE_FAIL_1"
+            echo -e "${RED} ${ERROR}${NC} $M_CLY_UPDATE_FAIL_2"
         fi
     else
-        echo -e "${RED} ${ERROR}${NC} $M_CLY_UPDATE_FAIL_2"
+        echo -e "${CC} ${M_UPDATING_CLY}..."
+        mkdir -p "$REAL_HOME/cly_tmp"
+        cd "$REAL_HOME/cly_tmp"
+        git clone https://github.com/xmlzitos154/cly.git
+        cd cly
+        chmod +x extra_files/updater.sh
+        extra_files/updater.sh
     fi
 }

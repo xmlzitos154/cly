@@ -2,7 +2,7 @@
 
 ntest() {
     st "$M_NET_TEST"
-    ping -c 1 -i 0.2 8.8.8.8 &>/dev/null &
+    ping -c 2 -i 0.5 aur.archlinux.org &>/dev/null &
     local pid=$!
     local spin='-\|/'
     while kill -0 $pid 2>/dev/null; do
