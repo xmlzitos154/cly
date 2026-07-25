@@ -2,7 +2,7 @@
 
 ## CLY - A Semantic AUR Helper wrapper written in bash
 
-ver="7.5.4"; rc="release-2"
+ver="7.5.5"; rc="release-1"
 
 set -o pipefail
 
@@ -20,10 +20,10 @@ RED='\033[0;31m'
 BOLD='\033[1m'
 NC='\033[0m'
 
-COMPLETE="[✓]"
-ALERT="[!]"
-ERROR="[X]"
-NOTE="[*]"
+COMPLETE=" ✓ "
+ALERT=" ! "
+ERROR=" X "
+NOTE=" * "
 CC="->"
 
 detback() {
@@ -46,7 +46,7 @@ load_lang() {
 load_lang
 
 logback() {
-    echo -e "${GREEN}${BOLD}$CC $M_USING_BACKEND $backend...${NC}"
+    echo -e "${GREEN}${BOLD} $CC $M_USING_BACKEND $backend...${NC}"
 }
 
 st() { echo -e "${BOLD}${GREEN} $CC ${NC}${1}"; }
