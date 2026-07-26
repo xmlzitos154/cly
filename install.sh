@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# CLY INSTALLATION SCRIPT
+## CLY INSTALLATION SCRIPT
 
 G='\e[32m'; C='\e[36m'; Y='\e[33m'; R='\e[31m'; B='\e[1m'; NC='\e[0m'
 
@@ -13,7 +13,7 @@ REAL_USER="${SUDO_USER:-$USER}"
 SOURCE="$SCRIPT_DIR/main.sh"
 
 if [[ ! -f "$SOURCE" ]]; then
-    echo -e "${R}Error: File 'main' not found.${NC}"
+    echo -e "${R}Error: File 'main.sh' not found.${NC}"
     exit 1
 fi
 
@@ -27,7 +27,7 @@ INSTALL_PATH="/usr/bin/$BIN_NAME"
 
 ### FUNCTIONS ###
 
-title() { clear; echo -e "${C}${B}CLY SETUP ${NC}"; echo -e "${C}──────────────────────────────${NC}"; }
+title() { clear; echo -e "${C}${B} -= CLY SETUP =- ${NC}"; echo -e "${C}──────────────────────────────${NC}"; }
 step() { echo -e "${C}  [..]${NC} $1"; sleep 0.3; }
 success() { echo -e "${G}  [OK]${NC} $1"; }
 
@@ -36,6 +36,7 @@ installer() {
     step "Installing binary to $INSTALL_PATH..."
     install -Dm755 "$SOURCE" "$INSTALL_PATH"
     success "Binary installed."
+    
     step "Installing languages modules..."
     if [[ ! -f "$SCRIPT_DIR/languages/lang_mod_en.sh" || ! -f "$SCRIPT_DIR/languages/lang_mod_pt.sh" ]]; then
         echo "Can't find one or more language modules."
@@ -43,14 +44,10 @@ installer() {
     fi
     install -Dm644 "$SCRIPT_DIR/languages/lang_mod_en.sh" "$MODULE_PATH/languages/lang_mod_en.sh"
     install -Dm644 "$SCRIPT_DIR/languages/lang_mod_pt.sh" "$MODULE_PATH/languages/lang_mod_pt.sh"
-    success "Done."
-    step "Installing main modules..."
+    success "Language modules installed."
+    step "Installing function modules..."
     if [[ ! -f "$SCRIPT_DIR/modules/mod_01.sh" ||  ! -f "$SCRIPT_DIR/modules/mod_02.sh" || ! -f "$SCRIPT_DIR/modules/mod_03.sh" || ! -f "$SCRIPT_DIR/modules/mod_04.sh" || ! -f "$SCRIPT_DIR/modules/mod_05.sh" ]]; then
-        echo "Can't find one or more modules."
-        exit 1
-    fi
-    if [[ ! -f "$SCRIPT_DIR/extra_files/infected_packages.txt" ]]; then
-        echo "Can't find 'infected_packages.txt' file. (text file for AUR attack verification.)"
+        echo "Can't find one or more function modules."
         exit 1
     fi
     install -Dm644 "$SCRIPT_DIR/modules/mod_01.sh" "$MODULE_PATH/mod_01.sh"
@@ -58,27 +55,37 @@ installer() {
     install -Dm644 "$SCRIPT_DIR/modules/mod_03.sh" "$MODULE_PATH/mod_03.sh"
     install -Dm644 "$SCRIPT_DIR/modules/mod_04.sh" "$MODULE_PATH/mod_04.sh"
     install -Dm644 "$SCRIPT_DIR/modules/mod_05.sh" "$MODULE_PATH/mod_05.sh"
+    success "Function modules installed."
+    step "Installing AUR infected programs list..."
+    if [[ ! -f "$SCRIPT_DIR/extra_files/infected_packages.txt" ]]; then
+        echo "Can't find 'infected_packages.txt' file. (text file for AUR attack verification.)"
+        exit 1
+    fi
     install -Dm644 "$SCRIPT_DIR/extra_files/infected_packages.txt" "$MODULE_PATH/infected_packages.txt"
+    success "AUR infected programs list installed."
     step "Adjusting permissions for $REAL_USER"
     chmod +x "$INSTALL_PATH"
     success "Done."
-    echo -e "\n${G}${B}Done!${NC} CLY installed successfully."
+    echo -e "\n${G}${B}Done!${NC} cly installed successfully."
     read -n1 -s -p "Press any key to exit..."
     exit 0
 }
 
 remover() {
     title
-    echo -e "${R}${B}Removing CLY...${NC}\n"
-    step "Removing files..."
+    echo -e "${R}${B}Uninstalling cly...${NC}\n"
+    step "Removing binary..."
     rm -f "$INSTALL_PATH"
     success "Binary removed."
-    rm -f "$REAL_HOME/.cache/cly.log"
+    step "Removing logs..."
+    find "$REAL_HOME/$REAL_USER/.cache" -maxdepth 1 -iname "*cly*" -delete
     success "logs removed."
+    step "Removing modules..."
     rm -fr "$MODULE_PATH"
     success "modules removed."
-    rm -fr "$REAL_HOME/.local/share/cly"
+    [[ -d "$REAL_HOME/.local/share/cly" ]] && rm -fr "$REAL_HOME/.local/share/cly"
     success "Config/backup removed."
+    [[ -d "/usr/share/doc/cly" ]] && step "Removing README.md..." && rm -fr "/usr/share/doc/cly" && success "README.md Removed (why do you have this?)" # <-- if someones install cly with aur, and uninstall with this script for some reason.
     echo -e "\n${Y}Uninstallation complete.${NC}"
     read -n1 -s -p "Press any key to exit..."
     exit 0
@@ -92,7 +99,7 @@ while true; do
     echo -e "  ${C}2.${NC} Remove"
     echo -e "  ${C}3.${NC} Exit"
     echo ""
-    echo -n " > "
+    echo -n " >> "
     read -r DO
     
     case "$DO" in
