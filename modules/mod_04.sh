@@ -229,8 +229,16 @@ check_updates() {
     ntest
     log_type="1" && mklog "-Qua" "Search for updates"
     [[ "$backend" == "pacman" ]] && return 0
-    if "$backend" -Qua 2>/dev/null | grep -qi "cly"; then
-        echo -e "$M_CLY_UPD_FOUND"
+    if [[ -f "$MODULES_FOLDER/aur_tag.sh" ]]; then
+        if "$backend" -Qua 2>/dev/null | grep -qi "cly"; then
+            echo -e "$M_CLY_UPD_FOUND"
+        fi
+    else
+        local remote_ver
+        remote_ver=$(curl -sf "https://raw.githubusercontent.com/xmlzitos154/cly/main/main.sh" | grep -oP '(?<=ver=")[^"]+')
+        if [[ -n "$remote_ver" && "$remote_ver" != "$ver" ]]; then
+            echo -e "$M_CLY_UPD_FOUND ($ver -> $remote_ver)"
+        fi
     fi
     ! command -v checkupdates &>/dev/null && { st "$M_INSTALL_DEPS"; "$backend" -S pacman-contrib --noconfirm; }
     st "$M_SEARCHING_UPDATES"
