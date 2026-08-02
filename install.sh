@@ -8,12 +8,12 @@ G='\e[32m'; C='\e[36m'; Y='\e[33m'; R='\e[31m'; B='\e[1m'; NC='\e[0m'
 
 REAL_HOME=$(getent passwd "$REAL_USER" 2>/dev/null | cut -d: -f6)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REAL_HOME=${REAL_HOME:-/home/$REAL_USER}
 REAL_USER="${SUDO_USER:-$USER}"
-SOURCE="$SCRIPT_DIR/main.sh"
+REAL_HOME=${REAL_HOME:-/home/$REAL_USER}
+SOURCE="$SCRIPT_DIR/modules/mod_main.sh"
 
 if [[ ! -f "$SOURCE" ]]; then
-    echo -e "${R}Error: File 'main.sh' not found.${NC}"
+    echo -e "${R}Error: Module 'mod_main.sh' not found.${NC}"
     exit 1
 fi
 
@@ -78,7 +78,7 @@ remover() {
     rm -f "$INSTALL_PATH"
     success "Binary removed."
     step "Removing logs..."
-    find "$REAL_HOME/$REAL_USER/.cache" -maxdepth 1 -iname "*cly*" -delete
+    find "$REAL_HOME/.cache" -maxdepth 1 -iname "*cly*" -delete
     success "logs removed."
     step "Removing modules..."
     rm -fr "$MODULE_PATH"

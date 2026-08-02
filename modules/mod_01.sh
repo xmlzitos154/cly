@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+### Network tester ###
+
 ntest() {
     st "$M_NET_TEST"
     ping -c 2 -i 0.5 aur.archlinux.org &>/dev/null &
@@ -20,6 +22,8 @@ ntest() {
         exit 1
     fi
 }
+
+### Basic pacman functions ###
 
 proc_func() {
     tag="$action"
@@ -72,6 +76,8 @@ proc_func() {
     esac
 }
 
+### Cly info ###
+
 dpver() { echo "cly $ver - release: $rc"; }
 
 inform() {
@@ -87,6 +93,8 @@ echo -e "${CYAN}${BOLD} ${version_padded}/____/    "
     echo -e "\n ${YELLOW}$M_RELEASE ${CYAN}$rc\n ${YELLOW}$M_MADE_BY ${CYAN}xml.dev\n${GREEN} $M_THANKS\n ${NC}"
     exit 0
 }
+
+### --help/-h Display function ###
 
 help_message() {
     echo "$H_USAGE: cly [$USG1] [$USG2] [$USG3]"

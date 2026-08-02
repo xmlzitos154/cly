@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+### Flatpak runner ###
+
 rflat() {
     [[ "$flat" != "1" ]] && return
     command -v flatpak &>/dev/null || err "$E_06"
@@ -22,6 +24,8 @@ rflat() {
         ;;
     esac
 }
+
+### --only-flatpak function runner ###
 
 flatpak_only() {
     ! command -v flatpak &>/dev/null && err "$E_06"

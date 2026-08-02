@@ -2,9 +2,11 @@
 
 ## CLY - A Semantic AUR Helper wrapper written in bash
 
-ver="7.5.5"; rc="release-2"
+ver="7.5.6"; rc="release-1"
 
 set -o pipefail
+
+### Essential variables ###
 
 REAL_HOME=$(getent passwd "${SUDO_USER:-$USER}" 2>/dev/null | cut -d: -f6); REAL_HOME=${REAL_HOME:-$HOME}
 CONFIG_FOLDER="$REAL_HOME/.local/share/cly"
@@ -26,6 +28,8 @@ ERROR=" X "
 NOTE=" * "
 CC="->"
 
+### Basic functions ###
+
 detback() {
     for b in yay paru; do
         command -v "$b" &>/dev/null && backend="$b" && return
@@ -46,7 +50,7 @@ load_lang() {
 load_lang
 
 logback() {
-    echo -e "${GREEN}${BOLD} $CC $M_USING_BACKEND $backend...${NC}"
+    st "$M_USING_BACKEND ${backend}..."
 }
 
 st() { echo -e "${BOLD}${GREEN} $CC ${NC}${1}"; }
@@ -79,6 +83,8 @@ load_modules
 [[ ! -w "$LOG_FILE" ]] && sudo chown "${SUDO_USER:-$USER}":"${SUDO_USER:-$USER}" "$LOG_FILE" 2>/dev/null
 [[ -z "$1" ]] && help_message
 
+### Execution variables ###
+
 only_flatpak=0
 final_args=()
 back_flags=()
@@ -93,6 +99,8 @@ func=""
 flat=0
 mlog=1
 
+### Functions reload ###
+
 log_rotate
 detback
 load_lang
@@ -100,11 +108,14 @@ load_lang
 [[ "$backend" == "pacman" && "$EUID" -ne 0 ]] && err "$E_07"
 [[ "$backend" != "pacman" && "$EUID" -eq 0 ]] && err "$E_05"
 
+### Flags testing ###
+
 while [[ $# -gt 0 ]]; do
     case "$1" in
         updater|doctor|ra|--create-snapshot|dp|why|--ignore|pin|statsb|--pacdiff|--ping|--create-backup|--restore-backup|install|-i|remove|-r|update|-u|search|-s|query|-q|cache|-c|orphan|-o|mirrors|-m|slog|-cl|-sl|--fix-keys|--check-updates)
             [[ -z "$action" ]] && action="$1" || final_args+=("$1")
         ;;
+        --testing)                 MODULES_FOLDER="./modules"; modules_test=1; load_modules ;;
         mksnap|--create-snapshot)  do_snap="1" ;;
         --list-aur|-ls-aur)        lsaur=1 ;;
         -fo|--flatpak-only)        only_flatpak=1 ;;
@@ -112,7 +123,6 @@ while [[ $# -gt 0 ]]; do
         -nc|--noconfirm)           back_flags+=("--noconfirm") ;;
         -v|--version)              dpver; exit 0 ;;
         -f|--flatpak)              flat=1 ;;
-        --testing)                 MODULES_FOLDER="./modules"; modules_test=1; load_modules ;;
         --backend)                 shift; if [[ "$1" == "yay" || "$1" == "paru" ]]; then backend="$1"; else err "$E_04"; fi ;;
         --dry-run)                 dry_run=1 ;;
         -h|--help)                 help_message ;;
@@ -169,6 +179,8 @@ case "$action" in
 esac
 
 [[ "$tag" == "SKIP" ]] && exit 0
+
+### Execution ###
 
 if [[ "$dry_run" == "1" ]]; then
     echo -e "\n${YELLOW}$M_DRY_RUN_SIM${NC}"

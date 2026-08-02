@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+### Cache manager ###
+
 chmgr() {
     log_type="1" && mklog "-Sc" "clean-cache"
     local cache_dir="$REAL_HOME/.cache/$backend"
@@ -20,6 +22,8 @@ chmgr() {
     tag="Wiped cache"
 }
 
+### Orphans remover ###
+
 rmorps() {
     log_type="1" && mklog "-Qtqd" "remove-orphans"
     st "$M_ORPHANS_SEARCHING"
@@ -32,6 +36,8 @@ rmorps() {
     cmd="-Rsn"
     tag="REMOVED ORPHANS"
 }
+
+### Pacdiff/pacnew manager ###
 
 ckconf() {
     log_type="1" && mklog "pacnews" "conf-merge" "0"

@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+### Log rotater ###
+
 log_rotate() {
     local max_size=500000
     local log_size
@@ -17,6 +19,8 @@ log_rotate() {
         sc "$M_ROTATED cly.log.1"
     fi
 }
+
+### Log manager ###
 
 mklog() {
     [[ "$mlog" == 0 ]] && return 0
@@ -59,6 +63,8 @@ mklog() {
     echo "[$date_str] $tag -> $cmd_str - flatpak = $used_flat - Exit Status $status" >> "$LOG_FILE"
     echo " " >> "$LOG_FILE"
 }
+
+### Log functions ###
 
 proc_log_func() {
     case "$log_func" in

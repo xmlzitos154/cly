@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+### Timeshift Snapshot ###
+
 mksnap() {
     log_type="1" && mklog "timeshift" "System snapshot" "0"
     st "$M_SNAP_CHECK"
@@ -14,6 +16,8 @@ mksnap() {
         echo -e "${YELLOW} $NOTE $M_SNAP_NOT_FOUND${NC}"
     fi
 }
+
+### Ignorepkg toggler ###
 
 pin() {
     log_type="1" && mklog "pin" "pin a package" "0"
@@ -46,6 +50,8 @@ pin() {
     fi
 }
 
+### Dependencies check ###
+
 depends() {
     log_type="1" && mklog "pactree" "Check for dependencies" "0"
     ! command -v pactree &>/dev/null && { st "$M_INSTALL_CONTRIB pacman-contrib..."; "$backend" -S pacman-contrib --noconfirm; }
@@ -72,6 +78,8 @@ depends() {
     echo "  cly -r $pkgs"
     mklog "WHY" "$pkg"
 }
+
+### Cly and AUR/pacman Status ###
 
 show_stats() {
     st "$M_STATS_GATHERING"
@@ -106,6 +114,8 @@ show_stats() {
     tag="STATS"
 }
 
+### PKGBUILD Viewer ###
+
 view_pkgbuild() {
     log_type="1" && mklog "-Gp" "View PKGBUILD file"
     [[ "$backend" == "pacman" ]] && err "$E_08"
@@ -123,6 +133,8 @@ view_pkgbuild() {
         error "$M_PKGB_NOT_FOUND '$pkg'. $M_PKGB_AUR_QUESTION"
     fi
 }
+
+### Refresh Mirrors ###
 
 refresh_mirrors() {
     ntest
@@ -160,6 +172,8 @@ refresh_mirrors() {
     fi
 }
 
+### GPG keys fixer ###
+
 fix_keys() {
     log_type="1" && mklog "gpg" "Recovery gpg keys"
     st "$M_GPG_START"
@@ -179,6 +193,8 @@ fix_keys() {
     sudo pacman-key --populate archlinux
     sc "$M_DONE"
 }
+
+### Backup manager ###
 
 backup_func() {
     log_type="1" && mklog "backup" "Create / restore backups" "0"
@@ -225,6 +241,8 @@ backup_func() {
     esac
 }
 
+### Update checker ###
+
 check_updates() {
     ntest
     log_type="1" && mklog "-Qua" "Search for updates"
@@ -242,8 +260,8 @@ check_updates() {
     fi
     ! command -v checkupdates &>/dev/null && { st "$M_INSTALL_DEPS"; "$backend" -S pacman-contrib --noconfirm; }
     st "$M_SEARCHING_UPDATES"
-    local tmp_repo=$(mktemp)
-    local tmp_aur=$(mktemp)
+    local tmp_repo; tmp_repo=$(mktemp)
+    local tmp_aur; tmp_aur=$(mktemp)
     checkupdates > "$tmp_repo" 2>/dev/null &
     local pid_repo=$!
     local pid_aur=""
@@ -283,6 +301,8 @@ check_updates() {
     mklog "FOUND UPDATES" "$total updates (Flatpak: $flat)"
 }
 
+### Package binary finder ###
+
 get_package_path() {
     log_type="1" && mklog "-Ql" "get package path"
     local pkg="$1"
@@ -293,6 +313,8 @@ get_package_path() {
         st "No binaries found in $pkg"
     fi
 }
+
+### Doctor function ###
 
 doctor() {
     local issues=0
@@ -381,6 +403,8 @@ doctor() {
     tag="DOCTOR"
     mklog "DOCTOR" "system check - $issues issues"
 }
+
+### Cly updater ###
 
 cly_updater() {
     ntest
