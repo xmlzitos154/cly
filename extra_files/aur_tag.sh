@@ -5,4 +5,4 @@
 
 # upload date:    2026-08-2
 # init version:   v7.5.4-2
-# actual version: v7.5.6-1
+# actual version: v7.5.7-1

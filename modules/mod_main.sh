@@ -2,7 +2,7 @@
 
 ## CLY - A Semantic AUR Helper wrapper written in bash
 
-ver="7.5.6"; rc="release-1"
+ver="7.5.7"; rc="release-1"
 
 set -o pipefail
 
@@ -112,7 +112,7 @@ load_lang
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        updater|doctor|ra|--create-snapshot|dp|why|--ignore|pin|statsb|--pacdiff|--ping|--create-backup|--restore-backup|install|-i|remove|-r|update|-u|search|-s|query|-q|cache|-c|orphan|-o|mirrors|-m|slog|-cl|-sl|--fix-keys|--check-updates)
+        updater|doctor|ra|--create-snapshot|dp|why|--ignore|pin|statsb|--pacdiff|--ping|--create-backup|--restore-backup|install|-i|remove|-r|update|-u|search|-s|query|-q|cache|-c|orphan|-o|mirrors|-m|slog|-cl|-sl|--fix-keys|--check-updates|--check-infected)
             [[ -z "$action" ]] && action="$1" || final_args+=("$1")
         ;;
         --testing)                 MODULES_FOLDER="./modules"; modules_test=1; load_modules ;;
@@ -151,31 +151,32 @@ fi
 [[ "$only_flatpak" == "1" ]] && flatpak_only
 
 case "$action" in
-    -Rsn|-ra|--remove-agressive|ra)    logback; agrmode=1; func="r"; proc_func ;;
-    --check-upds|--check-updates)      logback; check_updates ;;
-    mksnap|--create-snapshot)          mksnap; exit 0 ;;
-    -Syu|-up|upd|update|-u)            logback; func="u"; proc_func ;;
-    -S|-in|ins|install|-i)             logback; func="i"; proc_func ;;
-    --clear-logs|clog|-cl)             log_func="cl"; proc_log_func ;;
-    -Ss|-sr|src|search|-s)             logback; func="s"; proc_func ;;
-    --stats|--statistics)              show_stats ;;
-    --show-logs|slog|-sl)              log_func="sl"; proc_log_func ;;
-    -rb|--restore-backup)              backup_action="restore"; backup_func ;;
-    -R|rem|remove|-r|-rm)              logback; func="r"; proc_func ;;
-    -Q|-qr|qur|query|-q)               logback; func="q"; proc_func ;;
-    -cb|--create-backup)               backup_action="create"; backup_func ;;
-    -mr|mir|mirrors|-m)                refresh_mirrors ;;
-    -op|orp|orphan|-o)                 logback; rmorps ;;
-    -cc|cac|cache|-c)                  logback; chmgr ;;
-    pin|--ignore)                      pin ;;
-    depends|why)                       depends ;;
-    --fix-keys)                        fix_keys ;;
-    -vi|--view)                        logback; view_pkgbuild "${final_args[0]}"; exit 0 ;;
-    --pacdiff)                         logback; ckconf ;;
-    updater)                           cly_updater ;;
-    doctor)                            doctor ;;
-    --ping)                            ntest; exit 0 ;;
-    *)                                 err "$E_01 '$action'" ;;
+    --check-infected|aur-scanner|--aur-scanner) aur_scanner ;;
+    -Rsn|-ra|--remove-agressive|ra)             logback; agrmode=1; func="r"; proc_func ;;
+    --check-upds|--check-updates)               logback; check_updates ;;
+    mksnap|--create-snapshot)                   mksnap; exit 0 ;;
+    -Syu|-up|upd|update|-u)                     logback; func="u"; proc_func ;;
+    -S|-in|ins|install|-i)                      logback; func="i"; proc_func ;;
+    --clear-logs|clog|-cl)                      log_func="cl"; proc_log_func ;;
+    -Ss|-sr|src|search|-s)                      logback; func="s"; proc_func ;;
+    --stats|--statistics)                       show_stats ;;
+    --show-logs|slog|-sl)                       log_func="sl"; proc_log_func ;;
+    -rb|--restore-backup)                       backup_action="restore"; backup_func ;;
+    -R|rem|remove|-r|-rm)                       logback; func="r"; proc_func ;;
+    -Q|-qr|qur|query|-q)                        logback; func="q"; proc_func ;;
+    -cb|--create-backup)                        backup_action="create"; backup_func ;;
+    -mr|mir|mirrors|-m)                         refresh_mirrors ;;
+    -op|orp|orphan|-o)                          logback; rmorps ;;
+    -cc|cac|cache|-c)                           logback; chmgr ;;
+    pin|--ignore)                               pin ;;
+    depends|why)                                depends ;;
+    --fix-keys)                                 fix_keys ;;
+    -vi|--view)                                 logback; view_pkgbuild "${final_args[0]}"; exit 0 ;;
+    --pacdiff)                                  logback; ckconf ;;
+    updater)                                    cly_updater ;;
+    doctor)                                     doctor ;;
+    --ping)                                     ntest; exit 0 ;;
+    *)                                          err "$E_01 '$action'" ;;
 esac
 
 [[ "$tag" == "SKIP" ]] && exit 0

@@ -38,12 +38,13 @@ installer() {
     success "Binary installed."
     
     step "Installing languages modules..."
-    if [[ ! -f "$SCRIPT_DIR/languages/lang_mod_en.sh" || ! -f "$SCRIPT_DIR/languages/lang_mod_pt.sh" ]]; then
+    if [[ ! -f "$SCRIPT_DIR/languages/lang_mod_en.sh" || ! -f "$SCRIPT_DIR/languages/lang_mod_pt.sh" || ! -f "$SCRIPT_DIR/languages/lang_mod_es.sh" ]]; then
         echo "Can't find one or more language modules."
         exit 1
     fi
     install -Dm644 "$SCRIPT_DIR/languages/lang_mod_en.sh" "$MODULE_PATH/languages/lang_mod_en.sh"
     install -Dm644 "$SCRIPT_DIR/languages/lang_mod_pt.sh" "$MODULE_PATH/languages/lang_mod_pt.sh"
+    install -Dm644 "$SCRIPT_DIR/languages/lang_mod_es.sh" "$MODULE_PATH/languages/lang_mod_es.sh"
     success "Language modules installed."
     step "Installing function modules..."
     if [[ ! -f "$SCRIPT_DIR/modules/mod_01.sh" ||  ! -f "$SCRIPT_DIR/modules/mod_02.sh" || ! -f "$SCRIPT_DIR/modules/mod_03.sh" || ! -f "$SCRIPT_DIR/modules/mod_04.sh" || ! -f "$SCRIPT_DIR/modules/mod_05.sh" ]]; then

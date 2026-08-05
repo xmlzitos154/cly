@@ -84,12 +84,12 @@ inform() {
     local version_padded
     printf -v version_padded "v%-6s" "$ver"
     
-echo -e "${CYAN}${BOLD}         __      "     
-echo -e "${CYAN}${BOLD}   _____/ / _  __ "
-echo -e "${CYAN}${BOLD}  / ___/ // / / / "
-echo -e "${CYAN}${BOLD} / /__/ // /_/ /  "
-echo -e "${CYAN}${BOLD} \___/___\__, /   "
-echo -e "${CYAN}${BOLD} ${version_padded}/____/    "
+    echo -e "${CYAN}${BOLD}         __"
+    echo -e "${CYAN}${BOLD}   _____/ /__  __"
+    echo -e "${CYAN}${BOLD}  / ___/ // / / /"
+    echo -e "${CYAN}${BOLD} / /__/ // /_/ /"
+    echo -e "${CYAN}${BOLD} \___/___\__, /"
+    echo -e "${CYAN}${BOLD} ${version_padded}/____/"
     echo -e "\n ${YELLOW}$M_RELEASE ${CYAN}$rc\n ${YELLOW}$M_MADE_BY ${CYAN}xml.dev\n${GREEN} $M_THANKS\n ${NC}"
     exit 0
 }
