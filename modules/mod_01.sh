@@ -2,7 +2,7 @@
 
 ### Network tester ###
 
-ntest() {
+network_test() {
     st "$M_NET_TEST"
     ping -c 2 -i 0.5 aur.archlinux.org &>/dev/null &
     local pid=$!
@@ -29,7 +29,7 @@ proc_func() {
     tag="$action"
     case "$func" in
         i)
-            ntest
+            network_test
             cmd="-S"
             flat_cmd="install"
             tag="install"
@@ -45,7 +45,7 @@ proc_func() {
             log_type="1" && mklog $action $tag_cmd
         ;;
         u)
-            ntest
+            network_test
             [[ "$do_snap" == "1" ]] && mksnap
             cmd="-Syu"
             flat_cmd="update"
@@ -54,7 +54,7 @@ proc_func() {
             log_type="1" && mklog $action $tag_cmd
         ;;
         s)
-            ntest
+            network_test
             cmd="-Ss"
             flat_cmd="search"
             tag="search"

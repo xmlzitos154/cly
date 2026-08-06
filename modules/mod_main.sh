@@ -2,7 +2,7 @@
 
 ## CLY - A Semantic AUR Helper wrapper written in bash
 
-ver="7.5.7"; rc="release-1"
+ver="7.5.7"; rc="release-2"
 
 set -o pipefail
 
@@ -151,7 +151,7 @@ fi
 [[ "$only_flatpak" == "1" ]] && flatpak_only
 
 case "$action" in
-    --check-infected|aur-scanner|--aur-scanner) aur_scanner ;;
+    --malware-check|--check-infected|aur-scanner|--aur-scanner) aur_scanner ;;
     -Rsn|-ra|--remove-agressive|ra)             logback; agrmode=1; func="r"; proc_func ;;
     --check-upds|--check-updates)               logback; check_updates ;;
     mksnap|--create-snapshot)                   mksnap; exit 0 ;;
@@ -168,14 +168,14 @@ case "$action" in
     -mr|mir|mirrors|-m)                         refresh_mirrors ;;
     -op|orp|orphan|-o)                          logback; rmorps ;;
     -cc|cac|cache|-c)                           logback; chmgr ;;
-    pin|--ignore)                               pin ;;
+    pin|--ignore)                               package_pinner ;;
     depends|why)                                depends ;;
     --fix-keys)                                 fix_keys ;;
     -vi|--view)                                 logback; view_pkgbuild "${final_args[0]}"; exit 0 ;;
     --pacdiff)                                  logback; ckconf ;;
     updater)                                    cly_updater ;;
     doctor)                                     doctor ;;
-    --ping)                                     ntest; exit 0 ;;
+    --ping)                                     network_test; exit 0 ;;
     *)                                          err "$E_01 '$action'" ;;
 esac
 

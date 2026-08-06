@@ -17,9 +17,9 @@ mksnap() {
     fi
 }
 
-### Ignorepkg toggler ###
+### Ignorepkg manager ###
 
-pin() {
+package_pinner() {
     log_type="1" && mklog "pin" "pin a package" "0"
     local pkg="${final_args[0]}"
     local conf="/etc/pacman.conf"
@@ -137,7 +137,7 @@ view_pkgbuild() {
 ### Refresh Mirrors ###
 
 refresh_mirrors() {
-    ntest
+    network_test
     log_type="1" && mklog "reflector" "Refresh mirrors"
     st "$M_MIRROR_START"
     if ! command -v reflector &>/dev/null; then
@@ -244,7 +244,7 @@ backup_func() {
 ### Update checker ###
 
 check_updates() {
-    ntest
+    network_test
     log_type="1" && mklog "-Qua" "Search for updates"
     [[ "$backend" == "pacman" ]] && return 0
     if [[ -f "$MODULES_FOLDER/aur_tag.sh" ]]; then
@@ -407,7 +407,7 @@ doctor() {
 ### Cly updater ###
 
 cly_updater() {
-    ntest
+    network_test
     if [[ -f "$MODULES_FOLDER/aur_tag.sh" ]]; then
         echo -e "${CC} ${M_UPDATING_CLY}..."
         if $backend -Qi cly &>/dev/null; then
