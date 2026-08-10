@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+### CLY Configuration file ###
+
+## NOTE: This is an bash script file, so follow the default syntax so you don't get errors.
+
+# Show command colors (true/false)
+def "SHOW_COLORS"             "true"       ## Default: true
+
+# Maximum log file size (in KB)
+def "MAX_LOG_SIZE"            "512000"     ## Default: 512000
+
+# Toggle logging function (true/false)
+def "ENABLE_LOGGING"          "true"       ## Default: true
+
+# Toggle if the program always use --noconfirm flag (true/false)
+def "ALWAYS_USE_NOCONFIRM"    "false"      ## Default: false
+
+# Auto timeshift snapshot on update command (true/false)
+def "AUTO_SNAPSHOT_ON_UPDATE" "false"      ## Default: false
+
+# Toggle network testing before commands that need network (true/false)
+def "NETWORK_TESTING"         "true"       ## Default: true
+
+# set default backend (yay or paru), for automatic backend detection use "auto" (auto/yay/paru/pacman)
+def "DEFAULT_BACKEND"         "auto"       ## Default: auto
+
+# Run malware check before packages installation (true/false)
+def "MALWARE_CHECK"           "true"       ## Default: true

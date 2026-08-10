@@ -2,47 +2,147 @@
 
 ## CLY - A Semantic AUR Helper wrapper written in bash
 
-ver="7.5.7"; rc="release-2"
+ver="7.5.8"
+rc="pre_release-1"
 
 set -o pipefail
 
 ### Essential variables ###
 
 REAL_HOME=$(getent passwd "${SUDO_USER:-$USER}" 2>/dev/null | cut -d: -f6); REAL_HOME=${REAL_HOME:-$HOME}
-CONFIG_FOLDER="$REAL_HOME/.local/share/cly"
+LOCAL_FOLDER="$REAL_HOME/.local/share/cly"
 LOG_FILE="$REAL_HOME/.cache/cly.log"
-BACKUP_DIR="$CONFIG_FOLDER/backup"
+CONFIG_FOLDER="$REAL_HOME/.config/cly"
+BACKUP_DIR="$LOCAL_FOLDER/backup"
 BACKUP_FILE="$BACKUP_DIR/backup.txt"
 MODULES_FOLDER="/usr/share/cly"
 
-YELLOW='\033[1;33m'
-GREEN='\033[0;32m'
-CYAN='\033[0;36m'
-RED='\033[0;31m'
-BOLD='\033[1m'
-NC='\033[0m'
+### Config file functios ###
 
-COMPLETE=" ✓ "
-ALERT=" ! "
-ERROR=" X "
-NOTE=" * "
+def() {
+    local param="$1"
+    local value="$2"
+    case "$param" in
+        "SHOW_COLORS")
+            case "$value" in
+                true)  SHOW_COLORS="1" ;;
+                false) SHOW_COLORS="0" ;;
+                *)     SHOW_COLORS="1" ;;
+            esac
+        ;;
+        "MAX_LOG_SIZE")
+            if (( value <= 100 )); then
+                echo "Error in config file: MAX_LOG_SIZE value is too small"
+                exit 1
+                elif (( value <= 1000000 )); then
+                MAX_LOG_SIZE="$value"
+                elif (( value > 100000 )); then
+                MAX_LOG_SIZE="infinite"
+            fi
+            
+        ;;
+        "ALWAYS_USE_NOCONFIRM")
+            always_no_confirm="false"
+            case "$value" in
+                true)  always_no_confirm="true"  ;;
+                false) always_no_confirm="false" ;;
+                *)     always_no_confirm="false" ;;
+            esac
+        ;;
+        "ENABLE_LOGGING")
+            case "$value" in
+                true)   LOGGING="true"  ;;
+                false)  LOGGING="false" ;;
+                *)      LOGGING="true"  ;;
+            esac
+        ;;
+        "AUTO_SNAPSHOT_ON_UPDATE")
+            case "$value" in
+                true)  AUTO_SNAPSHOT="true"  ;;
+                false) AUTO_SNAPSHOT="false" ;;
+                *)     AUTO_SNAPSHOT="true"  ;;
+            esac
+        ;;
+        "NETWORK_TESTING")
+            case "$value" in
+                true)  NETWORK_TEST="true"  ;;
+                false) NETWORK_TEST="false" ;;
+                *)     NETWORK_TEST="true"  ;;
+            esac
+        ;;
+        "DEFAULT_BACKEND")
+            case "$value" in
+                yay)    DEFAULT_BACKEND="yay"     ;;
+                paru)   DEFAULT_BACKEND="paru"    ;;
+                pacman) DEFAULT_BACKEND="pacman"  ;; ## Why would you do this?
+                auto)   DEFAULT_BACKEND="auto"    ;;
+                *)      DEFAULT_BACKEND="auto"    ;;
+            esac
+        ;;
+        "MALWARE_CHECK")
+            case "$value" in
+                true)  MALWARE_CHECK="true"  ;;
+                false) MALWARE_CHECK="false" ;;
+                *)     MALWARE_CHECK="true"  ;;
+            esac
+        ;;
+    esac
+}
+
+### Config loader ###
+
+load_config() {
+    [[ ! -f "$CONFIG_FOLDER/config" ]] && echo "Error: Config file not found." && exit 1
+    source "$CONFIG_FOLDER/config"
+}
+
+load_config
+
+### Variables ###
+
+if [[ $SHOW_COLORS == "1" ]]; then
+    NC='\033[0m'
+    RED='\033[0;31m'
+    BOLD='\033[1m'
+    CYAN='\033[0;36m'
+    GREEN='\033[0;32m'
+    YELLOW='\033[1;33m'
+else
+    NC=''
+    RED=''
+    BOLD=''
+    CYAN=''
+    GREEN=''
+    YELLOW=''
+fi
+
 CC="->"
+NOTE="[*] "
+ERROR="[X] "
+ALERT="[!] "
+COMPLETE="[✓] "
 
 ### Basic functions ###
 
 detback() {
-    for b in yay paru; do
-        command -v "$b" &>/dev/null && backend="$b" && return
-    done
-    backend="pacman"
+    if [[ "$DEFAULT_BACKEND" != "auto" ]]; then
+        command -v "$DEFAULT_BACKEND" &>/dev/null && backend="$DEFAULT_BACKEND"
+    else
+        for b in yay paru; do
+            command -v "$b" &>/dev/null && backend="$b" && return
+        done
+        backend="pacman"
+    fi
 }
 
 load_lang() {
     lang_code="${LANG:0:2}"
     [[ ! -f "$MODULES_FOLDER/languages/lang_mod_pt.sh" && "$lang_code" == "pt" ]] && echo -e "${RED} $ERROR${NC} Módulo do idioma 'lang_mod_pt.sh' não encontrado." && exit 1
+    [[ ! -f "$MODULES_FOLDER/languages/lang_mod_es.sh" && "$lang_code" == "es" ]] && echo -e "${RED} $ERROR${NC} Módulo de idioma 'lang_mod_es.sh' no encontrado." && exit 1
     [[ ! -f "$MODULES_FOLDER/languages/lang_mod_en.sh" && "$lang_code" == "en" ]] && echo -e "${RED} $ERROR${NC} Language module 'lang_mod_en.sh' not found." && exit 1
     case "$lang_code" in
         pt) source "$MODULES_FOLDER/languages/lang_mod_pt.sh" ;;
+        es) source "$MODULES_FOLDER/languages/lang_mod_es.sh" ;;
         *)  source "$MODULES_FOLDER/languages/lang_mod_en.sh" ;;
     esac
 }
@@ -85,25 +185,23 @@ load_modules
 
 ### Execution variables ###
 
-only_flatpak=0
-final_args=()
-back_flags=()
-log_lines=""
-raw_cmd="$*"
+mlog=1
+flat=0
+func=""
+lsaur=0
+ptbin=0
 agrmode=0
 dry_run=0
 do_snap=0
-ptbin=0
-lsaur=0
-func=""
-flat=0
-mlog=1
+raw_cmd="$*"
+log_lines=""
+back_flags=()
+final_args=()
+only_flatpak=0
 
 ### Functions reload ###
 
-log_rotate
-detback
-load_lang
+log_rotate; detback; load_lang
 
 [[ "$backend" == "pacman" && "$EUID" -ne 0 ]] && err "$E_07"
 [[ "$backend" != "pacman" && "$EUID" -eq 0 ]] && err "$E_05"
@@ -112,23 +210,23 @@ load_lang
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        updater|doctor|ra|--create-snapshot|dp|why|--ignore|pin|statsb|--pacdiff|--ping|--create-backup|--restore-backup|install|-i|remove|-r|update|-u|search|-s|query|-q|cache|-c|orphan|-o|mirrors|-m|slog|-cl|-sl|--fix-keys|--check-updates|--check-infected)
+        --edit-config|updater|doctor|ra|--create-snapshot|dp|why|--ignore|pin|statsb|--pacdiff|--ping|--create-backup|--restore-backup|install|-i|remove|-r|update|-u|search|-s|query|-q|cache|-c|orphan|-o|mirrors|-m|slog|-cl|-sl|--fix-keys|--check-updates|--check-infected)
             [[ -z "$action" ]] && action="$1" || final_args+=("$1")
         ;;
         --testing)                 MODULES_FOLDER="./modules"; modules_test=1; load_modules ;;
+        --debug)                   set -x ;;
+        --dry-run)                 dry_run=1 ;;
         mksnap|--create-snapshot)  do_snap="1" ;;
         --list-aur|-ls-aur)        lsaur=1 ;;
         -fo|--flatpak-only)        only_flatpak=1 ;;
         --path-to-binary)          ptbin=1 ;;
         -nc|--noconfirm)           back_flags+=("--noconfirm") ;;
-        -v|--version)              dpver; exit 0 ;;
+        -v|--version)              display_version; exit 0 ;;
         -f|--flatpak)              flat=1 ;;
         --backend)                 shift; if [[ "$1" == "yay" || "$1" == "paru" ]]; then backend="$1"; else err "$E_04"; fi ;;
-        --dry-run)                 dry_run=1 ;;
         -h|--help)                 help_message ;;
         --no-log)                  mlog=0 ;;
         --lines)                   shift; log_lines="$1" ;;
-        --debug)                   set -x ;;
         --view)                    [[ -z "$action" ]] && action="--view" || final_args+=("$1") ;;
         --path)                    shift; [[ -z "$1" ]] && error "--path requires a file path argument"; custom_path="$1" ;;
         --info)                    inform; exit 0 ;;
@@ -151,6 +249,18 @@ fi
 [[ "$only_flatpak" == "1" ]] && flatpak_only
 
 case "$action" in
+    --edit-config)
+        if [[ -n "$EDITOR" ]]; then $EDITOR "$CONFIG_FOLDER/config";
+            elif command -v nano &>/dev/null; then nano "$CONFIG_FOLDER/config";
+            elif command -v vi &>/dev/null; then vi "$CONFIG_FOLDER/config";
+            elif command -v vim &>/dev/null; then vim "$CONFIG_FOLDER/config";
+            elif command -v micro &>/dev/null; then micro "$CONFIG_FOLDER/config";
+        else
+            error "$M_EDITOR_NOT_FOUND"
+            exit 1
+        fi
+        exit 0
+    ;;
     --malware-check|--check-infected|aur-scanner|--aur-scanner) aur_scanner ;;
     -Rsn|-ra|--remove-agressive|ra)             logback; agrmode=1; func="r"; proc_func ;;
     --check-upds|--check-updates)               logback; check_updates ;;
@@ -175,11 +285,12 @@ case "$action" in
     --pacdiff)                                  logback; ckconf ;;
     updater)                                    cly_updater ;;
     doctor)                                     doctor ;;
-    --ping)                                     network_test; exit 0 ;;
+    --ping)                                     ping_cmd="1"; network_test; exit 0 ;;
     *)                                          err "$E_01 '$action'" ;;
 esac
 
 [[ "$tag" == "SKIP" ]] && exit 0
+[[ "$always_no_confirm" == "true" ]] && back_flags+=("--noconfirm")
 
 ### Execution ###
 
@@ -200,7 +311,7 @@ case "$action" in
     *)
         if [[ -n "$cmd" ]]; then
             log_type="2" && mklog "Executing $backend $cmd ${final_args[@]} ${back_flags[@]}"
-            if [[ "$func" == "i" ]]; then
+            if [[ "$func" == "i" && "$MALWARE_CHECK" == "true" ]]; then
                 echo " $CC $M_SEARCH_INFECTED"
                 for pkg in "${final_args[@]}"; do
                     grep -Exi "$pkg" "$MODULES_FOLDER/infected_packages.txt" &>/dev/null && {

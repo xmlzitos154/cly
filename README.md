@@ -33,14 +33,14 @@ sudo pacman -S --needed git base-devel
 git clone https://github.com/xmlzitos154/cly.git
 cd cly
 chmod +x install.sh
-sudo ./install.sh
+./install.sh
 
 ```
 
 If you want to do all of this at once, we can chain the commands like so:
 
 ```bash
-sudo pacman -S --needed git base-devel && git clone https://github.com/xmlzitos154/cly.git && cd cly && chmod +x install.sh && sudo ./install.sh
+sudo pacman -S --needed git base-devel && git clone https://github.com/xmlzitos154/cly.git && cd cly && chmod +x install.sh && ./install.sh
 
 ```
 
@@ -96,11 +96,11 @@ cly [command] [options] [packages]
 | `cache`                     | `-c`    | Flush Pacman, Flatpak and AUR backend cache storage                                                         |
 | `mirrors`                   | `-m`    | Optimize and sort fastest mirrorlists via Reflector                                                         |
 | `why`, `dp`                 |         | Generate reverse dependency maps with suggested removal orders                                              |
-| `doctor`                  |         | Runs a system health check reporting issues with suggested fixes (kernel, cache, mirrors, network, orphans) |
+| `doctor`                    |         | Runs a system health check reporting issues with suggested fixes (kernel, cache, mirrors, network, orphans) |
 | `snap`, `--create-snapshot` |         | Instantly generate a system state checkpoint via Timeshift                                                  |
 | `pin`, `--ignore`           |         | Toggle specific package blocks during upgrade runs                                                          |
 | `stats`                     |         | View package disk usage, installation birth-date, and top 10 heaviest structures                            |
-| `--check-updates`           | `check` | Search and print pending available updates                                                                  |
+| `--check-updates`           |         | Search and print pending available updates                                                                  |
 | `--pacdiff`                 | `pd`    | Safely manage emergent `.pacnew` / `.pacsave` configurations                                                |
 | `--view`                    | `vi`    | Directly audit the PKGBUILD source file of AUR packages                                                     |
 | `--list-aur`                | `la`    | List exclusively all custom packages pulled from the AUR                                                    |
@@ -109,6 +109,7 @@ cly [command] [options] [packages]
 | `--no-log`                  |         | Don't log the executed command                                                                              |
 | `--create-backup`           | `cb`    | Backup local package maps complete with SHA256 integrity validation                                         |
 | `--restore-backup`          | `rb`    | Mass-reinstall packages structured within an active CLY backup list                                         |
+| `--aur-check`               |         | Search for AUR infected packages on your system                                                             |
 
 ### Power-User Options
 
@@ -194,7 +195,7 @@ cly --restore-backup --path ~/safe_state.txt # handles targets outside default e
 
 Distributed under the MIT License. Developed with <3 by xml.dev
 
-version: **7.5.7 - Release 2**
+version: **7.5.8 - Pre Release 1**
 
 > [!NOTE]
 > Due to recent attacks on the AUR repository, CLY will remain outdated (Version **7.5.5-2**) until the issue is fixed.

@@ -3,6 +3,7 @@
 ### Network tester ###
 
 network_test() {
+    [[ "$NETWORK_TEST" == "false" && "$ping_cmd" != "1" ]] && return 0
     st "$M_NET_TEST"
     ping -c 2 -i 0.5 aur.archlinux.org &>/dev/null &
     local pid=$!
@@ -44,8 +45,9 @@ proc_func() {
             tag_cmd="remove"
             log_type="1" && mklog $action $tag_cmd
         ;;
-        u)
+        u)            
             network_test
+            [[ "$AUTO_SNAPSHOT" == "true" ]] && mksnap  
             [[ "$do_snap" == "1" ]] && mksnap
             cmd="-Syu"
             flat_cmd="update"
@@ -76,21 +78,27 @@ proc_func() {
     esac
 }
 
-### Cly info ###
+### CLY info functions ###
 
-dpver() { echo "cly $ver - release: $rc"; }
+display_version() { echo "cly $ver - release: $rc"; }
 
 inform() {
     local version_padded
-    printf -v version_padded "v%-6s" "$ver"
-    
-    echo -e "${CYAN}${BOLD}         __"
-    echo -e "${CYAN}${BOLD}   _____/ /__  __"
-    echo -e "${CYAN}${BOLD}  / ___/ // / / /"
-    echo -e "${CYAN}${BOLD} / /__/ // /_/ /"
-    echo -e "${CYAN}${BOLD} \___/___\__, /"
-    echo -e "${CYAN}${BOLD} ${version_padded}/____/"
-    echo -e "\n ${YELLOW}$M_RELEASE ${CYAN}$rc\n ${YELLOW}$M_MADE_BY ${CYAN}xml.dev\n${GREEN} $M_THANKS\n ${NC}"
+    printf -v version_padded "v%-14s" "$ver"
+echo -e "${CYAN}${BOLD}       _..._                         "
+echo -e "${CYAN}${BOLD}    .-'_..._''. .---.                "
+echo -e "${CYAN}${BOLD}  .' .'      '.\|   |                "
+echo -e "${CYAN}${BOLD} / .'           |   |.-.          .- "
+echo -e "${CYAN}${BOLD}. '             |   | \ \        / / "
+echo -e "${CYAN}${BOLD}| |             |   |  \ \      / /  "
+echo -e "${CYAN}${BOLD}| |             |   |   \ \    / /   "
+echo -e "${CYAN}${BOLD}. '             |   |    \ \  / /    "
+echo -e "${CYAN}${BOLD} \ '.          .|   |     \ '' /     "
+echo -e "${CYAN}${BOLD}  '. '._____.-'/|   |      \  /      "
+echo -e "${CYAN}${BOLD}    '-.______./ '---'      / /       "
+echo -e "${CYAN}${BOLD}                       |'-' /        "
+echo -e "${CYAN}${BOLD}$version_padded         '..'         "
+    echo -e "\n ${YELLOW}$M_RELEASE ${CYAN}$rc\n ${YELLOW}$M_MADE_BY  ${CYAN}xml.dev\n\n${GREEN} $M_THANKS\n ${NC}"
     exit 0
 }
 
@@ -131,7 +139,9 @@ help_message() {
     echo "--dry-run                $H_DRY"
     echo "--statistics, stats      $H_STATS"
     echo "--flatpak-only           $H_FLAT_ONLY"
-    echo -e "--backend             $H_BACKEND\n"
-    dpver
+    echo "--edit-config            $H_EDITOR"
+    echo "--backend                $H_BACKEND"
+    echo ""
+    display_version
     exit 0
 }

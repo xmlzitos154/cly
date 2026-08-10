@@ -3,7 +3,8 @@
 ### Log rotater ###
 
 log_rotate() {
-    local max_size=500000
+    [[ "$MAX_LOG_SIZE" == "infinite" ]] && return 0
+    local max_size="$MAX_LOG_SIZE"
     local log_size
     log_size=$(stat -c%s "$LOG_FILE" 2>/dev/null || echo 0)
     [[ "$log_size" -lt "$max_size" ]] && return
@@ -23,7 +24,7 @@ log_rotate() {
 ### Log manager ###
 
 mklog() {
-    [[ "$mlog" == 0 ]] && return 0
+    [[ "$mlog" == 0 || "$LOGGING" == "false" ]] && return 0
     printf -v date_str '%(%Y-%m-%d - %H:%M:%S)T' -1
     
     if [[ "$log_type" == "1" ]]; then

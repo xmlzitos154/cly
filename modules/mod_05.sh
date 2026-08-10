@@ -5,6 +5,7 @@
 chmgr() {
     log_type="1" && mklog "-Sc" "clean-cache"
     local cache_dir="$REAL_HOME/.cache/$backend"
+    [[ "$backend" == "pacman" ]] && cache_dir="/var/cache/pacman/pkg"
     if [[ -d "$cache_dir" ]]; then
         st "$M_CACHE_CLEANING_BUILDS"
         rm -rf "${cache_dir:?}"/*/
