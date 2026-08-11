@@ -92,7 +92,7 @@ def() {
 ### Config loader ###
 
 migrate_config() {
-    local missing; missing=$(comm -23 <(grep -oP '(?<=def ")[^"]+' "$MODULES_FOLDER/components/base_config" | sort) <(grep -oP '(?<=def ")[^"]+' "$CONFIG_FOLDER/config" | sort))
+    local missing; missing=$(comm -23 <(grep -oP '(?<=def ")[^"]+' "$MODULES_FOLDER/components/example_config" | sort) <(grep -oP '(?<=def ")[^"]+' "$CONFIG_FOLDER/config" | sort))
     if [[ -n "$missing" ]]; then
         cp "$CONFIG_FOLDER/config" "$CONFIG_FOLDER/config.bak"
         while IFS= read -r key; do
