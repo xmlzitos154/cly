@@ -98,7 +98,7 @@ echo -e "${CYAN}${BOLD}  '. '._____.-'/|   |      \  /      "
 echo -e "${CYAN}${BOLD}    '-.______./ '---'      / /       "
 echo -e "${CYAN}${BOLD}                       |'-' /        "
 echo -e "${CYAN}${BOLD}$version_padded         '..'         "
-    echo -e "\n ${YELLOW}$M_RELEASE ${CYAN}$rc\n ${YELLOW}$M_MADE_BY  ${CYAN}xml.dev\n\n${GREEN} $M_THANKS\n ${NC}"
+    echo -e "\n ${YELLOW}$M_RELEASE ${CYAN}$rc\n ${YELLOW}$M_MADE_BY ${CYAN}xml.dev $M_AND FreaK\n\n${GREEN} $M_THANKS\n ${NC}"
     exit 0
 }
 
