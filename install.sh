@@ -28,7 +28,7 @@ INSTALL_PATH="/usr/bin/$BIN_NAME"
 
 [[ $EUID -ne 0 ]] && { echo -e "${Y}::${NC} Soliciting root..."; exec sudo "$0" "$@"; }
 
-[[ -d "/usr/share/cly" ]] && rm -fr /usr/share/cly ## <- adding this for remove modules from the old directory path
+[[ -d "$MODULE_PATH" ]] && rm -fr "$MODULE_PATH" ## <- adding this for remove modules from the old directory path
 
 ### Functions ###
 
@@ -61,8 +61,8 @@ installer() {
         rm -fr "$CONFIG_FOLDER"
         exit 1
     fi
-    install -Dm 644 -o "$REAL_USER" -g "$REAL_USER" "$SCRIPT_DIR/components/base_config" "$CONFIG_FOLDER/config"
-    install -Dm644 "$SCRIPT_DIR/components/base_config" "$MODULE_PATH/example_config"
+    [[ ! -f "$CONFIG_FOLDER/config" ]] && install -Dm644 -o "$REAL_USER" -g "$REAL_USER" "$SCRIPT_DIR/components/base_config" "$CONFIG_FOLDER/config"
+    install -Dm644 "$SCRIPT_DIR/components/base_config" "$MODULE_PATH/components/example_config"
     success "Config file created."
     
     step "Installing function modules..."
@@ -82,7 +82,7 @@ installer() {
         echo "Can't find 'infected_packages.txt' file. (text file for AUR attack verification.)"
         exit 1
     fi
-    install -Dm644 "$SCRIPT_DIR/components/infected_packages.txt" "$MODULE_PATH/infected_packages.txt"
+    install -Dm644 "$SCRIPT_DIR/components/infected_packages.txt" "$MODULE_PATH/components/infected_packages.txt"
     success "AUR infected programs list installed."
     
     step "Adjusting permissions for $REAL_USER"
@@ -102,7 +102,7 @@ remover() {
     step "Removing binary..."
     rm -f "$INSTALL_PATH"
     success "Binary removed."
-
+    
     step "Removing logs..."
     find "$REAL_HOME/.cache" -maxdepth 1 -iname "*cly*" -delete
     success "logs removed."
@@ -111,8 +111,7 @@ remover() {
     rm -fr "$MODULE_PATH"
     success "modules removed."
     
-    [[ -d "$REAL_HOME/.local/share/cly" ]] && rm -fr "$REAL_HOME/.local/share/cly"
-    success "Config/backup removed."
+    [[ -d "$REAL_HOME/.local/share/cly" ]] && rm -fr "$REAL_HOME/.local/share/cly" && success "Config/backup removed."
     
     [[ -d "/usr/share/doc/cly" ]] && step "Removing README.md..." && rm -fr "/usr/share/doc/cly" && success "README.md Removed (why do you have this?)" # <-- if someones install cly with aur, and uninstall with this script for some reason.
     

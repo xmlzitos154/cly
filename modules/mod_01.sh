@@ -70,7 +70,7 @@ proc_func() {
             tag="list"
             tag_cmd="query"
             log_type="1" && mklog $action $tag_cmd
-            [[ "$ptbin" == 1 ]] && get_package_path "${final_args[@]}" && tag="SKIP" && return
+            [[ "$ptbin" == 1 ]] && get_package_path "${final_args[@]}"
         ;;
         *)
             err "var func not defined"
@@ -94,7 +94,7 @@ echo -e "${CYAN}${BOLD}| |             |   |  \ \      / /  "
 echo -e "${CYAN}${BOLD}| |             |   |   \ \    / /   "
 echo -e "${CYAN}${BOLD}. '             |   |    \ \  / /    "
 echo -e "${CYAN}${BOLD} \ '.          .|   |     \ '' /     "
-echo -e "${CYAN}${BOLD}  '. '._____.-'/|   |      \  /      "
+echo -e "${CYAN}${BOLD}  '. '._____.-'/|   \      \  /      "
 echo -e "${CYAN}${BOLD}    '-.______./ '---'      / /       "
 echo -e "${CYAN}${BOLD}                       |'-' /        "
 echo -e "${CYAN}${BOLD}$version_padded         '..'         "

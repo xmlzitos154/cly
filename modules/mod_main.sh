@@ -3,7 +3,7 @@
 ## CLY - A Semantic AUR Helper wrapper written in bash
 
 ver="7.5.8"
-rc="pre_release-2"
+rc="release-1"
 
 set -o pipefail
 
@@ -91,8 +91,21 @@ def() {
 
 ### Config loader ###
 
+migrate_config() {
+    local missing; missing=$(comm -23 <(grep -oP '(?<=def ")[^"]+' "$MODULES_FOLDER/components/base_config" | sort) <(grep -oP '(?<=def ")[^"]+' "$CONFIG_FOLDER/config" | sort))
+    if [[ -n "$missing" ]]; then
+        cp "$CONFIG_FOLDER/config" "$CONFIG_FOLDER/config.bak"
+        while IFS= read -r key; do
+            local line; line=$(grep "def \"$key\"" "$MODULES_FOLDER/components/base_config")
+            echo "$line" >> "$CONFIG_FOLDER/config"
+        done < <(echo "$missing")
+        echo -e "${YELLOW} $NOTE $M_CONFIG_MIGRATED${NC}"
+    fi
+}
+
 load_config() {
-    [[ ! -f "$CONFIG_FOLDER/config" ]] && echo "Error: Config file not found." && exit 1
+    [[ ! -f "$CONFIG_FOLDER/config" ]] && install -Dm644 -o "${SUDO_USER:-$USER}" -g "${SUDO_USER:-$USER}" "$MODULES_FOLDER/example_config" "$CONFIG_FOLDER/config"
+    migrate_config
     source "$CONFIG_FOLDER/config"
 }
 
@@ -221,7 +234,7 @@ while [[ $# -gt 0 ]]; do
         -fo|--flatpak-only)        only_flatpak=1 ;;
         --path-to-binary)          ptbin=1 ;;
         -nc|--noconfirm)           back_flags+=("--noconfirm") ;;
-        -v|--version)              display_version; exit 0 ;;
+        -v|--version)              inform; exit 0 ;;
         -f|--flatpak)              flat=1 ;;
         --backend)                 shift; if [[ "$1" == "yay" || "$1" == "paru" ]]; then backend="$1"; else err "$E_04"; fi ;;
         -h|--help)                 help_message ;;
@@ -235,6 +248,7 @@ while [[ $# -gt 0 ]]; do
     shift
 done
 
+[[ "$always_no_confirm" == "true" ]] && back_flags+=("--noconfirm")
 [[ -z "$action" && ${#final_args[@]} -gt 0 ]] && action="${final_args[0]}" && final_args=("${final_args[@]:1}")
 [[ "$action" =~ ^(-S|-in|ins|install|-i|-Rsn|-ra|--remove-agressive|ra|-R|rem|remove|-r|-rm)$ && ${#final_args[@]} -eq 0 ]] && error "$M_SPECIFY_PKG"
 ! command -v "$backend" &>/dev/null && load_lang && err "$E_03"
@@ -262,8 +276,8 @@ case "$action" in
         exit 0
     ;;
     --malware-check|--check-infected|aur-scanner|--aur-scanner) aur_scanner ;;
-    -Rsn|-ra|--remove-agressive|ra)             logback; agrmode=1; func="r"; proc_func ;;
-    --check-upds|--check-updates)               logback; check_updates ;;
+    -Rsn|-ra|--remove-agressive)                logback; agrmode=1; func="r"; proc_func ;;
+    check-upds|--check-updates)                 check_updates ;;
     mksnap|--create-snapshot)                   mksnap; exit 0 ;;
     -Syu|-up|upd|update|-u)                     logback; func="u"; proc_func ;;
     -S|-in|ins|install|-i)                      logback; func="i"; proc_func ;;
@@ -289,9 +303,6 @@ case "$action" in
     *)                                          err "$E_01 '$action'" ;;
 esac
 
-[[ "$tag" == "SKIP" ]] && exit 0
-[[ "$always_no_confirm" == "true" ]] && back_flags+=("--noconfirm")
-
 ### Execution ###
 
 if [[ "$dry_run" == "1" ]]; then
@@ -302,33 +313,24 @@ if [[ "$dry_run" == "1" ]]; then
     exit 0
 fi
 
-case "$action" in
-    search|-s)
-        "$backend" "$cmd" "${final_args[@]}" "${back_flags[@]}" 2>&1 | tee "$tmp_out"
-        exit_code=${PIPESTATUS[0]}
-        rflat
-    ;;
-    *)
-        if [[ -n "$cmd" ]]; then
-            log_type="2" && mklog "Executing $backend $cmd ${final_args[@]} ${back_flags[@]}"
-            if [[ "$func" == "i" && "$MALWARE_CHECK" == "true" ]]; then
-                echo " $CC $M_SEARCH_INFECTED"
-                for pkg in "${final_args[@]}"; do
-                    grep -Exi "$pkg" "$MODULES_FOLDER/infected_packages.txt" &>/dev/null && {
-                        echo -e "${YELLOW} $ALERT $M_INFECTED_PKG_FOUND: $pkg"
-                        exit 1
-                    }
-                done
-            fi
-            "$backend" "$cmd" "${final_args[@]}" "${back_flags[@]}" 2>&1 | tee "$tmp_out"
-            exit_code=${PIPESTATUS[0]}
-            rflat
-        fi
-    ;;
-esac
+if [[ -n "$cmd" ]]; then
+    [[ "$func" != "s" ]] && log_type="2" && mklog "Executing $backend $cmd ${final_args[@]} ${back_flags[@]}"
+    if [[ "$func" == "i" && "$MALWARE_CHECK" == "true" ]]; then
+        echo " $CC $M_SEARCH_INFECTED"
+        for pkg in "${final_args[@]}"; do
+            grep -Exi "$pkg" "$MODULES_FOLDER/infected_packages.txt" &>/dev/null && {
+                echo -e "${YELLOW} $ALERT $M_INFECTED_PKG_FOUND: $pkg"
+                exit 1
+            }
+        done
+    fi
+    "$backend" "$cmd" "${final_args[@]}" "${back_flags[@]}" 2>&1 | tee "$tmp_out"
+    exit_code=${PIPESTATUS[0]}
+    rflat
+fi
 
-if [[ "$exit_code" -eq 0 && -n "$tag" ]]; then
-    if grep -qiE "could not find|nenhum pacote|target not found" "$tmp_out"; then
+if [[ -n "$tag" ]]; then
+    if [[ "$exit_code" -ne 0 ]]; then
         mklog "NOT FOUND" "${raw_cmd}"
     else
         mklog "${tag:-SYSTEM}" "${raw_cmd}"

@@ -311,7 +311,9 @@ get_package_path() {
         echo -e "${GREEN}Binaries found:${NC}\n$bins"
     else
         st "No binaries found in $pkg"
+        exit 1
     fi
+    exit 0
 }
 
 ### Doctor function ###
