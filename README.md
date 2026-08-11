@@ -195,7 +195,7 @@ cly --restore-backup --path ~/safe_state.txt # handles targets outside default e
 
 Distributed under the MIT License. Developed with <3 by xml.dev
 
-version: **7.5.8 - Pre Release 1**
+version: **7.5.8 - Pre Release 2**
 
 > [!NOTE]
 > Due to recent attacks on the AUR repository, CLY will remain outdated (Version **7.5.5-2**) until the issue is fixed.

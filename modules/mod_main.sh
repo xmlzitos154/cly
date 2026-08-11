@@ -3,7 +3,7 @@
 ## CLY - A Semantic AUR Helper wrapper written in bash
 
 ver="7.5.8"
-rc="pre_release-1"
+rc="pre_release-2"
 
 set -o pipefail
 
