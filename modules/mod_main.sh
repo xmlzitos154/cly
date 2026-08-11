@@ -96,7 +96,7 @@ migrate_config() {
     if [[ -n "$missing" ]]; then
         cp "$CONFIG_FOLDER/config" "$CONFIG_FOLDER/config.bak"
         while IFS= read -r key; do
-            local line; line=$(grep "def \"$key\"" "$MODULES_FOLDER/components/base_config")
+            local line; line=$(grep "def \"$key\"" "$MODULES_FOLDER/components/example_config")
             echo "$line" >> "$CONFIG_FOLDER/config"
         done < <(echo "$missing")
         echo -e "${YELLOW} $NOTE $M_CONFIG_MIGRATED${NC}"
