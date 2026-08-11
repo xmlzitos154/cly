@@ -13,6 +13,8 @@ REAL_HOME=${REAL_HOME:-/home/$REAL_USER}
 SOURCE="$SCRIPT_DIR/modules/mod_main.sh"
 CONFIG_FOLDER="$REAL_HOME/.config/cly"
 
+[[ -d "/usr/share/cly" ]] && rm -fr /usr/share/cly ## <- adding this for remove modules from the old directory path
+
 binary_version=$(grep -oP '(?<=ver=")[^"]+' "$SCRIPT_DIR/modules/mod_main.sh")
 
 if [[ ! -f "$SOURCE" ]]; then
@@ -68,11 +70,11 @@ installer() {
         echo "Can't find one or more function modules."
         exit 1
     fi
-    install -Dm644 "$SCRIPT_DIR/modules/mod_01.sh" "$MODULE_PATH/mod_01.sh"
-    install -Dm644 "$SCRIPT_DIR/modules/mod_02.sh" "$MODULE_PATH/mod_02.sh"
-    install -Dm644 "$SCRIPT_DIR/modules/mod_03.sh" "$MODULE_PATH/mod_03.sh"
-    install -Dm644 "$SCRIPT_DIR/modules/mod_04.sh" "$MODULE_PATH/mod_04.sh"
-    install -Dm644 "$SCRIPT_DIR/modules/mod_05.sh" "$MODULE_PATH/mod_05.sh"
+    install -Dm644 "$SCRIPT_DIR/modules/mod_01.sh" "$MODULE_PATH/execution-modules/mod_01.sh"
+    install -Dm644 "$SCRIPT_DIR/modules/mod_02.sh" "$MODULE_PATH/execution-modules/mod_02.sh"
+    install -Dm644 "$SCRIPT_DIR/modules/mod_03.sh" "$MODULE_PATH/execution-modules/mod_03.sh"
+    install -Dm644 "$SCRIPT_DIR/modules/mod_04.sh" "$MODULE_PATH/execution-modules/mod_04.sh"
+    install -Dm644 "$SCRIPT_DIR/modules/mod_05.sh" "$MODULE_PATH/execution-modules/mod_05.sh"
     success "Function modules installed."
     
     step "Installing AUR infected programs list..."

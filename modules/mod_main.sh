@@ -165,7 +165,7 @@ load_modules() {
     [[ "$modules_test" == "1" ]] && echo -e "MODULES TEST: Modules Folder: $MODULES_FOLDER"
     local failed=()
     for mod in mod_01.sh mod_02.sh mod_03.sh mod_04.sh mod_05.sh; do
-        [[ ! -f "$MODULES_FOLDER/$mod" ]] && failed+=("$mod")
+        [[ ! -f "$MODULES_FOLDER/execution-modules/$mod" ]] && failed+=("$mod")
     done
     if [[ ${#failed[@]} -gt 0 ]]; then
         [[ "$lang_code" == "pt" ]] && echo -e "${RED} ${ERROR} ${NC}Módulos não encontrados: ${failed[*]}" || \
@@ -173,7 +173,7 @@ load_modules() {
         exit 1
     fi
     for mod in mod_01.sh mod_02.sh mod_03.sh mod_04.sh mod_05.sh; do
-        source "$MODULES_FOLDER/$mod"
+        source "$MODULES_FOLDER/execution-modules/$mod"
     done
 }
 
