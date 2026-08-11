@@ -13,8 +13,6 @@ REAL_HOME=${REAL_HOME:-/home/$REAL_USER}
 SOURCE="$SCRIPT_DIR/modules/mod_main.sh"
 CONFIG_FOLDER="$REAL_HOME/.config/cly"
 
-[[ -d "/usr/share/cly" ]] && rm -fr /usr/share/cly ## <- adding this for remove modules from the old directory path
-
 binary_version=$(grep -oP '(?<=ver=")[^"]+' "$SCRIPT_DIR/modules/mod_main.sh")
 
 if [[ ! -f "$SOURCE" ]]; then
@@ -29,6 +27,8 @@ MODULE_PATH="/usr/share/$BIN_NAME"
 INSTALL_PATH="/usr/bin/$BIN_NAME"
 
 [[ $EUID -ne 0 ]] && { echo -e "${Y}::${NC} Soliciting root..."; exec sudo "$0" "$@"; }
+
+[[ -d "/usr/share/cly" ]] && rm -fr /usr/share/cly ## <- adding this for remove modules from the old directory path
 
 ### Functions ###
 
