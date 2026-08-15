@@ -104,7 +104,7 @@ migrate_config() {
 }
 
 load_config() {
-    [[ ! -f "$CONFIG_FOLDER/config" ]] && install -Dm644 -o "${SUDO_USER:-$USER}" -g "${SUDO_USER:-$USER}" "$MODULES_FOLDER/example_config" "$CONFIG_FOLDER/config"
+    [[ ! -f "$CONFIG_FOLDER/config" ]] && install -Dm644 -o "${SUDO_USER:-$USER}" -g "${SUDO_USER:-$USER}" "$MODULES_FOLDER/base_config" "$CONFIG_FOLDER/config"
     migrate_config
     source "$CONFIG_FOLDER/config"
 }
