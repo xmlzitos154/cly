@@ -1,6 +1,6 @@
 [![Bash](https://img.shields.io/badge/Language-Bash-4EAA25?style=for-the-badge&logo=gnu-bash&logoColor=white)](https://www.gnu.org/software/bash/)
 [![Arch Linux](https://img.shields.io/badge/OS-Arch_Linux-1793D1?style=for-the-badge&logo=arch-linux&logoColor=white)](https://archlinux.org)
-[![cly](https://img.shields.io/badge/CLY-v7.5.5-1793D1?style=for-the-badge&logo=arch-linux&logoColor=white)](https://aur.archlinux.org/packages/cly)
+[![cly](https://img.shields.io/badge/CLY-v7.5.8-1793D1?style=for-the-badge&logo=arch-linux&logoColor=white)](https://aur.archlinux.org/packages/cly)
 
 # cly
 
@@ -196,6 +196,3 @@ cly --restore-backup --path ~/safe_state.txt # handles targets outside default e
 Distributed under the MIT License. Developed with <3 by xml.dev and FreaK
 
 version: **7.5.8 - Release 1**
-
-> [!NOTE]
-> Due to recent attacks on the AUR repository, CLY will remain outdated (Version **7.5.5-2**) until the issue is fixed.

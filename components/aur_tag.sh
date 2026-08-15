@@ -5,6 +5,4 @@
 # init version:   v7.5.4-2
 # latest version: v7.5.8-3
 
-### NOTE: Due to malware infection on AUR, CLY will remain outdated until the problem is fixed.
-
-# AUR latest version: v7.5.5-2
+# AUR latest version: v7.5.8-3
