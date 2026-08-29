@@ -1,6 +1,6 @@
 [![Bash](https://img.shields.io/badge/Language-Bash-4EAA25?style=for-the-badge&logo=gnu-bash&logoColor=white)](https://www.gnu.org/software/bash/)
 [![Arch Linux](https://img.shields.io/badge/OS-Arch_Linux-1793D1?style=for-the-badge&logo=arch-linux&logoColor=white)](https://archlinux.org)
-[![cly](https://img.shields.io/badge/CLY-v7.5.9-1793D1?style=for-the-badge&logo=arch-linux&logoColor=white)](https://aur.archlinux.org/packages/cly)
+[![cly](https://img.shields.io/badge/CLY-v7.6.0-1793D1?style=for-the-badge&logo=arch-linux&logoColor=white)](https://aur.archlinux.org/packages/cly)
 
 # cly
 
@@ -193,6 +193,6 @@ cly --restore-backup --path ~/safe_state.txt # handles targets outside default e
 
 ## License
 
-Distributed under the MIT License. Developed with <3 by xml.dev and FreaK
+Distributed under the MIT License. Developed with love by xml.dev with support of FreaK
 
-version: **7.5.9 - Release 1**
+version: **7.6.0 - Release 1**

@@ -2,7 +2,7 @@
 
 ## CLY - A Semantic AUR Helper wrapper written in bash
 
-ver="7.5.9"
+ver="7.6.0"
 rc="release-1"
 
 set -o pipefail
@@ -226,24 +226,23 @@ while [[ $# -gt 0 ]]; do
         --edit-config|updater|doctor|ra|--create-snapshot|dp|why|--ignore|pin|statsb|--pacdiff|--ping|--create-backup|--restore-backup|install|-i|remove|-r|update|-u|search|-s|query|-q|cache|-c|orphan|-o|mirrors|-m|slog|-cl|-sl|--fix-keys|--check-updates|--check-infected)
             [[ -z "$action" ]] && action="$1" || final_args+=("$1")
         ;;
-        --testing)                 MODULES_FOLDER="./modules"; modules_test=1; load_modules ;;
-        --debug)                   set -x ;;
-        --dry-run)                 dry_run=1 ;;
-        mksnap|--create-snapshot)  do_snap="1" ;;
-        --list-aur|-ls-aur)        lsaur=1 ;;
-        -fo|--flatpak-only)        only_flatpak=1 ;;
-        --path-to-binary)          ptbin=1 ;;
-        -nc|--noconfirm)           back_flags+=("--noconfirm") ;;
-        -v|--version)              inform; exit 0 ;;
-        -f|--flatpak)              flat=1 ;;
-        --backend)                 shift; if [[ "$1" == "yay" || "$1" == "paru" ]]; then backend="$1"; else err "$E_04"; fi ;;
-        -h|--help)                 help_message ;;
-        --no-log)                  mlog=0 ;;
-        --lines)                   shift; log_lines="$1" ;;
-        --view)                    [[ -z "$action" ]] && action="--view" || final_args+=("$1") ;;
-        --path)                    shift; [[ -z "$1" ]] && error "--path requires a file path argument"; custom_path="$1" ;;
-        --info)                    inform; exit 0 ;;
-        *)                         final_args+=("$1") ;;
+        -test|--testing)                 MODULES_FOLDER="./modules"; modules_test=1; load_modules ;;
+        -deb|--debug)                    set -x ;;
+        -dry|--dry-run)                  dry_run=1 ;;
+        mksnap|--create-snapshot)        do_snap="1" ;;
+        -lsa|--list-aur|-ls-aur)         lsaur=1 ;;
+        -fo|--flatpak-only)              only_flatpak=1 ;;
+        -ptb|--path-to-binary)           ptbin=1 ;;
+        -nc|--noconfirm)                 back_flags+=("--noconfirm") ;;
+        -v|--version)                    inform; exit 0 ;;
+        -f|--flatpak)                    flat=1 ;;
+        -b|--backend)                    shift; if [[ "$1" == "yay" || "$1" == "paru" ]]; then backend="$1"; else err "$E_04"; fi ;;
+        help|-h|--help)                  help_message ;;
+        --no-log)                        mlog=0 ;;
+        -l|--lines)                      shift; log_lines="$1" ;;
+        --path)                          shift; [[ -z "$1" ]] && error "--path requires a file path argument"; custom_path="$1" ;;
+        --info)                          inform; exit 0 ;;
+        *)                               final_args+=("$1") ;;
     esac
     shift
 done
@@ -276,8 +275,8 @@ case "$action" in
         exit 0
     ;;
     --malware-check|--check-infected|aur-scanner|--aur-scanner) aur_scanner ;;
+    check|-cu|check-upds|--check-updates)       check_updates ;;
     -Rsn|-ra|--remove-agressive)                logback; agrmode=1; func="r"; proc_func ;;
-    check-upds|--check-updates)                 check_updates ;;
     mksnap|--create-snapshot)                   mksnap; exit 0 ;;
     -Syu|-up|upd|update|-u)                     logback; func="u"; proc_func ;;
     -S|-in|ins|install|-i)                      logback; func="i"; proc_func ;;
@@ -292,14 +291,14 @@ case "$action" in
     -mr|mir|mirrors|-m)                         refresh_mirrors ;;
     -op|orp|orphan|-o)                          logback; rmorps ;;
     -cc|cac|cache|-c)                           logback; chmgr ;;
+    -pc|--pacdiff)                              logback; ckconf ;;
+    -upd|updater)                               cly_updater ;;
     pin|--ignore)                               package_pinner ;;
+    -doc|doctor)                                doctor ;;
     depends|why)                                depends ;;
-    --fix-keys)                                 fix_keys ;;
     -vi|--view)                                 logback; view_pkgbuild "${final_args[0]}"; exit 0 ;;
-    --pacdiff)                                  logback; ckconf ;;
-    updater)                                    cly_updater ;;
-    doctor)                                     doctor ;;
-    --ping)                                     ping_cmd="1"; network_test; exit 0 ;;
+    --fix-keys)                                 fix_keys ;;
+    -p|--ping)                                  ping_cmd="1"; network_test; exit 0 ;;
     *)                                          err "$E_01 '$action'" ;;
 esac
 
