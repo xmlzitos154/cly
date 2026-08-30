@@ -2,7 +2,7 @@
 
 ## CLY - A Semantic AUR Helper wrapper written in bash
 
-ver="7.6.0"
+ver="7.6.1"
 rc="release-1"
 
 set -o pipefail
@@ -295,7 +295,7 @@ case "$action" in
     -upd|updater)                               cly_updater ;;
     pin|--ignore)                               package_pinner ;;
     -doc|doctor)                                doctor ;;
-    depends|why)                                depends ;;
+    -dp|depends|why)                            depends ;;
     -vi|--view)                                 logback; view_pkgbuild "${final_args[0]}"; exit 0 ;;
     --fix-keys)                                 fix_keys ;;
     -p|--ping)                                  ping_cmd="1"; network_test; exit 0 ;;
@@ -317,7 +317,7 @@ if [[ -n "$cmd" ]]; then
     if [[ "$func" == "i" && "$MALWARE_CHECK" == "true" ]]; then
         echo " $CC $M_SEARCH_INFECTED"
         for pkg in "${final_args[@]}"; do
-            grep -Exi "$pkg" "$MODULES_FOLDER/infected_packages.txt" &>/dev/null && {
+            grep -Exi "$pkg" "$MODULES_FOLDER/components/infected_packages.txt" &>/dev/null && {
                 echo -e "${YELLOW} $ALERT $M_INFECTED_PKG_FOUND: $pkg"
                 exit 1
             }

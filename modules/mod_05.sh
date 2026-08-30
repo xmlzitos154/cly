@@ -58,7 +58,7 @@ ckconf() {
 ### AUR Infected packages scanner ###
 
 aur_scanner() {
-    [[ ! -f "$MODULES_FOLDER/infected_packages.txt" ]] && err "$E_SCAN_NO_LIST"
+    [[ ! -f "$MODULES_FOLDER/components/infected_packages.txt" ]] && err "$E_SCAN_NO_LIST"
     local tmp_found; tmp_found=$(mktemp)
     local spin='-\|/'
     local i=0
@@ -71,7 +71,7 @@ aur_scanner() {
             else
                 pacman -Qqm "$pkg" &>/dev/null && echo "$pkg" >> "$tmp_found"
             fi
-        done < "$MODULES_FOLDER/infected_packages.txt"
+        done < "$MODULES_FOLDER/components/infected_packages.txt"
     ) &
     local pid=$!
 
