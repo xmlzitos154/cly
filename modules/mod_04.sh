@@ -411,25 +411,24 @@ doctor() {
 cly_updater() {
     network_test
     if [[ -f "$MODULES_FOLDER/aur_tag.sh" ]]; then
+        ## For AUR Users
         echo -e "${CC} ${M_UPDATING_CLY}..."
-        if $backend -Qi cly &>/dev/null; then
-            if "$backend" -S cly; then
-                echo -e "${GREEN} ${COMPLETE}${NC} $M_CLY_UPDATE_DONE"
-            else
-                echo -e "${RED} ${ERROR}${NC} $M_CLY_UPDATE_FAIL_1"
-            fi
+        if "$backend" -S cly; then
+            echo -e "${GREEN} ${COMPLETE}${NC} $M_CLY_UPDATE_DONE"
         else
-            echo -e "${RED} ${ERROR}${NC} $M_CLY_UPDATE_FAIL_2"
+            echo -e "${RED} ${ERROR}${NC} $M_CLY_UPDATE_FAIL_1"
         fi
     else
+        ## For Non-AUR Users
         echo -e "${CC} ${M_UPDATING_CLY}..."
-        mkdir -p "$REAL_HOME/cly_tmp"
-        cd "$REAL_HOME/cly_tmp"
-        git clone https://github.com/xmlzitos154/cly.git
+        local upd_folder="$REAL_HOME/.cache/cly-update"
+        mkdir -p "$upd_folder"
+        cd "$upd_folder"
+        git clone https://github.com/Xmlzitos154/cly.git
         cd cly
         chmod +x install.sh
         echo "1" | ./install.sh
-        rm -fr "$REAL_HOME/cly_tmp"
+        rm -fr "$upd_folder"
         clear
         echo -e "${GREEN} ${COMPLETE}${NC} $M_CLY_UPDATE_DONE"
     fi

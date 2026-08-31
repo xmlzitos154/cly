@@ -1,2 +1,1 @@
-*.txt
-!components/infected_packages.txt
+*.txt!components/infected_packages.txt
