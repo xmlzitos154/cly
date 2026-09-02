@@ -3,7 +3,7 @@
 ## CLY - A Semantic AUR Helper wrapper written in bash
 
 ver="7.6.2"
-rc="release-1"
+rc="release-2"
 
 set -o pipefail
 
@@ -216,7 +216,6 @@ only_flatpak=0
 
 log_rotate; detback; load_lang
 
-[[ "$backend" == "pacman" && "$EUID" -ne 0 ]] && err "$E_07"
 [[ "$backend" != "pacman" && "$EUID" -eq 0 ]] && err "$E_05"
 
 ### Flags testing ###
@@ -260,6 +259,7 @@ if [[ -f /var/lib/pacman/db.lck ]]; then
 fi
 
 [[ "$only_flatpak" == "1" ]] && flatpak_only
+[[ "$backend" == "pacman" && "$EUID" -ne 0 ]] && err "$E_07"
 
 case "$action" in
     --edit-config)
