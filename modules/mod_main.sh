@@ -3,7 +3,7 @@
 ## CLY - A Semantic AUR Helper wrapper written in bash
 
 ver="7.6.2"
-rc="release-2"
+rc="release-3"
 
 set -o pipefail
 
@@ -44,9 +44,9 @@ def() {
         "ALWAYS_USE_NOCONFIRM")
             always_no_confirm="false"
             case "$value" in
-                true)  always_no_confirm="true"  ;;
-                false) always_no_confirm="false" ;;
-                *)     always_no_confirm="false" ;;
+                true)  ALWAYS_NOCONFIRM="true"  ;;
+                false) ALWAYS_NOCONFIRM="false" ;;
+                *)     ALWAYS_NOCONFIRM="false" ;;
             esac
         ;;
         "ENABLE_LOGGING")
@@ -232,7 +232,7 @@ while [[ $# -gt 0 ]]; do
         -lsa|--list-aur|-ls-aur)         lsaur=1 ;;
         -fo|--flatpak-only)              only_flatpak=1 ;;
         -ptb|--path-to-binary)           ptbin=1 ;;
-        -nc|--noconfirm)                 back_flags+=("--noconfirm") ;;
+        -nc|--noconfirm)                 [[ "$ALWAYS_NOCONFIRM" == "true" ]] && echo -e "${YELLOW}$M_ALREADY_NOCONFIRM" || back_flags+=("--noconfirm") ;;
         -v|--version)                    inform; exit 0 ;;
         -f|--flatpak)                    flat=1 ;;
         -b|--backend)                    shift; if [[ "$1" == "yay" || "$1" == "paru" ]]; then backend="$1"; else err "$E_04"; fi ;;
@@ -246,7 +246,7 @@ while [[ $# -gt 0 ]]; do
     shift
 done
 
-[[ "$always_no_confirm" == "true" ]] && back_flags+=("--noconfirm")
+[[ "$ALWAYS_NOCONFIRM" == "true" ]] && back_flags+=("--noconfirm")
 [[ -z "$action" && ${#final_args[@]} -gt 0 ]] && action="${final_args[0]}" && final_args=("${final_args[@]:1}")
 [[ "$action" =~ ^(-S|-in|ins|install|-i|-Rsn|-ra|--remove-agressive|ra|-R|rem|remove|-r|-rm)$ && ${#final_args[@]} -eq 0 ]] && error "$M_SPECIFY_PKG"
 ! command -v "$backend" &>/dev/null && load_lang && err "$E_03"

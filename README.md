@@ -195,4 +195,4 @@ cly --restore-backup --path ~/safe_state.txt # handles targets outside default e
 
 Distributed under the MIT License. Developed with love by xml.dev with support of FreaK
 
-version: **7.6.2 - Release 2**
+version: **7.6.2 - Release 3**
