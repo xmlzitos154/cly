@@ -9,7 +9,7 @@ A lightweight, human-friendly AUR helper wrapper with Flatpak integration and mu
 ## Features
 
 - Use `install`, `update`, or `remove` instead of complex, hard-to-remember arguments.
-- Dynamically hooks into `yay`, `paru`, `pikaur`, or cleanly falls back to a limited `pacman` instance.
+- Dynamically hooks into `yay`, `paru`, or cleanly falls back to a limited `pacman` instance.
 - Seamless fallback to Flathub if an application isn't hosted or found natively in the Arch Repositories/AUR.
 - Purge target packages along with their entire unused cascading dependency tree (`-Rsn`).
 - Records detailed logs in `~/.cache/cly.log` with a built-in automated 500KB rotater mechanism.
